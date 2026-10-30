@@ -70,6 +70,13 @@ def generate_swap_requests_and_events(
                 active_by_team_week[(assignment.team_id, iso_year, iso_week)].append(assignment)
 
     request_rate = cfg.swap_rules.request_rate_per_assignment
+    deliberate_rejection_rate = 0.05
+    deliberate_rejection_codes = (
+        "SWAP_UNQUALIFIED_RECEIVER",
+        "SWAP_REST_VIOLATION",
+        "SWAP_APPROVED_LEAVE",
+    )
+    deliberate_rejection_seen = False
     requested_ids = set()
     swaps: List[SwapRequest] = []
     events: List[SwapRequestEvent] = []
@@ -87,6 +94,10 @@ def generate_swap_requests_and_events(
             source = group_assignments[int(source_index)]
             if source.assignment_id in requested_ids or rng.random() >= request_rate:
                 continue
+            deliberately_ineligible = (
+                (request_seq >= 1 and not deliberate_rejection_seen)
+                or rng.random() < deliberate_rejection_rate
+            )
             possible_targets = [
                 candidate
                 for candidate in group_assignments
@@ -97,7 +108,10 @@ def generate_swap_requests_and_events(
                 continue
             target_order = rng.permutation(len(possible_targets))
             selected = None
-            for target_index in target_order[: min(20, len(target_order))]:
+            selected_finding = None
+            first_eligible = None
+            search_limit = 100 if deliberately_ineligible else 20
+            for target_index in target_order[: min(search_limit, len(target_order))]:
                 candidate = possible_targets[int(target_index)]
                 requester = employee_map[source.employee_id]
                 target_employee = employee_map[candidate.employee_id]
@@ -117,9 +131,28 @@ def generate_swap_requests_and_events(
                     certifications_by_employee_skill=certifications_by_employee_skill,
                     approved_leave_dates_by_employee=approved_leave_dates_by_employee,
                 )
-                if not eligibility_errors:
-                    selected = candidate
-                    break
+                if eligibility_errors and deliberately_ineligible:
+                    selected_finding = next(
+                        (
+                            finding
+                            for finding in eligibility_errors
+                            if any(code in finding for code in deliberate_rejection_codes)
+                        ),
+                        None,
+                    )
+                    if selected_finding:
+                        selected = candidate
+                        break
+                elif not eligibility_errors:
+                    first_eligible = candidate
+                    if not deliberately_ineligible:
+                        selected = candidate
+                        break
+            if selected is None and first_eligible is not None:
+                selected = first_eligible
+                deliberately_ineligible = False
+            elif selected_finding:
+                deliberate_rejection_seen = True
             if selected is None:
                 continue
 
@@ -164,6 +197,34 @@ def generate_swap_requests_and_events(
                 )
             )
 
+            if selected_finding:
+                managers = managers_by_team.get(requester.team_id, [])
+                manager = managers[int(rng.integers(0, len(managers)))] if managers else None
+                actor_type = "EMPLOYEE" if manager else "SYSTEM"
+                actor_id = manager.employee_id if manager else None
+                decision_time = min(
+                    requested_time + timedelta(hours=int(rng.integers(1, 7))),
+                    earliest_shift - timedelta(minutes=2),
+                )
+                request.decided_at = _format_timestamp(decision_time)
+                request.manager_employee_id = actor_id
+                request.current_status = "REJECTED"
+                request.rejection_reason = selected_finding
+                event_seq += 1
+                events.append(
+                    SwapRequestEvent(
+                        swap_event_id=format_swap_event_id(year, event_seq),
+                        swap_request_id=request_id,
+                        from_status="REQUESTED",
+                        to_status="REJECTED",
+                        event_timestamp=request.decided_at,
+                        actor_type=actor_type,
+                        actor_id=actor_id,
+                        notes=request.rejection_reason,
+                    )
+                )
+                continue
+
             transition = float(rng.random())
             if request_seq == 1 or (request_seq > 3 and transition < 0.15):
                 continue
@@ -179,23 +240,6 @@ def generate_swap_requests_and_events(
             request.decided_at = _format_timestamp(decision_time)
             request.manager_employee_id = actor_id
             event_seq += 1
-            if request_seq == 2 or (request_seq > 3 and transition < 0.30):
-                request.current_status = "REJECTED"
-                request.rejection_reason = "Operational coverage could not accommodate the exchange"
-                events.append(
-                    SwapRequestEvent(
-                        swap_event_id=format_swap_event_id(year, event_seq),
-                        swap_request_id=request_id,
-                        from_status="REQUESTED",
-                        to_status="REJECTED",
-                        event_timestamp=request.decided_at,
-                        actor_type=actor_type,
-                        actor_id=actor_id,
-                        notes=request.rejection_reason,
-                    )
-                )
-                continue
-
             request.current_status = "APPROVED"
             events.append(
                 SwapRequestEvent(

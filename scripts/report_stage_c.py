@@ -41,11 +41,16 @@ def report_scale(scale: str) -> None:
     for status in ("REQUESTED", "APPROVED", "REJECTED", "APPLIED"):
         print(f"  {status}: {status_counts.get(status, 0)}")
 
-    rejection_reasons = Counter(
-        request.rejection_reason
-        for request in data["swap_requests"]
-        if request.current_status == "REJECTED"
-    )
+    coverage_prefix = "Operational coverage could not accommodate the exchange: "
+    rejection_reasons = Counter()
+    for request in data["swap_requests"]:
+        if request.current_status != "REJECTED":
+            continue
+        reason = request.rejection_reason or "(missing reason)"
+        if reason.startswith(coverage_prefix):
+            reason = reason[len(coverage_prefix):]
+        reason_code = reason.split(":", 1)[0]
+        rejection_reasons[reason_code] += 1
     print("Swap rejection reasons:")
     if rejection_reasons:
         for reason, count in sorted(rejection_reasons.items()):

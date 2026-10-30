@@ -16,6 +16,7 @@ import pytest
 from workforce_generator.models.entities import ShiftAssignment
 from workforce_generator.rules import (
     check_attendance_invariants,
+    check_swap_eligibility,
     check_swap_invariants,
     validate_all_schedule_rules,
 )
@@ -277,6 +278,70 @@ def test_unqualified_applied_swap_is_rejected_by_checker(starter_pipeline_data):
         data["employee_skills"],
     )
     assert any("SWAP_UNQUALIFIED_RECEIVER" in error for error in errors)
+
+
+def test_rejected_swap_reason_matches_bruteforce_eligibility_finding(starter_pipeline_data):
+    data = starter_pipeline_data
+    employees = {employee.employee_id: employee for employee in data["employees"]}
+    assignments = {assignment.assignment_id: assignment for assignment in data["shift_assignments"]}
+    replacements_by_request = defaultdict(list)
+    for assignment in data["shift_assignments"]:
+        if assignment.swap_request_id:
+            replacements_by_request[assignment.swap_request_id].append(assignment)
+
+    rejected = [
+        request for request in data["swap_requests"] if request.current_status == "REJECTED"
+    ]
+    assert rejected
+    for request in rejected:
+        request_sequence = int(request.swap_request_id.rsplit("-", 1)[1])
+        earlier_applied_ids = {
+            other.swap_request_id
+            for other in data["swap_requests"]
+            if other.current_status == "APPLIED"
+            and int(other.swap_request_id.rsplit("-", 1)[1]) < request_sequence
+        }
+        replaced_before_request = {
+            assignment.replaces_assignment_id
+            for swap_request_id in earlier_applied_ids
+            for assignment in replacements_by_request[swap_request_id]
+        }
+        schedule_at_request = [
+            replace(
+                assignment,
+                assignment_status=(
+                    "SWAPPED_OUT"
+                    if assignment.assignment_id in replaced_before_request
+                    else "ACTIVE"
+                ),
+                effective_to=None,
+            )
+            for assignment in data["shift_assignments"]
+            if assignment.swap_request_id is None
+        ]
+        schedule_at_request.extend(
+            assignment
+            for swap_request_id in earlier_applied_ids
+            for assignment in replacements_by_request[swap_request_id]
+        )
+        requestor = employees[request.requestor_employee_id]
+        target = employees[request.target_employee_id]
+        findings = check_swap_eligibility(
+            assignments[request.requestor_assignment_id],
+            assignments[request.target_assignment_id],
+            requestor,
+            target,
+            schedule_at_request,
+            data["employee_skills"],
+            data["leave_requests"],
+            min_rest_hours=data["config"].labor_constraints.min_rest_hours_between_shifts,
+            max_consecutive_days=(
+                data["config"].labor_constraints.max_consecutive_working_days
+            ),
+            max_weekly_hours=data["config"].labor_constraints.overtime_cap_weekly_hours,
+            paid_hours_per_shift=data["config"].labor_constraints.paid_hours_per_shift,
+        )
+        assert request.rejection_reason in findings
 
 
 def test_attendance_independently_reconciles_to_final_schedule(starter_pipeline_data):

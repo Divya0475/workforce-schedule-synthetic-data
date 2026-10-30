@@ -215,6 +215,12 @@ def check_swap_eligibility(
     approved_leave_dates_by_employee: Dict[str, Set[date]] | None = None,
 ) -> List[str]:
     """Validate a proposed reciprocal exchange against each employee's full schedule."""
+    def rejection_findings(findings: List[str]) -> List[str]:
+        return [
+            f"Operational coverage could not accommodate the exchange: {finding}"
+            for finding in findings
+        ]
+
     errors = []
     if requestor_employee.employee_id == target_employee.employee_id:
         errors.append("SWAP_SAME_EMPLOYEE: request participants must differ")
@@ -233,7 +239,7 @@ def check_swap_eligibility(
     if requestor_assignment.shift_date.isocalendar()[:2] != target_assignment.shift_date.isocalendar()[:2]:
         errors.append("SWAP_DIFFERENT_ISO_WEEK: assignments must be in the same ISO week")
     if errors:
-        return errors
+        return rejection_findings(errors)
 
     if certifications_by_employee_skill is None:
         certifications_by_employee_skill = defaultdict(list)
@@ -290,7 +296,7 @@ def check_swap_eligibility(
             )
         )
     if errors:
-        return errors
+        return rejection_findings(errors)
 
     exchanged_ids = {
         requestor_assignment.assignment_id,
@@ -355,7 +361,7 @@ def check_swap_eligibility(
                 f"SWAP_OVERTIME_CAP: {employee.employee_id} would exceed "
                 f"{max_weekly_hours:g} paid hours in an ISO week"
             )
-    return errors
+    return rejection_findings(errors)
 
 
 def check_swap_invariants(
