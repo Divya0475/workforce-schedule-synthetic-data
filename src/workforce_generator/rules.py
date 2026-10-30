@@ -322,3 +322,4 @@ def validate_all_schedule_rules(
     violations.extend(check_consecutive_working_days(assignments))
     violations.extend(check_overtime_cap(assignments, horizon_start, horizon_end))
     return violations
+
