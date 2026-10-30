@@ -8,9 +8,6 @@ import pandas as pd
 import pytest
 
 from workforce_generator.config import load_config
-from workforce_generator.generators.coverage import generate_coverage_requirements
-from workforce_generator.generators.holidays import generate_holidays
-from workforce_generator.generators.organization import generate_organization
 from workforce_generator.models.entities import ShiftTemplate
 from workforce_generator.models.identifiers import (
     RE_COVERAGE_ID,
@@ -21,51 +18,7 @@ from workforce_generator.models.identifiers import (
     RE_SKILL_ID,
     RE_TEAM_ID,
 )
-
-
-@pytest.fixture
-def stage_a_artifacts():
-    overrides = {
-        "seed": 20261022,
-        "workforce": {
-            "num_teams": 5,
-            "employees_per_team": 10,
-        },
-        "horizon": {
-            "start_date": "2026-01-01",
-            "end_date": "2026-01-14",
-        },
-    }
-    cfg = load_config(overrides=overrides)
-    rng = np.random.default_rng(cfg.seed)
-
-    teams, skills, employees, employee_skills = generate_organization(cfg, rng)
-    shift_templates = [
-        ShiftTemplate(
-            shift_template_id=s.id,
-            template_code=s.code,
-            name=s.name,
-            start_time=s.start_time,
-            end_time=s.end_time,
-            duration_hours=s.duration_hours,
-            unpaid_break_minutes=s.unpaid_break_minutes,
-            is_overnight=s.is_overnight,
-        )
-        for s in cfg.shifts
-    ]
-    holidays = generate_holidays(cfg)
-    coverage_requirements = generate_coverage_requirements(cfg, teams, holidays)
-
-    return {
-        "config": cfg,
-        "teams": teams,
-        "skills": skills,
-        "employees": employees,
-        "employee_skills": employee_skills,
-        "shift_templates": shift_templates,
-        "holidays": holidays,
-        "coverage_requirements": coverage_requirements,
-    }
+from workforce_generator.pipeline import run_pipeline
 
 
 def test_every_demanded_skill_has_holders_in_each_requiring_team(stage_a_artifacts):
@@ -162,32 +115,15 @@ def test_generation_determinism():
     }
 
     def generate_pipeline():
-        cfg = load_config(overrides=overrides)
-        rng = np.random.default_rng(cfg.seed)
-        t, sk, e, esk = generate_organization(cfg, rng)
-        st = [
-            ShiftTemplate(
-                shift_template_id=s.id,
-                template_code=s.code,
-                name=s.name,
-                start_time=s.start_time,
-                end_time=s.end_time,
-                duration_hours=s.duration_hours,
-                unpaid_break_minutes=s.unpaid_break_minutes,
-                is_overnight=s.is_overnight,
-            )
-            for s in cfg.shifts
-        ]
-        h = generate_holidays(cfg)
-        c = generate_coverage_requirements(cfg, t, h)
+        data = run_pipeline(overrides=overrides)
         return {
-            "Team": pd.DataFrame([x.to_dict() for x in t]),
-            "Skill": pd.DataFrame([x.to_dict() for x in sk]),
-            "Employee": pd.DataFrame([x.to_dict() for x in e]),
-            "EmployeeSkill": pd.DataFrame([x.to_dict() for x in esk]),
-            "ShiftTemplate": pd.DataFrame([x.to_dict() for x in st]),
-            "HolidayCalendar": pd.DataFrame([x.to_dict() for x in h]),
-            "CoverageRequirement": pd.DataFrame([x.to_dict() for x in c]),
+            "Team": pd.DataFrame([x.to_dict() for x in data["teams"]]),
+            "Skill": pd.DataFrame([x.to_dict() for x in data["skills"]]),
+            "Employee": pd.DataFrame([x.to_dict() for x in data["employees"]]),
+            "EmployeeSkill": pd.DataFrame([x.to_dict() for x in data["employee_skills"]]),
+            "ShiftTemplate": pd.DataFrame([x.to_dict() for x in data["shift_templates"]]),
+            "HolidayCalendar": pd.DataFrame([x.to_dict() for x in data["holidays"]]),
+            "CoverageRequirement": pd.DataFrame([x.to_dict() for x in data["coverage_requirements"]]),
         }
 
     run1 = generate_pipeline()

@@ -16,53 +16,129 @@ from workforce_generator.generators.coverage import generate_coverage_requiremen
 from workforce_generator.generators.holidays import generate_holidays
 from workforce_generator.generators.leave import generate_leave_requests_and_events
 from workforce_generator.generators.organization import generate_organization
-
-
-@pytest.fixture
-def starter_leave_pipeline():
-    overrides = {
-        "seed": 20261022,
-        "workforce": {
-            "num_teams": 5,
-            "employees_per_team": 10,
-        },
-        "horizon": {
-            "start_date": "2026-01-01",
-            "end_date": "2026-01-14",
-        },
-        "leave_rules": {
-            "target_total_requests": 100,
-            "leave_coverage_buffer": 1.25,
-        },
-    }
-    cfg = load_config(overrides=overrides)
-    ss = np.random.SeedSequence(cfg.seed)
-    rng_org, rng_leave = [np.random.default_rng(s) for s in ss.spawn(2)]
-
-    teams, skills, employees, employee_skills = generate_organization(cfg, rng_org)
-    holidays = generate_holidays(cfg)
-    coverage_reqs = generate_coverage_requirements(cfg, teams, holidays)
-    leave_requests, leave_events = generate_leave_requests_and_events(
-        cfg, rng_leave, employees, employee_skills, coverage_reqs, holidays
-    )
-
-    return {
-        "config": cfg,
-        "teams": teams,
-        "skills": skills,
-        "employees": employees,
-        "employee_skills": employee_skills,
-        "holidays": holidays,
-        "coverage_requirements": coverage_reqs,
-        "leave_requests": leave_requests,
-        "leave_events": leave_events,
-    }
+from workforce_generator.pipeline import run_pipeline
 
 
 def test_leave_counts_and_types(starter_leave_pipeline):
-    """Verify configured target count and distribution of leave types."""
+    """Verify configured target count and distribution of leave types, including still-SUBMITTED requests."""
     reqs = starter_leave_pipeline["leave_requests"]
     assert len(reqs) == 100
+
+    # Assert at least one still-SUBMITTED request exists
+    submitted_reqs = [r for r in reqs if r.current_status == "SUBMITTED"]
+    assert len(submitted_reqs) >= 1, "Expected at least one still-SUBMITTED request in starter profile!"
+
+
+def test_lifecycle_events_transitions_and_actor_rules(starter_leave_pipeline):
+    """Restore lifecycle tests: event counts (1, 2, or 3), valid transitions, non-decreasing timestamps, current_status mirrors latest event, and actor governance."""
+    reqs = starter_leave_pipeline["leave_requests"]
+    events = starter_leave_pipeline["leave_events"]
+    emps = {e.employee_id: e for e in starter_leave_pipeline["employees"]}
+    req_map = {r.leave_request_id: r for r in reqs}
+
+    evts_by_req = defaultdict(list)
+    for ev in events:
+        evts_by_req[ev.leave_request_id].append(ev)
+
+    assert len(reqs) == 100
+    assert len(events) > 100
+
+    VALID_TRANSITIONS = {
+        (None, "SUBMITTED"),
+        ("SUBMITTED", "APPROVED"),
+        ("SUBMITTED", "REJECTED"),
+        ("SUBMITTED", "CANCELLED"),
+        ("APPROVED", "CANCELLED"),
+    }
+
+    found_1_event = False
+    found_2_events = False
+    found_3_events = False
+
+    for r in reqs:
+        r_events = evts_by_req[r.leave_request_id]
+        n_events = len(r_events)
+
+        # 1 (pending), 2 (decided or cancelled before decision) or 3 (post-approval cancel)
+        assert n_events in (1, 2, 3), (
+            f"Request {r.leave_request_id} has invalid event count {n_events}!"
+        )
+
+        if n_events == 1:
+            found_1_event = True
+            assert r.current_status == "SUBMITTED"
+            assert r_events[0].from_status is None
+            assert r_events[0].to_status == "SUBMITTED"
+        elif n_events == 2:
+            found_2_events = True
+            assert r.current_status in ("APPROVED", "REJECTED", "CANCELLED")
+            if r.current_status == "CANCELLED":
+                # Cancelled before decision
+                assert r_events[1].from_status == "SUBMITTED"
+                assert r_events[1].to_status == "CANCELLED"
+            else:
+                assert r_events[1].from_status == "SUBMITTED"
+                assert r_events[1].to_status in ("APPROVED", "REJECTED")
+        elif n_events == 3:
+            found_3_events = True
+            assert r.current_status == "CANCELLED"
+            assert r_events[1].from_status == "SUBMITTED"
+            assert r_events[1].to_status == "APPROVED"
+            assert r_events[2].from_status == "APPROVED"
+            assert r_events[2].to_status == "CANCELLED"
+
+        # current_status == latest event to_status
+        latest_event = r_events[-1]
+        assert r.current_status == latest_event.to_status, (
+            f"Request {r.leave_request_id} current_status {r.current_status} != latest event {latest_event.to_status}"
+        )
+
+        # Timestamps non-decreasing and valid transitions
+        prev_dt = None
+        for ev in r_events:
+            transition = (ev.from_status, ev.to_status)
+            assert transition in VALID_TRANSITIONS, (
+                f"Invalid transition {transition} on request {r.leave_request_id}"
+            )
+
+            dt = datetime.fromisoformat(ev.event_timestamp.rstrip("Z"))
+            if prev_dt is not None:
+                assert dt >= prev_dt, (
+                    f"Timestamp regression on {r.leave_request_id}: {prev_dt} -> {dt}"
+                )
+            prev_dt = dt
+
+            # Actor rules for every event type:
+            # - Creation (SUBMITTED): actor must be the requester employee
+            # - Pre-decision or post-approval CANCELLED: actor must be the requester employee
+            # - Decision (APPROVED / REJECTED):
+            #     * Requester cannot decide their own leave (actor_id != requester)
+            #     * If requester is MANAGER: decided by SYSTEM (actor_id is None) or another team's MANAGER
+            #     * If requester is non-manager: decided by SYSTEM (actor_id is None) or their team's MANAGER
+            req_emp = emps[r.employee_id]
+
+            if ev.to_status == "SUBMITTED":
+                assert ev.actor_type == "EMPLOYEE"
+                assert ev.actor_id == r.employee_id
+            elif ev.to_status == "CANCELLED":
+                assert ev.actor_type == "EMPLOYEE"
+                assert ev.actor_id == r.employee_id
+            elif ev.to_status in ("APPROVED", "REJECTED"):
+                assert ev.actor_id != r.employee_id
+                if ev.actor_type == "SYSTEM":
+                    assert ev.actor_id is None
+                elif ev.actor_type == "EMPLOYEE":
+                    actor_emp = emps[ev.actor_id]
+                    assert actor_emp.role == "MANAGER"
+                    if req_emp.role == "MANAGER":
+                        assert actor_emp.team_id != req_emp.team_id
+                    else:
+                        assert actor_emp.team_id == req_emp.team_id
+
+    # Assert all event patterns were observed in the starter profile
+    assert found_1_event, "Expected at least one pending request with 1 event!"
+    assert found_2_events, "Expected requests with 2 events!"
+    assert found_3_events, "Expected post-approval cancelled requests with 3 events!"
 
     types = {r.leave_type for r in reqs}
     assert "ANNUAL" in types
@@ -178,8 +254,8 @@ def test_submission_and_cancellation_temporal_bounds(starter_leave_pipeline):
             )
 
 
-def test_counterfactual_rejections_violate_threshold(starter_leave_pipeline):
-    """Counterfactual test: every REJECTED request with a coverage reason would have violated the threshold."""
+def test_counterfactual_rejections_violate_threshold_and_replay_overlaps(starter_leave_pipeline):
+    """Counterfactual test: assert at least 3 coverage rejections exist and replay both coverage and overlap rejections."""
     cfg = starter_leave_pipeline["config"]
     reqs = starter_leave_pipeline["leave_requests"]
     cov_reqs = starter_leave_pipeline["coverage_requirements"]
@@ -201,43 +277,70 @@ def test_counterfactual_rejections_violate_threshold(starter_leave_pipeline):
         for sk_id in emp_skills_map[staff.employee_id]:
             team_skill_holders[(staff.team_id, sk_id)].append(staff)
 
+    coverage_rejections = [
+        r for r in reqs
+        if r.current_status == "REJECTED" and r.decision_reason and "Insufficient coverage" in r.decision_reason
+    ]
+    overlap_rejections = [
+        r for r in reqs
+        if r.current_status == "REJECTED" and r.decision_reason and "Overlapping approved leave" in r.decision_reason
+    ]
+
+    # Assert at least 3 coverage rejections exist
+    assert len(coverage_rejections) >= 3, f"Expected >= 3 coverage rejections, got {len(coverage_rejections)}"
+    assert len(overlap_rejections) >= 1, f"Expected >= 1 overlap rejection, got {len(overlap_rejections)}"
+
     # Replay sequential decisions
     approved_on_leave = defaultdict(set)
+    emp_approved_intervals = defaultdict(list)
 
     for r in reqs:
-        if r.current_status == "REJECTED" and r.decision_reason and "Insufficient coverage" in r.decision_reason:
-            # Counterfactual check: must fail on at least one date and skill
-            emp_holds = emp_skills_map[r.employee_id]
-            emp_team = [e.team_id for e in sched_emps if e.employee_id == r.employee_id][0]
+        if r.current_status == "REJECTED":
+            if r.decision_reason and "Insufficient coverage" in r.decision_reason:
+                # Counterfactual check: must fail on at least one date and skill
+                emp_holds = emp_skills_map[r.employee_id]
+                emp_team = [e.team_id for e in sched_emps if e.employee_id == r.employee_id][0]
 
-            violated = False
-            cur_d = r.start_date
-            while cur_d <= r.end_date:
-                demands = demand_by_team_date.get((emp_team, cur_d), {})
-                current_leave = approved_on_leave[(emp_team, cur_d)]
+                violated = False
+                cur_d = r.start_date
+                while cur_d <= r.end_date:
+                    demands = demand_by_team_date.get((emp_team, cur_d), {})
+                    current_leave = approved_on_leave[(emp_team, cur_d)]
 
-                for sk_id, min_cnt in demands.items():
-                    if min_cnt <= 0 or sk_id not in emp_holds:
-                        continue
-                    thresh = math.ceil(min_cnt * buffer_multiplier)
-                    holders = team_skill_holders.get((emp_team, sk_id), [])
+                    for sk_id, min_cnt in demands.items():
+                        if min_cnt <= 0 or sk_id not in emp_holds:
+                            continue
+                        thresh = math.ceil(min_cnt * buffer_multiplier)
+                        holders = team_skill_holders.get((emp_team, sk_id), [])
 
-                    active_avail = sum(
-                        1 for s in holders
-                        if s.employee_id not in current_leave
-                        and s.hire_date <= cur_d
-                        and (s.termination_date is None or s.termination_date >= cur_d)
-                    )
-                    rem = active_avail - 1
-                    if rem < thresh:
-                        violated = True
+                        active_avail = sum(
+                            1 for s in holders
+                            if s.employee_id not in current_leave
+                            and s.hire_date <= cur_d
+                            and (s.termination_date is None or s.termination_date >= cur_d)
+                        )
+                        rem = active_avail - 1
+                        if rem < thresh:
+                            violated = True
+                            break
+
+                    if violated:
                         break
+                    cur_d += timedelta(days=1)
 
-                if violated:
-                    break
-                cur_d += timedelta(days=1)
+                assert violated, f"Rejected request {r.leave_request_id} did not actually violate threshold counterfactually!"
 
-            assert violated, f"Rejected request {r.leave_request_id} did not actually violate threshold counterfactually!"
+            elif r.decision_reason and "Overlapping approved leave" in r.decision_reason:
+                # Replay overlap check: employee must already have an approved range overlapping [r.start_date, r.end_date]
+                prior_approved = emp_approved_intervals[r.employee_id]
+                has_overlap = any(
+                    not (r.end_date < ex_s or r.start_date > ex_e)
+                    for ex_s, ex_e in prior_approved
+                )
+                assert has_overlap, (
+                    f"Overlap rejected request {r.leave_request_id} for {r.employee_id} "
+                    f"({r.start_date} to {r.end_date}) had no prior approved overlap in {prior_approved}!"
+                )
 
         elif r.decided_at is not None and r.decision_reason and r.decision_reason.startswith("Approved"):
             # Update approved on leave calendar for replay
@@ -246,6 +349,7 @@ def test_counterfactual_rejections_violate_threshold(starter_leave_pipeline):
             while cur_d <= r.end_date:
                 approved_on_leave[(emp_team, cur_d)].add(r.employee_id)
                 cur_d += timedelta(days=1)
+            emp_approved_intervals[r.employee_id].append((r.start_date, r.end_date))
 
 
 def test_coverage_invariant_planned_non_manager_leave_only(starter_leave_pipeline):
@@ -323,34 +427,27 @@ def test_coverage_invariant_planned_non_manager_leave_only(starter_leave_pipelin
 
 
 def test_statutory_holidays_exemption_non_vacuous_ground_truth(starter_leave_pipeline):
-    """Non-vacuous holiday test: assert at least one annual leave spans Jan 1 and verify hand-computed hours."""
+    """Non-vacuous holiday test: assert literal 8.0 hours for a 40h employee spanning Jan 1-2 2026."""
     reqs = starter_leave_pipeline["leave_requests"]
     emps = {e.employee_id: e for e in starter_leave_pipeline["employees"]}
 
-    # Non-vacuous check: at least one annual leave spans 2026-01-01
-    spanning = [
+    # Non-vacuous check: find 40h full-time employee with ANNUAL leave spanning 2026-01-01 to 2026-01-02
+    target_reqs = [
         r for r in reqs
-        if r.leave_type == "ANNUAL" and r.start_date <= date(2026, 1, 1) <= r.end_date
+        if r.leave_type == "ANNUAL"
+        and r.start_date == date(2026, 1, 1)
+        and r.end_date == date(2026, 1, 2)
+        and emps[r.employee_id].weekly_contract_hours == 40.0
     ]
-    assert len(spanning) >= 1, "Expected at least one annual leave spanning statutory holiday 2026-01-01!"
+    assert len(target_reqs) >= 1, (
+        "Expected at least one ANNUAL leave request for a 40h employee spanning Jan 1-2 2026!"
+    )
 
-    # Ground truth verification for request #1 spanning 2026-01-01 to 2026-01-02
-    req1 = spanning[0]
-    emp = emps[req1.employee_id]
-    daily_hours = round(emp.weekly_contract_hours / 5.0, 1)
-
-    # 2026-01-01 is statutory holiday (0h); 2026-01-02 is Friday (daily_hours)
-    # Hand-computed ground truth:
-    cur = req1.start_date
-    expected = 0.0
-    while cur <= req1.end_date:
-        if cur.weekday() < 5 and cur != date(2026, 1, 1):
-            expected += daily_hours
-        cur += timedelta(days=1)
-    if expected == 0.0:
-        expected = daily_hours
-
-    assert round(req1.requested_hours, 1) == round(expected, 1)
+    # Jan 1 is statutory holiday (0.0h); Jan 2 is working Friday (8.0h). Total must literally equal 8.0 hours.
+    for r in target_reqs:
+        assert r.requested_hours == 8.0, (
+            f"Expected literal 8.0 requested_hours for 40h employee {r.employee_id} spanning Jan 1-2, got {r.requested_hours}"
+        )
 
 
 def test_decisions_actor_governance(starter_leave_pipeline):
@@ -391,45 +488,57 @@ def test_decisions_actor_governance(starter_leave_pipeline):
 
 
 def test_timezone_independence():
-    """Verify leave generator produces bitwise identical output regardless of environment TZ."""
+    """Verify leave generator produces bitwise identical hashes under TZ='IST-5:30' and TZ='UTC0'."""
     import os
 
     script = (
-        "import sys, json; "
+        "import sys, json, hashlib; "
         "sys.path.insert(0, 'src'); "
-        "import numpy as np, pandas as pd; "
-        "from workforce_generator.config import load_config; "
-        "from workforce_generator.generators.organization import generate_organization; "
-        "from workforce_generator.generators.holidays import generate_holidays; "
-        "from workforce_generator.generators.coverage import generate_coverage_requirements; "
-        "from workforce_generator.generators.leave import generate_leave_requests_and_events; "
-        "cfg = load_config(overrides={'seed': 20261022, 'workforce': {'num_teams': 5, 'employees_per_team': 10}, 'horizon': {'start_date': '2026-01-01', 'end_date': '2026-01-14'}, 'leave_rules': {'target_total_requests': 100, 'leave_coverage_buffer': 1.25}}); "
-        "ss = np.random.SeedSequence(cfg.seed); "
-        "rng_org, rng_leave = [np.random.default_rng(s) for s in ss.spawn(2)]; "
-        "t, sk, e, esk = generate_organization(cfg, rng_org); "
-        "h = generate_holidays(cfg); "
-        "cov = generate_coverage_requirements(cfg, t, h); "
-        "reqs, evts = generate_leave_requests_and_events(cfg, rng_leave, e, esk, cov, h); "
-        "print(json.dumps([r.to_dict() for r in reqs]))"
+        "from workforce_generator.pipeline import run_pipeline; "
+        "d = run_pipeline(overrides={'seed': 20261022, 'workforce': {'num_teams': 5, 'employees_per_team': 10}, 'horizon': {'start_date': '2026-01-01', 'end_date': '2026-01-14'}, 'leave_rules': {'target_total_requests': 100, 'leave_coverage_buffer': 1.25}}); "
+        "reqs_json = json.dumps([r.to_dict() for r in d['leave_requests']], sort_keys=True); "
+        "evts_json = json.dumps([ev.to_dict() for ev in d['leave_events']], sort_keys=True); "
+        "h_reqs = hashlib.sha256(reqs_json.encode('utf-8')).hexdigest(); "
+        "h_evts = hashlib.sha256(evts_json.encode('utf-8')).hexdigest(); "
+        "print(f'{h_reqs}:{h_evts}')"
     )
 
-    env_kolkata = os.environ.copy()
-    env_kolkata["TZ"] = "Asia/Kolkata"
+    env_ist = os.environ.copy()
+    env_ist["TZ"] = "IST-5:30"
 
     env_utc = os.environ.copy()
-    env_utc["TZ"] = "UTC"
+    env_utc["TZ"] = "UTC0"
 
-    out_kolkata = subprocess.check_output(
+    out_ist = subprocess.check_output(
         [sys.executable, "-c", script],
-        env=env_kolkata,
+        env=env_ist,
         text=True,
-    )
+    ).strip()
     out_utc = subprocess.check_output(
         [sys.executable, "-c", script],
         env=env_utc,
         text=True,
-    )
-    assert out_kolkata == out_utc
+    ).strip()
+    assert out_ist == out_utc
+    assert len(out_ist.split(":")) == 2
+
+
+def test_static_timezone_safety_no_disallowed_functions():
+    """Static code test: fails if src/ contains .astimezone(, datetime.now(, utcnow(, fromtimestamp(, or time.localtime."""
+    import glob
+    from pathlib import Path
+
+    repo_src = Path(__file__).resolve().parent.parent / "src"
+    disallowed = [".astimezone(", "datetime.now(", "utcnow(", "fromtimestamp(", "time.localtime"]
+
+    violations = []
+    for py_file in repo_src.rglob("*.py"):
+        text = py_file.read_text(encoding="utf-8")
+        for token in disallowed:
+            if token in text:
+                violations.append(f"{py_file.name}: contains {token}")
+
+    assert not violations, f"Disallowed timezone-dependent functions found in src/: {violations}"
 
 
 def test_leave_generation_determinism():

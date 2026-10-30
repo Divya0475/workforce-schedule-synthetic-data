@@ -14,10 +14,7 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
 
 from workforce_generator.config import load_config
-from workforce_generator.generators.coverage import generate_coverage_requirements
-from workforce_generator.generators.holidays import generate_holidays
-from workforce_generator.generators.organization import generate_organization
-from workforce_generator.models.entities import ShiftTemplate
+from workforce_generator.pipeline import run_pipeline
 
 
 def run_stage_a() -> Dict[str, pd.DataFrame]:
@@ -35,8 +32,6 @@ def run_stage_a() -> Dict[str, pd.DataFrame]:
     }
 
     config = load_config(overrides=starter_overrides)
-    ss = np.random.SeedSequence(config.seed)
-    rng_org = np.random.default_rng(ss.spawn(1)[0])
 
     print("=" * 80)
     print("STAGE A: WORKFORCE SYNTHETIC DATA GENERATOR (STARTER PROFILE)")
@@ -45,39 +40,18 @@ def run_stage_a() -> Dict[str, pd.DataFrame]:
     print(f"Planning Horizon: {config.horizon.start_date} to {config.horizon.end_date} ({config.horizon.total_days} days)")
     print("=" * 80)
 
-    # 1. Organization (Teams, Skills, Employees, EmployeeSkill)
-    teams, skills, employees, employee_skills = generate_organization(config, rng_org)
-
-    # 2. Shift Templates
-    shift_templates = [
-        ShiftTemplate(
-            shift_template_id=s.id,
-            template_code=s.code,
-            name=s.name,
-            start_time=s.start_time,
-            end_time=s.end_time,
-            duration_hours=s.duration_hours,
-            unpaid_break_minutes=s.unpaid_break_minutes,
-            is_overnight=s.is_overnight,
-        )
-        for s in config.shifts
-    ]
-
-    # 3. Holiday Calendar
-    holidays = generate_holidays(config)
-
-    # 4. Coverage Requirements
-    coverage_requirements = generate_coverage_requirements(config, teams, holidays)
+    # Run pipeline
+    data = run_pipeline(config)
 
     # Convert to DataFrames
     dfs = {
-        "Team": pd.DataFrame([t.to_dict() for t in teams]),
-        "Skill": pd.DataFrame([s.to_dict() for s in skills]),
-        "Employee": pd.DataFrame([e.to_dict() for e in employees]),
-        "EmployeeSkill": pd.DataFrame([es.to_dict() for es in employee_skills]),
-        "ShiftTemplate": pd.DataFrame([st.to_dict() for st in shift_templates]),
-        "HolidayCalendar": pd.DataFrame([h.to_dict() for h in holidays]),
-        "CoverageRequirement": pd.DataFrame([c.to_dict() for c in coverage_requirements]),
+        "Team": pd.DataFrame([t.to_dict() for t in data["teams"]]),
+        "Skill": pd.DataFrame([s.to_dict() for s in data["skills"]]),
+        "Employee": pd.DataFrame([e.to_dict() for e in data["employees"]]),
+        "EmployeeSkill": pd.DataFrame([es.to_dict() for es in data["employee_skills"]]),
+        "ShiftTemplate": pd.DataFrame([st.to_dict() for st in data["shift_templates"]]),
+        "HolidayCalendar": pd.DataFrame([h.to_dict() for h in data["holidays"]]),
+        "CoverageRequirement": pd.DataFrame([c.to_dict() for c in data["coverage_requirements"]]),
     }
 
     print("\nROW COUNTS SUMMARY:")

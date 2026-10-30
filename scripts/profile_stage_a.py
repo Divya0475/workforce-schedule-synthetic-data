@@ -25,10 +25,8 @@ repo_root = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(repo_root / "src"))
 
 from workforce_generator.config import load_config
-from workforce_generator.generators.coverage import generate_coverage_requirements
-from workforce_generator.generators.holidays import generate_holidays
-from workforce_generator.generators.organization import generate_organization
 from workforce_generator.models.entities import ShiftTemplate
+from workforce_generator.pipeline import run_pipeline
 
 
 def profile_stage_a(csv_dir: Path | None = None) -> None:
@@ -57,33 +55,15 @@ def profile_stage_a(csv_dir: Path | None = None) -> None:
             },
         }
         cfg = load_config(overrides=starter_overrides)
-        ss = np.random.SeedSequence(cfg.seed)
-        rng = np.random.default_rng(ss.spawn(1)[0])
+        data = run_pipeline(cfg)
 
-        teams, skills, employees, employee_skills = generate_organization(cfg, rng)
-        shift_templates = [
-            ShiftTemplate(
-                shift_template_id=s.id,
-                template_code=s.code,
-                name=s.name,
-                start_time=s.start_time,
-                end_time=s.end_time,
-                duration_hours=s.duration_hours,
-                unpaid_break_minutes=s.unpaid_break_minutes,
-                is_overnight=s.is_overnight,
-            )
-            for s in config_shifts(cfg)
-        ]
-        holidays = generate_holidays(cfg)
-        coverage_requirements = generate_coverage_requirements(cfg, teams, holidays)
-
-        team_df = pd.DataFrame([t.to_dict() for t in teams])
-        skill_df = pd.DataFrame([s.to_dict() for s in skills])
-        emp_df = pd.DataFrame([e.to_dict() for e in employees])
-        emp_sk_df = pd.DataFrame([es.to_dict() for es in employee_skills])
-        shift_df = pd.DataFrame([st.to_dict() for st in shift_templates])
-        holiday_df = pd.DataFrame([h.to_dict() for h in holidays])
-        cov_df = pd.DataFrame([c.to_dict() for c in coverage_requirements])
+        team_df = pd.DataFrame([t.to_dict() for t in data["teams"]])
+        skill_df = pd.DataFrame([s.to_dict() for s in data["skills"]])
+        emp_df = pd.DataFrame([e.to_dict() for e in data["employees"]])
+        emp_sk_df = pd.DataFrame([es.to_dict() for es in data["employee_skills"]])
+        shift_df = pd.DataFrame([st.to_dict() for st in data["shift_templates"]])
+        holiday_df = pd.DataFrame([h.to_dict() for h in data["holidays"]])
+        cov_df = pd.DataFrame([c.to_dict() for c in data["coverage_requirements"]])
 
     tables = {
         "Team": team_df,

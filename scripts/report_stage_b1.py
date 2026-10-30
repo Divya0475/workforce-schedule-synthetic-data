@@ -23,10 +23,7 @@ repo_root = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(repo_root / "src"))
 
 from workforce_generator.config import load_config
-from workforce_generator.generators.coverage import generate_coverage_requirements
-from workforce_generator.generators.holidays import generate_holidays
-from workforce_generator.generators.leave import generate_leave_requests_and_events
-from workforce_generator.generators.organization import generate_organization
+from workforce_generator.pipeline import run_pipeline
 
 
 def run_and_report_b1(scale: str = "starter") -> None:
@@ -57,22 +54,19 @@ def run_and_report_b1(scale: str = "starter") -> None:
     print(f"STAGE B1 AUDIT REPORT: {profile_name}")
     print("=" * 100)
 
-    seed_seq = np.random.SeedSequence(cfg.seed)
-    rng_org, rng_leave = [np.random.default_rng(s) for s in seed_seq.spawn(2)]
-
     t0 = time.perf_counter()
-    teams, skills, employees, employee_skills = generate_organization(cfg, rng_org)
-    holidays = generate_holidays(cfg)
-    coverage_reqs = generate_coverage_requirements(cfg, teams, holidays)
-    t_prep = time.perf_counter()
-
-    leave_requests, leave_events = generate_leave_requests_and_events(
-        cfg, rng_leave, employees, employee_skills, coverage_reqs, holidays
-    )
+    data = run_pipeline(cfg)
     t_end = time.perf_counter()
 
-    prep_duration = t_prep - t0
-    leave_duration = t_end - t_prep
+    teams = data["teams"]
+    skills = data["skills"]
+    employees = data["employees"]
+    employee_skills = data["employee_skills"]
+    holidays = data["holidays"]
+    coverage_reqs = data["coverage_requirements"]
+    leave_requests = data["leave_requests"]
+    leave_events = data["leave_events"]
+
     total_duration = t_end - t0
 
     req_df = pd.DataFrame([r.to_dict() for r in leave_requests])
@@ -84,9 +78,7 @@ def run_and_report_b1(scale: str = "starter") -> None:
     req_df = req_df.merge(emp_df[["employee_id", "team_id"]], on="employee_id", how="left")
 
     print("\n--- RUNTIME BENCHMARK ---")
-    print(f"  * Upstream Dimensions Generation (Org, Holidays, Coverage): {prep_duration:.4f} s")
-    print(f"  * Leave Requests & Events Generation (Stage B1):           {leave_duration:.4f} s")
-    print(f"  * Total End-to-End Execution Time:                         {total_duration:.4f} s")
+    print(f"  * Pipeline Execution Time:                                 {total_duration:.4f} s")
     print(f"  * Generated Leave Requests:                                {len(req_df):,} rows")
     print(f"  * Generated Leave Request Events:                          {len(evt_df):,} rows")
 

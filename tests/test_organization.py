@@ -1,30 +1,8 @@
 """Tests for organization generation: teams, skills, employees, and employee skills."""
 
 from datetime import date
-import numpy as np
 import pytest
-
-from workforce_generator.config import load_config
-from workforce_generator.generators.organization import generate_organization
-
-
-@pytest.fixture
-def starter_data():
-    overrides = {
-        "seed": 20261022,
-        "workforce": {
-            "num_teams": 5,
-            "employees_per_team": 10,
-        },
-        "horizon": {
-            "start_date": "2026-01-01",
-            "end_date": "2026-01-14",
-        },
-    }
-    cfg = load_config(overrides=overrides)
-    rng = np.random.default_rng(cfg.seed)
-    teams, skills, employees, employee_skills = generate_organization(cfg, rng)
-    return cfg, teams, skills, employees, employee_skills
+from workforce_generator.models.identifiers import RE_EMPLOYEE_ID
 
 
 def test_starter_organization_generation(starter_data):

@@ -228,7 +228,14 @@ All parameters and thresholds are externalized in [`config/default.yaml`](file:/
 6. **The Specialized Skill Pinch (e.g., `SKL-ONCOLOGY`)**:
    - When a specialized skill has minimal staffing baseline (e.g. `TEAM-002` where only 2 non-manager staff hold `SKL-ONCOLOGY`) and a non-zero weekday minimum requirement exists ($\text{min} = 1 \implies \lceil 1 \times 1.25 \rceil = 2$ required buffer):
    - Neither oncology-certified employee can take planned weekday leave without triggering a coverage violation. These employees represent permanent critical operational constraints ("employees who can never get weekday leave") unless redundant staffing or cross-team float pools are deployed.
-7. **Approver Governance**:
+7. **Leave Coverage Buffer Calibration (`leave_coverage_buffer`)**:
+   - The buffer parameter was calibrated from `1.4` down to `1.25`:
+     - With `buffer = 1.4`: In the tight 50-person starter cohort (5 teams x 10 staff), standard shifts requiring 3 minimum staff produced a threshold of $\lceil 3 \times 1.4 \rceil = 5$ staff. Because teams have only 9 schedulable staff spread across 2-3 overlapping skills, this restricted approvals heavily, yielding an approval rate of **55.2%** (53 approved / 96 decided requests), which fell below the statutory 60–95% enterprise feasibility target.
+     - With `buffer = 1.25`: The threshold becomes $\lceil 3 \times 1.25 \rceil = 4$ staff, preserving operational safety margins while lifting starter cohort approvals to **60.4%** (58 approved / 96 decided requests).
+     - At full scale (2,000 staff, 100 teams), the approval rate remains robust and stable under both settings (**91.1%** at 1.4 vs. **91.2%** at 1.25), while preserving the realistic oncology coverage bottleneck.
+   - Therefore, `leave_coverage_buffer = 1.25` is adopted as the canonical default to ensure consistent 60–95% approval compliance across both starter and enterprise scale profiles.
+
+8. **Approver Governance**:
    - For non-manager staff, decisions are approved by the team's `MANAGER` (`actor_id != requester`) or `SYSTEM`.
    - For managers requesting administrative leave, decisions are authorized by `SYSTEM` or by a manager from another operational team (`actor_id != requester`), preventing self-authorization.
 

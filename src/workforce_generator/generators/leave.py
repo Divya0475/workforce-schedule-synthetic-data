@@ -242,9 +242,6 @@ def generate_leave_requests_and_events(
 
             cur_d += timedelta(days=1)
 
-        if total_hours <= 0.0:
-            total_hours = daily_hours
-
         candidate_requests.append({
             "seq": seq,
             "employee_id": emp.employee_id,
