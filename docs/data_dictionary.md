@@ -235,6 +235,7 @@ Represents an employee's scheduled commitment to work a shift slot.
 | `swap_request_id` | VARCHAR(24) | Optional | Valid `swap_request_id` or `NULL` | N/A | Non-unique | `SwapRequest(swap_request_id)` | `NULL` for original baseline rows; populated on swap replacement rows |
 | `replaces_assignment_id`| VARCHAR(24)| Optional| Valid `assignment_id` or `NULL` | N/A | Non-unique | `ShiftAssignment(assignment_id)` | `NULL` for baseline; points to superseded row for swap replacements |
 | `fulfills_skill_id` | VARCHAR(16) | Optional | Valid `skill_id` or `NULL` | N/A | Non-unique | `Skill(skill_id)` | Skill slot satisfied by assignment; `NULL` if filling general headcount buffer |
+| `is_holiday_premium`| BOOLEAN | Required | `TRUE`, `FALSE` | N/A | Non-unique | None | `TRUE` if shift_date is a statutory holiday |
 
 ---
 
@@ -362,6 +363,8 @@ $$\text{gap\_headcount} = \max\left(0, \; \text{required\_headcount} - \sum_{e \
 | `required_headcount`| INTEGER | Required | `>= 1` | Headcount | Non-unique | None | Demanded `min_headcount` from `CoverageRequirement` |
 | `scheduled_headcount`| INTEGER | Required | `>= 0` | Headcount | Non-unique | None | Actual active scheduled staff possessing `skill_id` |
 | `gap_headcount` | INTEGER | Required | `>= 0` | Deficit | Non-unique | None | `MAX(0, required_headcount - scheduled_headcount)` |
+| `target_shortfall`| INTEGER | Required | `>= 0` | Deficit | Non-unique | None | `MAX(0, target_headcount - scheduled_headcount)` |
+| `reason` | VARCHAR(255)| Required | Narrative text | N/A | Non-unique | None | Diagnostic explanation (e.g., 'Fully staffed', 'Skill pinch', 'Sick leave absence') |
 | `is_critical` | BOOLEAN | Required | `TRUE`, `FALSE` | N/A | Non-unique | None | `TRUE` if `gap_headcount > 0` |
 | `computed_at` | TIMESTAMP | Required | ISO 8601 UTC timestamp | UTC | Non-unique | None | Timestamp of analytical computation |
 

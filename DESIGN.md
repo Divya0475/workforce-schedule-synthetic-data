@@ -356,10 +356,14 @@ Derived tables provide high-performance query projections computed directly from
 - **Purpose**: Tracks operational staffing compliance by comparing required headcount against active scheduled headcount per team, date, shift, and skill.
 - **Relational Invariant**: Contains a direct foreign key `coverage_id` pointing to `CoverageRequirement(coverage_id)`. Does **not** maintain FK constraints from mutable `ShiftAssignment`.
 - **Derivation**:
-  $$\text{scheduled\_headcount} = \sum_{e \in \text{ActiveAssigned}(d, T, S)} \mathbb{I}(e \text{ holds skill } K)$$
+  $$\text{scheduled\_headcount} = \sum_{e \in \text{ActiveAssigned}(d, T, S)} \mathbb{I}(e \text{ holds skill } K \land \text{assignment fulfills } K)$$
   $$\text{gap\_headcount} = \max(0, \; \text{required\_headcount} - \text{scheduled\_headcount})$$
+  $$\text{target\_shortfall} = \max(0, \; \text{target\_headcount} - \text{scheduled\_headcount})$$
   $$\text{is\_critical} = (\text{gap\_headcount} > 0)$$
-- **Expected Baseline Result**: Exactly **0 critical gaps** (`is_critical = FALSE` across all 27,000 records).
+- **Diagnostic Reason (`reason`)**: Records explanatory narrative (`'Fully staffed'`, `'Unscheduled sick leave absence'`, `'Skill pinch: insufficient baseline qualified staff'`, `'Approved leave reduction'`, `'Target buffer omitted to prevent contractual overtime'`).
+- **Baseline Expectations**:
+  - The clean baseline guarantees **0 hard rule violations** (no double-booking, no leave overlaps, no rest violations, no >6 consecutive days, no >48h full-week caps).
+  - Unscheduled sick leaves and tight specialized constraints (such as the oncology pinch or tight starter cohorts) generate realistic, natural coverage gaps ($is\_critical = TRUE$) which are tracked and reconciled transparently.
 
 ### 6.2 `WeeklyHoursSummary`
 - **Purpose**: Audits weekly workload, regular hours, overtime hours, and compliance with the 48.0-hour statutory ceiling.
