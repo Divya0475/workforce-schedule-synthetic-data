@@ -57,7 +57,7 @@ This project delivers a **100% reproducible, zero-external-dependency synthetic 
    - Employees belong to a single primary operational team.
    - Roles include: `STAFF` (65%), `SENIOR` (20%), `LEAD` (10%), and `MANAGER` (5%).
    - **Exclusion from Scheduling**: Employees with `role == 'MANAGER'` are administrative team supervisors. They are **never scheduled for operational shifts and are strictly excluded from coverage counts**.
-   - **Manager Approval Invariant**: Any human approval or rejection in `LeaveRequestEvent` or `SwapRequest` must specify `actor_type = 'EMPLOYEE'` and be enacted by an employee whose `role == 'MANAGER'` and whose `team_id` matches the requester's `team_id`.
+   - **Manager Approval Invariant**: Any human approval or rejection in `LeaveRequestEvent` or `SwapRequestEvent` must specify `actor_type = 'EMPLOYEE'` and be enacted by an employee whose `role == 'MANAGER'` and whose `team_id` matches the requester's `team_id`; for swaps, the actor cannot be either participant. SYSTEM decisions use `actor_type = 'SYSTEM'` and `actor_id = NULL`.
    - **Automated Engine Decisions**: The system supports `actor_type = 'SYSTEM'` (with `actor_id = NULL`) when decisions are automatically evaluated by the scheduling and coverage engine.
 
 5. **Operational Roles of `HolidayCalendar`**:
@@ -158,10 +158,9 @@ For testing and development, the **Starter Profile** intentionally sizes capacit
    - At `target_headcount` (60.0 – 64.5 shifts), demand exceeds both standard supply ($41$) and the statutory 48h overtime ceiling ($54$).
    - This creates an ideal, realistic testbed: the baseline easily meets hard `min_headcount` floors, while soft `target_headcount` buffers and boundary transitions (mid-horizon hires/terminations) naturally produce **expected coverage gaps**, allowing complete verification of gap tracking.
 
-### 3.3 Expected Coverage Gaps in Clean Baseline (Production Scale)
+### 3.3 Expected Coverage Gaps in Clean Baseline
 > [!IMPORTANT]
-> **Production Scale Baseline Expected Coverage Gaps**: **EXACTLY ZERO (0)**.
-> At full scale (100 teams, 20 employees/team), reserve margins exceed $44\%$, ensuring 100% complete coverage satisfaction with 0 gaps in the clean baseline.
+> Coverage gaps are permitted when the brute-force audit establishes that no qualified employee can legally fill the minimum slot (for example, a skill pinch or labor/availability constraint). The scheduler must not leave a minimum slot open when a qualified, legally available employee remains. A coverage gap is a diagnostic shortfall, not by itself a hard-rule violation. Applied swaps must preserve the skill requirement and may not introduce a new minimum-coverage gap.
 
 ---
 
@@ -241,26 +240,27 @@ All parameters and thresholds are externalized in [`config/default.yaml`](file:/
 
 ### 4.4 Shift Swap Policy & Non-Destructive Mechanics
 1. Two employees $E_1$ (assigned to $A_1$) and $E_2$ (assigned to $A_2$) agree on a trade.
-2. A `SwapRequest` is created in state `REQUESTED`.
+2. Requests are drawn after baseline scheduling from two non-manager employees with `ACTIVE` assignments in the same team and ISO week. `requested_at` is before the earlier shift start. Each assignment participates in at most one generated request.
 3. **Validation Gates**:
    - **Same Team Invariant**: $E_1$ and $E_2$ must belong to the **same operational team** ($E_1.\text{team\_id} == E_2.\text{team\_id}$).
    - **Skill Match**: $E_2$ possesses certified active skills required by $A_1$; $E_1$ possesses certified active skills required by $A_2$.
-   - **Rest Period**: Neither employee incurs an 11-hour rest violation post-swap.
-   - **Weekly Cap**: Swapping does not push either employee above 48.0 weekly hours.
+   - Neither employee has approved leave on the received assignment date, has an overlapping shift, incurs an 11-hour rest violation, exceeds six consecutive work days, or exceeds the 48.0 paid-hour ISO-week cap after the exchange.
 4. **Approval & Application**:
-   - Approver must be a Manager of the requester's team (`manager_employee_id.role == 'MANAGER'`, `team_id == requester.team_id`) or `'SYSTEM'`.
+   - The lifecycle is `REQUESTED -> APPROVED | REJECTED -> APPLIED`; requests may remain `REQUESTED`. Rejections include a reason.
+   - Approval or rejection is authored by a same-team Manager other than the requester or target, or by `'SYSTEM'` (`actor_id = NULL`). Every transition has an append-only `SwapRequestEvent`, and `current_status` mirrors its latest event.
    - Upon `APPLIED`:
      - $A_1$ and $A_2$ have `assignment_status` updated to `'SWAPPED_OUT'` and `effective_to` closed to `applied_at`.
      - Old rows are **never deleted or reassigned**; their `employee_id` remains unchanged.
      - New replacement rows $A_{\text{new1}}$ (assigned to $E_2$) and $A_{\text{new2}}$ (assigned to $E_1$) are inserted with `assignment_status = 'ACTIVE'`, `effective_from = applied_at`, `effective_to = NULL`, linking to `swap_request_id` and `replaces_assignment_id`.
 
 ### 4.5 Attendance & Punch Simulation
-- **Active Assignment Linkage**: Attendance punches link **strictly and exclusively to `ACTIVE` `ShiftAssignment` records**. Superseded `SWAPPED_OUT` records never have punch activity.
+- **Active Assignment Linkage**: Events are generated only for `ACTIVE` assignments on or before the horizon end date and not on approved-leave dates. Superseded `SWAPPED_OUT` records never have attendance events.
+- **Punch Derivations**: Clock-in/out variance is computed against scheduled start/end. `worked_minutes` is elapsed time between the punches; exception flags and types are derived from those variances and configured thresholds, never sampled independently. A no-show is represented by one `NO_SHOW` event at scheduled start, with null variance and zero worked minutes (no synthetic clock-in/out pair).
 - **Exception Types**:
-  - `LATE`: Clock-in $> 10$ minutes after scheduled start.
-  - `EARLY_LEAVE`: Clock-out $> 15$ minutes before scheduled end.
-  - `NO_SHOW`: Scheduled active employee fails to clock in (unexcused absence).
-  - `OVERTIME`: Clock-out extension $> 15$ minutes past scheduled end.
+  - `LATE`: Clock-in exceeds the configured late threshold.
+  - `EARLY_LEAVE`: Clock-out is earlier than the configured early-leave threshold.
+  - `NO_SHOW`: Scheduled active employee does not clock in.
+  - `OVERTIME`: Clock-out exceeds the configured overtime threshold.
 
 ### 4.6 Skill Taxonomy, Distribution Rules & Rare Certifications
 1. **Core Operational Skills**:
@@ -339,11 +339,11 @@ flowchart TD
 ### Topological Execution Steps:
 1. **Step 1: Configuration & Static Dimensions (Level 0)**: Parse config (`seed: 20261022`), generate `ShiftTemplate`, `HolidayCalendar`, `Skill`, `Team` (100 teams).
 2. **Step 2: Workforce Roster & Skills Generation (Level 1)**: Generate 2,000 employees with roles (`STAFF`, `SENIOR`, `LEAD`, `MANAGER`) and FTE contracts; assign skills via `EmployeeSkill`; generate 27,000 `CoverageRequirement` slots.
-3. **Step 3: Baseline Schedule Synthesis (Level 2)**: Synthesize fair, conflict-free baseline schedule with 11h rest, 6-day limits, and 40h/48h caps. Emit initial `ShiftAssignment` records in `ACTIVE` status with `effective_from = horizon_start`, `effective_to = NULL`.
+3. **Step 3: Baseline Schedule Synthesis (Level 2)**: For each ISO week, first fill all minimum-headcount slots, prioritizing scarce skills; then fill toward target only for employees below contract hours. Overtime is available only in the minimum-fill pass. Enforce 11h rest and six-day limits.
 4. **Step 4: Leave Simulation & Coverage Evaluation (Level 3)**: Process 5,000 leave requests against counterfactual coverage. Approvals logged by team managers or `'SYSTEM'`. Sync `current_status`.
 5. **Step 5: Swap Simulation & Temporal History (Level 4)**: Process peer swaps. For applied swaps, close `effective_to` on original rows, set to `SWAPPED_OUT`, and insert new replacement rows with `assignment_status = 'ACTIVE'` and `effective_from = applied_at`.
 6. **Step 6: Attendance Punches & Exceptions (Level 5)**: Link timeclock punches **strictly to active assignments**. Flag `LATE`, `EARLY_LEAVE`, `NO_SHOW`, and `OVERTIME`.
-7. **Step 7: Derived Analytics Aggregation (Level 6)**: Compute derived `CoverageGap` (asserting 0 gaps) and `WeeklyHoursSummary` (auditing 48.0h caps).
+7. **Step 7: Derived Analytics Aggregation (Level 6)**: Rebuild `CoverageGap` and `WeeklyHoursSummary` from final `ACTIVE` assignments only. Compare the post-swap minimum gaps with baseline; skill-preserving swaps must not create one.
 8. **Step 8: Dual Dataset Emission & Anomaly Injection (Level 7)**: Export clean baseline dataset; run `anomalies.py` to produce dirty dataset and `ground_truth.csv`/`json`; run `report.py` for distribution analysis.
 
 ---
@@ -424,7 +424,7 @@ ANM-0005,SWAP_APPLIED_WITHOUT_APPROVAL,SwapRequest,SWP-2026-000088,current_statu
    - Confirms $\le 48.0$ active hours per ISO week.
    - Confirms $\ge 11.0$ hours rest between consecutive active shifts.
    - Confirms $\le 6$ consecutive working days.
-9. **Coverage Satisfaction**: Asserts active assignments satisfy coverage demand and verifies derived `CoverageGap` has 0 critical gaps in clean baseline.
+9. **Coverage Feasibility**: Independently audits each unfilled minimum slot. It is an invariant failure if any qualified, legally available employee could have filled it; genuine skill pinches and other proven constraints are counted and reported separately. Swaps must not create new minimum gaps.
 10. **Attendance vs. Active Schedule Alignment**: Confirms punches link exclusively to active assignments, exception types match rules, and no punches exist during approved leaves.
 
 ---
@@ -487,9 +487,9 @@ workforce-schedule-synthetic-data/
 │       │   ├── coverage.py          # Daily CoverageRequirement demand matrix (27,000 slots)
 │       │   ├── scheduler.py         # Baseline schedule synthesizer (11h rest, 6-day max, 48h cap, temporal fields)
 │       │   ├── leave.py             # Generates LeaveRequests and LeaveRequestEvents (evaluates coverage & manager rules)
-│       │   ├── swap.py              # Generates SwapRequests, checks eligibility, non-destructive row insertion
+│       │   ├── swaps.py             # Generates audited SwapRequests, checks eligibility, preserves assignment history
 │       │   ├── attendance.py        # Simulates AttendanceEvents (links only to ACTIVE), clock in/out variance, exceptions
-│       │   └── analytics.py         # Computes derived tables: CoverageGap (0 gaps) and WeeklyHoursSummary
+│       │   └── analytics.py         # Computes post-swap CoverageGap and WeeklyHoursSummary from ACTIVE rows
 │       ├── anomalies.py             # Injects the 5 labelled edge cases into a dirty dataset copy
 │       ├── pipeline.py              # Top-level orchestrator executing steps in topological order
 │       ├── export.py                # Exports DataFrames to CSV, JSON, and ANSI SQL seed files
@@ -501,8 +501,7 @@ workforce-schedule-synthetic-data/
 │   ├── test_organization.py         # Tests employee and skill distributions, manager roles
 │   ├── test_scheduler.py            # Tests 11h rest, 6-day max, and 48h overtime constraint compliance
 │   ├── test_leave_approval.py       # Tests leave approval, coverage checks, and manager team matching
-│   ├── test_swap_validation.py      # Tests non-destructive swap insertion and temporal history preservation
-│   ├── test_attendance.py           # Tests attendance variance distributions and exception flagging (ACTIVE only)
+│   ├── test_stage_c.py              # Independently checks swap/attendance invariants, counterexamples, and determinism
 │   ├── test_anomalies.py            # Tests injection of all 5 synthetic anomalies
 │   └── test_pipeline_reproducibility.py # Tests deterministic output matching given the same random seed
 ├── run_generator.py                 # CLI executable script to run generation and export datasets
@@ -521,9 +520,9 @@ workforce-schedule-synthetic-data/
 | `src/workforce_generator/generators/coverage.py` | Generate daily staffing demand matrices across horizon (27,000 shift slots). | Horizon dates, shift templates, teams, skills | `List[CoverageRequirement]` |
 | `src/workforce_generator/generators/scheduler.py` | Assign employees to shift slots while enforcing rest, 6-day, and 48h rules. | Employees, skills, coverage requirements | `List[ShiftAssignment]` |
 | `src/workforce_generator/generators/leave.py` | Sample 5,000 leave requests, evaluate counterfactual coverage, log manager/SYSTEM audit events. | Assignments, coverage requirements, employees | `List[LeaveRequest]`, `List[LeaveRequestEvent]` |
-| `src/workforce_generator/generators/swap.py` | Generate shift trades, verify skills & rest invariants, insert replacement active rows with temporal bounds. | Assignments, employee skills, employees | `List[SwapRequest]`, `List[SwapRequestEvent]`, updated `ShiftAssignment` |
+| `src/workforce_generator/generators/swaps.py` | Generate shift trades, verify eligibility, log lifecycle events, and insert replacement rows with temporal bounds. | Assignments, employee skills, employees | `List[SwapRequest]`, `List[SwapRequestEvent]`, updated `ShiftAssignment` |
 | `src/workforce_generator/generators/attendance.py` | Sample real-time clock-in/out timestamps linking strictly to active assignments, flag exceptions. | Finalized active assignments, variance configs | `List[AttendanceEvent]` |
-| `src/workforce_generator/generators/analytics.py` | Compute derived `CoverageGap` (asserting 0 gaps) and `WeeklyHoursSummary` roll-up tables. | `CoverageRequirement`, `ShiftAssignment`, `Employee` | `List[CoverageGap]`, `List[WeeklyHoursSummary]` |
+| `src/workforce_generator/generators/analytics.py` | Compute post-swap `CoverageGap` and `WeeklyHoursSummary` roll-ups from `ACTIVE` assignments. | `CoverageRequirement`, `ShiftAssignment`, `Employee` | `List[CoverageGap]`, `List[WeeklyHoursSummary]` |
 | `src/workforce_generator/anomalies.py` | Inject the 5 labelled edge cases into a dirty copy of the dataset; emit ground truth. | Clean DataFrames | Dirty DataFrames, `ground_truth.csv`, `ground_truth.json` |
 | `src/workforce_generator/pipeline.py` | Orchestrate end-to-end execution flow in topological sequence. | `GeneratorConfig` | Clean & Dirty DataFrames, Ground Truth |
 | `src/workforce_generator/export.py` | Serialize DataFrames to CSV, JSON, and ANSI SQL seed files. | DataFrames, output directory | Files on disk |
@@ -541,8 +540,8 @@ The system guarantees mathematical correctness, relational integrity, and diagno
      ```bash
      python validate.py --data-dir output/clean
      ```
-   - **Result**: The validator reports **exactly zero (0) violations** across all 10 integrity categories and exits with code `0`.
-   - All PK/FK checks pass, all working hours adhere to statutory caps ($\le 48.0$ hours/week, $\ge 11.0$ hours rest, $\le 6$ consecutive days), all coverage requirements are satisfied, derived `CoverageGap` has 0 critical gaps, and all `current_status` values match the latest event logs.
+   - **Result**: The validator reports **exactly zero (0) hard-rule violations** across all integrity categories and exits with code `0`.
+   - All PK/FK checks pass, all working hours adhere to statutory caps ($\le 48.0$ hours/week, $\ge 11.0$ hours rest, $\le 6$ consecutive days), every unfilled minimum slot has a brute-force finding explaining why it could not be filled, and all request statuses match their latest event logs. Diagnostic minimum coverage gaps may remain where the audit finds a genuine skill pinch or other binding constraint.
 
 2. **Dirty Dataset Acceptance & Anomaly Reconciliation**:
    - When `validate.py` executes against the dirty dataset:

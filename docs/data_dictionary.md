@@ -58,7 +58,7 @@ In an enterprise operation scaling to **100 teams** running concurrent shifts ev
 - As a **deliberate architectural extension**, the format incorporates the team identifier: `SHIFT-YYYY-MM-DD-TEAM{team_id:03d}-{template_code}` (e.g., `SHIFT-2026-01-01-TEAM001-A`).
 - This satisfies the brief's naming pattern while guaranteeing mathematical uniqueness across all $100 \times 90 \times 3 = 27,000$ shift slots.
 
-- **Timezone**: All timestamps are formatted in ISO 8601 UTC (`YYYY-MM-DDTHH:MM:SSZ`).
+- **Timezone**: Timestamps are represented as naive UTC datetimes serialized in ISO 8601 form with a trailing `Z` (`YYYY-MM-DDTHH:MM:SSZ`). The trailing `Z` is a UTC marker, not a local-time conversion.
 - **Dates**: Formatted as ISO 8601 calendar date (`YYYY-MM-DD`).
 - **Times**: Formatted as 24-hour military time (`HH:MM:SS`).
 
@@ -285,11 +285,11 @@ Immutable audit event store tracking the complete lifecycle history of every lea
 Manages shift exchange proposals between two employees.
 
 **Mandatory Swap Rules**:
-1. **Same Team**: Requestor and target must belong to the **same operational team** (`requestor.team_id == target.team_id`).
-2. **Valid Skills**: Both parties must hold certified active skills required by the shift they are receiving.
-3. **Rest & Overtime Compliance**: The trade must not cause an 11-hour rest violation or push either employee $> 48.0$ weekly hours.
-4. **Manager Approval**: Must be approved by a Manager of the team (`manager_employee_id.role == 'MANAGER'`).
-5. **Status Sync**: `current_status` **must equal** the `to_status` of the latest `SwapRequestEvent`.
+1. Requests pair two non-manager employees with `ACTIVE` assignments in the same team and ISO week.
+2. Each employee must be qualified for the assignment they would receive, have no approved leave on that date, and remain within the 11-hour rest, six-consecutive-day, and 48-hour weekly limits after the exchange.
+3. `requested_at` precedes the earlier scheduled start. Approval or rejection is performed by a same-team manager other than either participant, or by `SYSTEM`; a request may remain `REQUESTED`.
+4. Only an approved request can become `APPLIED`. Rejections carry a reason. Applied swaps retain original assignment rows as `SWAPPED_OUT` and create linked replacement rows; employee IDs on original rows are never overwritten.
+5. **Status Sync**: `current_status` **must equal** the `to_status` of the latest `SwapRequestEvent`; event timestamps are non-decreasing per request.
 
 | Field Name | Type | Req/Opt | Allowed Values | Units | Uniqueness | Foreign Key | Validation Rule |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -299,7 +299,7 @@ Manages shift exchange proposals between two employees.
 | `target_employee_id` | VARCHAR(16) | Required | Valid `employee_id` | N/A | Non-unique | `Employee(employee_id)` | Partner (`team_id == requestor.team_id`) |
 | `target_assignment_id` | VARCHAR(24) | Required | Valid `assignment_id` | N/A | Non-unique | `ShiftAssignment(assignment_id)` | Partner's assignment |
 | `current_status` | VARCHAR(16) | Required | `REQUESTED`, `APPROVED`, `REJECTED`, `APPLIED` | N/A | Non-unique | None | **Must equal latest `SwapRequestEvent.to_status`** |
-| `manager_employee_id` | VARCHAR(16) | Optional | Valid `employee_id` or `NULL` | N/A | Non-unique | `Employee(employee_id)` | Team manager (`role == 'MANAGER'`) |
+| `manager_employee_id` | VARCHAR(16) | Optional | Valid `employee_id` or `NULL` | N/A | Non-unique | `Employee(employee_id)` | Same-team manager decision actor, or `NULL` for SYSTEM |
 | `requested_at` | TIMESTAMP | Required | ISO 8601 UTC timestamp | UTC | Non-unique | None | Must precede earliest shift start |
 | `decided_at` | TIMESTAMP | Optional | ISO 8601 UTC timestamp or `NULL` | UTC | Non-unique | None | `decided_at >= requested_at` |
 | `applied_at` | TIMESTAMP | Optional | ISO 8601 UTC timestamp or `NULL` | UTC | Non-unique | None | `applied_at >= decided_at` |
@@ -314,9 +314,9 @@ Immutable audit log tracking all transitions in a swap request lifecycle.
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | `swap_event_id` | VARCHAR(24) | Required | Pattern: `^SWP-EVT-\d{4}-\d{6}$` | N/A | **PK** | None | Zero-padded event ID |
 | `swap_request_id`| VARCHAR(24) | Required | Valid `swap_request_id` | N/A | Non-unique | `SwapRequest(swap_request_id)` | Foreign key to parent swap |
-| `from_status` | VARCHAR(16) | Optional | `NULL`, `REQUESTED`, `APPROVED` | N/A | Non-unique | None | `NULL` on initial creation |
+| `from_status` | VARCHAR(16) | Optional | `NULL`, `REQUESTED`, `APPROVED` | N/A | Non-unique | None | `NULL` on initial creation; valid transitions are `REQUESTED -> APPROVED/REJECTED -> APPLIED` |
 | `to_status` | VARCHAR(16) | Required | `REQUESTED`, `APPROVED`, `REJECTED`, `APPLIED` | N/A | Non-unique | None | Permitted lifecycle transition |
-| `event_timestamp`| TIMESTAMP | Required | ISO 8601 UTC timestamp | UTC | Non-unique | None | Chronologically increasing per swap |
+| `event_timestamp`| TIMESTAMP | Required | Naive UTC serialized with trailing `Z` | UTC | Non-unique | None | Non-decreasing chronologically per swap |
 | `actor_type` | VARCHAR(16) | Required | `EMPLOYEE`, `SYSTEM` | N/A | Non-unique | None | Originator type |
 | `actor_id` | VARCHAR(16) | Optional | Valid `employee_id` or `NULL` | N/A | Non-unique | `Employee(employee_id)` | Required for EMPLOYEE; `NULL` for SYSTEM |
 | `notes` | VARCHAR(255)| Optional | Transition comment | N/A | Non-unique | None | Audit notes |
@@ -327,19 +327,22 @@ Immutable audit log tracking all transitions in a swap request lifecycle.
 Captures real-time timeclock events (clock-in, clock-out) with variance analysis against scheduled shifts.
 
 **Important Relationship Constraint**:
-`AttendanceEvent.assignment_id` **links only to `ACTIVE` `ShiftAssignment` records** (never to `SWAPPED_OUT` assignments).
+Events are generated for `ACTIVE` assignments on or before the horizon end date, except assignments falling on an approved-leave date. No event is generated for `SWAPPED_OUT` assignments. A no-show is represented by one `NO_SHOW` event (not a fabricated clock-in/out pair).
 
 | Field Name | Type | Req/Opt | Allowed Values | Units | Uniqueness | Foreign Key | Validation Rule |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `attendance_event_id` | VARCHAR(64) | Required | Pattern: `^ATT-EMP-\d{6}-\d{8}T\d{6}Z$` | N/A | **PK** | None | Formatted: `ATT-<emp_id>-<compact_timestamp>` |
+| `attendance_event_id` | VARCHAR(64) | Required | Pattern: `^ATT-EMP-\d{6}-\d{8}T\d{6}Z$` | N/A | **PK** | None | Formatted: `ATT-<emp_id>-<compact_timestamp>`; unique and deterministic |
 | `employee_id` | VARCHAR(16) | Required | Valid `employee_id` | N/A | Non-unique | `Employee(employee_id)` | Employee recording attendance |
-| `assignment_id` | VARCHAR(24) | Optional | Valid `assignment_id` or `NULL` | N/A | Non-unique | `ShiftAssignment(assignment_id)` | **Must reference an `ACTIVE` assignment** |
-| `event_type` | VARCHAR(16) | Required | `CLOCK_IN`, `CLOCK_OUT` | N/A | Non-unique | None | Strict punch state domain |
-| `event_timestamp` | TIMESTAMP | Required | ISO 8601 UTC timestamp | UTC | Non-unique | None | Realized physical punch timestamp |
+| `assignment_id` | VARCHAR(24) | Required | Valid `assignment_id` | N/A | Non-unique | `ShiftAssignment(assignment_id)` | **Must reference an `ACTIVE` assignment** |
+| `event_type` | VARCHAR(16) | Required | `CLOCK_IN`, `CLOCK_OUT`, `NO_SHOW` | N/A | Non-unique | None | `NO_SHOW` is a single event and has no clock punches |
+| `event_timestamp` | TIMESTAMP | Required | Naive UTC serialized with trailing `Z` | UTC | Non-unique | None | Realized punch time; no-show is timestamped at scheduled start |
 | `source` | VARCHAR(16) | Required | `BIOMETRIC`, `BADGE_READER`, `MOBILE_APP`, `MANUAL_OVERRIDE` | N/A | Non-unique | None | Hardware/software terminal source |
-| `variance_minutes` | INTEGER | Required | `-120` to `+240` | Minutes | Non-unique | None | `event_timestamp - scheduled_time` |
-| `is_exception` | BOOLEAN | Required | `TRUE`, `FALSE` | N/A | Non-unique | None | `TRUE` if `abs(variance_minutes) > threshold` |
-| `exception_type` | VARCHAR(32) | Optional | `NO_SHOW`, `LATE`, `EARLY_LEAVE`, `OVERTIME`, `NULL` | N/A | Non-unique | None | Populated if `is_exception == TRUE` |
+| `variance_minutes` | INTEGER | Optional | Configured clock-in or clock-out range, or `NULL` | Minutes | Non-unique | None | Derived as event time minus scheduled start/end; `NULL` for no-show |
+| `worked_minutes` | INTEGER | Optional | `>= 0` or `NULL` | Minutes | Non-unique | None | Derived from clock-out minus clock-in; `0` for no-show and `NULL` on CLOCK_IN |
+| `is_exception` | BOOLEAN | Required | `TRUE`, `FALSE` | N/A | Non-unique | None | Derived from event type and threshold-based exception type |
+| `exception_type` | VARCHAR(32) | Optional | `NO_SHOW`, `LATE`, `EARLY_LEAVE`, `OVERTIME`, `NULL` | N/A | Non-unique | None | Derived from the punch variance; no-show is always an exception |
+
+Clock-in variance is measured against scheduled start; clock-out variance is measured against scheduled end. `LATE`, `EARLY_LEAVE`, and `OVERTIME` use the configured exception thresholds. `worked_minutes` is the elapsed clock-in-to-clock-out duration in minutes, not an independently sampled value.
 
 ---
 
@@ -366,7 +369,10 @@ $$\text{gap\_headcount} = \max\left(0, \; \text{required\_headcount} - \sum_{e \
 | `target_shortfall`| INTEGER | Required | `>= 0` | Deficit | Non-unique | None | `MAX(0, target_headcount - scheduled_headcount)` |
 | `reason` | VARCHAR(255)| Required | Narrative text | N/A | Non-unique | None | Diagnostic explanation (e.g., 'Fully staffed', 'Skill pinch', 'Sick leave absence') |
 | `is_critical` | BOOLEAN | Required | `TRUE`, `FALSE` | N/A | Non-unique | None | `TRUE` if `gap_headcount > 0` |
+| `has_gap` | BOOLEAN | Required | `TRUE`, `FALSE` | N/A | Non-unique | None | `TRUE` if `gap_headcount > 0`; retained as a query-friendly gap flag |
 | `computed_at` | TIMESTAMP | Required | ISO 8601 UTC timestamp | UTC | Non-unique | None | Timestamp of analytical computation |
+
+The `reason` is derived from the exhaustive availability audit of qualified staff (including skill pinch, hire/termination dates, approved leave, an assignment on the same shift/day, rest, consecutive-day, and weekly-hour constraints); it is not sampled independently. Coverage gaps can remain when no qualified employee can legally fill the minimum slot. After swaps, all counts are recomputed from `ACTIVE` assignments only.
 
 ---
 
@@ -438,10 +444,8 @@ The ground truth dataset is stored in **`ground_truth.csv`** and **`ground_truth
    $$\text{Total ACTIVE Hours} \le 48.0 \quad \text{per full ISO calendar week (where } is\_partial\_week == \text{FALSE)}.$$
    Enforced via `WeeklyHoursSummary.exceeds_overtime_cap == FALSE`. Overnight shifts count toward the week of their `shift_date`.
 
-4. **Coverage Integrity**:
-   For any $(d, T, S, K)$ representing date $d$, team $T$, shift template $S$, and skill $K$:
-   $$\sum_{e \in \text{ActiveAssigned}(d, T, S)} \mathbb{I}(e \text{ holds skill } K) \ge \text{CoverageRequirement.min\_headcount}(d, T, S, K)$$
-   Managers are excluded from `ActiveAssigned`. Enforced via `CoverageGap.is_critical == FALSE` across all slots in the clean baseline.
+4. **Coverage Feasibility**:
+   Managers are excluded from coverage counts, and derived coverage is rebuilt from `ACTIVE` assignments only. Every unfilled minimum slot must have a brute-force finding establishing that no qualified employee was legally available at fill time; a free qualified employee is an invariant failure. Genuine skill pinches and other proven constraints can leave diagnostic minimum gaps. Applied skill-preserving swaps must not create new minimum gaps.
 
 5. **Lifecycle Status Synchronization Invariant**:
    - For every `LeaveRequest` record:
@@ -450,7 +454,7 @@ The ground truth dataset is stored in **`ground_truth.csv`** and **`ground_truth
      $$\text{SwapRequest.current\_status} == \text{Latest}(\text{SwapRequestEvent.to\_status})$$
 
 6. **Manager Authorization & System Actor Rules**:
-   - When `actor_type == 'EMPLOYEE'`: `actor_id` must reference an Employee where `role == 'MANAGER'` and `team_id == requester.team_id`.
+   - On swap decisions, when `actor_type == 'EMPLOYEE'`: `actor_id` must reference a non-participant Employee where `role == 'MANAGER'` and `team_id == requester.team_id`.
    - When `actor_type == 'SYSTEM'`: `actor_id` is `NULL`.
 
 7. **ShiftAssignment Non-Destructive Versioning**:
@@ -460,11 +464,10 @@ The ground truth dataset is stored in **`ground_truth.csv`** and **`ground_truth
      - Replacement rows have `assignment_status` $\leftarrow$ `'ACTIVE'`, `effective_from` $\leftarrow \text{applied\_at}$, `effective_to` $\leftarrow \text{NULL}$, linking to `swap_request_id` and `replaces_assignment_id`.
 
 8. **Swap Eligibility Invariants**:
-   - Both employees must belong to the **same operational team** (`requestor.team_id == target.team_id`).
-   - Both employees must possess certified active skills required by the received shifts.
-   - Both post-swap schedules must satisfy 11h rest and 48h weekly overtime limits.
-
+   - Requestor and target are non-managers with active assignments in the same operational team and ISO week; the request is timestamped before the earlier shift.
+   - Both employees must possess valid certifications for the received shifts, have no approved leave on those dates, and satisfy overlap, 11h rest, six-consecutive-day, and 48h weekly paid-hour constraints after the swap.
+   - Only `APPROVED` requests may transition to `APPLIED`. The request status matches the latest event; event times are non-decreasing. Decisions are made by an eligible same-team manager other than either participant, or SYSTEM.
 9. **Attendance vs. Active Schedule Alignment**:
-   - Every `AttendanceEvent` with a non-null `assignment_id` must reference an `ACTIVE` `ShiftAssignment`.
-   - Exception types must strictly conform to `NO_SHOW`, `LATE`, `EARLY_LEAVE`, and `OVERTIME`.
-   - Punches must not exist for shift assignments where the employee had an `APPROVED` leave request covering that date.
+   - Attendance is generated only for `ACTIVE` assignments on or before the horizon end date and not on approved-leave dates; no events may reference `SWAPPED_OUT` rows.
+   - A regular shift has `CLOCK_IN` and `CLOCK_OUT`; a no-show has a single `NO_SHOW` event at scheduled start, null variance, and zero worked minutes.
+   - Clock variances are recomputed from event and schedule timestamps; worked minutes are recomputed from the punch interval. `is_exception` and `exception_type` must reconcile with those raw values and the configured thresholds.
