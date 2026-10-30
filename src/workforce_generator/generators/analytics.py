@@ -24,7 +24,7 @@ from workforce_generator.models.identifiers import (
     format_coverage_gap_id,
     format_weekly_hours_summary_id,
 )
-from workforce_generator.rules import parse_iso_utc
+from workforce_generator.rules import get_shift_datetimes, parse_iso_utc
 
 
 def compute_coverage_gaps(
@@ -37,25 +37,46 @@ def compute_coverage_gaps(
 ) -> List[CoverageGap]:
     """Compute CoverageGap analytical projection comparing requirements against active assignments.
 
-    Args:
-        cfg: Generator configuration.
-        coverage_reqs: List of CoverageRequirement records.
-        assignments: List of ShiftAssignment records.
-        employees: List of Employee records.
-        employee_skills: List of EmployeeSkill records.
-        leave_requests: List of LeaveRequest records.
-
-    Returns:
-        List of CoverageGap dataclass instances.
+    For every CoverageGap with gap_headcount > 0, performs an exhaustive unavailability audit
+    across all qualified employees of that team to identify the primary failure reason:
+    - Not yet hired or already terminated
+    - Approved leave (statutory sick or planned)
+    - Already assigned to this shift slot
+    - Rest period violation (< 11h from another scheduled shift)
+    - Rolling 6-day consecutive working limit reached
+    - Overtime ceiling exceeded (> 48h weekly paid hours)
     """
     now_ts = f"{cfg.horizon.start_date.isoformat()}T00:00:00Z"
+    paid_hours_per_shift = cfg.labor_constraints.paid_hours_per_shift
+    min_rest_hours = cfg.labor_constraints.min_rest_hours_between_shifts
+    max_consecutive_days = cfg.labor_constraints.max_consecutive_working_days
+    max_weekly_hours = cfg.labor_constraints.overtime_cap_weekly_hours
+
+    shift_objs_map = {s.id: s for s in cfg.shifts}
 
     # Index active assignments by (shift_date, team_id, shift_template_id, fulfills_skill_id) -> count
     scheduled_by_slot: Dict[Tuple[date, str, str, str], int] = defaultdict(int)
+    # Index active assignments by (shift_date, team_id, shift_template_id) -> Set of employee_ids
+    assigned_in_slot: Dict[Tuple[date, str, str], Set[str]] = defaultdict(set)
+    # Employee worked dates: employee_id -> Set[date]
+    emp_worked_dates: Dict[str, Set[date]] = defaultdict(set)
+    # Employee shift intervals: employee_id -> List[(start_dt, end_dt)]
+    emp_shift_intervals: Dict[str, List[Tuple[datetime, datetime]]] = defaultdict(list)
+    # Employee weekly paid hours: (employee_id, iso_year, iso_week) -> float
+    emp_week_hours: Dict[Tuple[str, int, int], float] = defaultdict(float)
+
     for a in assignments:
-        if a.assignment_status == "ACTIVE" and a.fulfills_skill_id:
-            key = (a.shift_date, a.team_id, a.shift_template_id, a.fulfills_skill_id)
-            scheduled_by_slot[key] += 1
+        if a.assignment_status == "ACTIVE":
+            if a.fulfills_skill_id:
+                key = (a.shift_date, a.team_id, a.shift_template_id, a.fulfills_skill_id)
+                scheduled_by_slot[key] += 1
+            assigned_in_slot[(a.shift_date, a.team_id, a.shift_template_id)].add(a.employee_id)
+            emp_worked_dates[a.employee_id].add(a.shift_date)
+            start_dt = parse_iso_utc(a.scheduled_start)
+            end_dt = parse_iso_utc(a.scheduled_end)
+            emp_shift_intervals[a.employee_id].append((start_dt, end_dt))
+            iso_year, iso_week, _ = a.shift_date.isocalendar()
+            emp_week_hours[(a.employee_id, iso_year, iso_week)] += paid_hours_per_shift
 
     # Pre-index approved leave dates per employee
     emp_leaves: Dict[str, Set[date]] = defaultdict(set)
@@ -69,10 +90,10 @@ def compute_coverage_gaps(
                     emp_sick_leaves[lve.employee_id].add(cur)
                 cur += timedelta(days=1)
 
-    # Pre-index employee skills
-    emp_skills_map: Dict[str, Set[str]] = defaultdict(set)
+    # Pre-index employee skills with valid dates: employee_id -> Dict[skill_id, List[(certified_date, expiry_date)]]
+    emp_certs: Dict[str, Dict[str, List[Tuple[date, Optional[date]]]]] = defaultdict(lambda: defaultdict(list))
     for es in employee_skills:
-        emp_skills_map[es.employee_id].add(es.skill_id)
+        emp_certs[es.employee_id][es.skill_id].append((es.certified_date, es.expiry_date))
 
     # Team staff map (non-managers)
     team_staff: Dict[str, List[Employee]] = defaultdict(list)
@@ -89,34 +110,109 @@ def compute_coverage_gaps(
         gap_headcount = max(0, req.min_headcount - scheduled_count)
         target_shortfall = max(0, req.target_headcount - scheduled_count)
         is_critical = gap_headcount > 0
+        has_gap = gap_headcount > 0
 
-        # Diagnose primary reason for shortfall / gap
+        # Diagnose reason
         if gap_headcount == 0 and target_shortfall == 0:
             reason = "Fully staffed"
+        elif gap_headcount == 0 and target_shortfall > 0:
+            reason = "Target buffer omitted to prevent contractual overtime"
         else:
-            # Diagnose reason
+            # gap_headcount > 0: Perform exhaustive unavailability audit on all qualified team staff
             staff_list = team_staff.get(req.team_id, [])
+            # Qualified holders of this skill on the team
             qualified_staff = [
                 s for s in staff_list
-                if req.skill_id in emp_skills_map[s.employee_id]
-                and s.hire_date <= req.effective_date
-                and (s.termination_date is None or s.termination_date >= req.effective_date)
+                if any(
+                    cd <= req.effective_date and (ed is None or ed >= req.effective_date)
+                    for cd, ed in emp_certs[s.employee_id].get(req.skill_id, [])
+                )
             ]
 
             if len(qualified_staff) < req.min_headcount:
                 reason = "Skill pinch: insufficient baseline qualified staff"
             else:
-                # Check if qualified staff are on leave
-                sick_count = sum(1 for s in qualified_staff if req.effective_date in emp_sick_leaves[s.employee_id])
-                planned_leave_count = sum(1 for s in qualified_staff if req.effective_date in emp_leaves[s.employee_id] and req.effective_date not in emp_sick_leaves[s.employee_id])
-                if sick_count > 0:
+                # Audit why qualified staff could not be scheduled
+                s_tmpl = shift_objs_map[req.shift_template_id]
+                s_start, s_end = get_shift_datetimes(req.effective_date, s_tmpl)
+                iso_y, iso_w, _ = req.effective_date.isocalendar()
+
+                unavailability_reasons = []
+                for s in qualified_staff:
+                    sid = s.employee_id
+                    if req.effective_date < s.hire_date:
+                        unavailability_reasons.append("hire_date")
+                    elif s.termination_date and req.effective_date > s.termination_date:
+                        unavailability_reasons.append("termination_date")
+                    elif req.effective_date in emp_sick_leaves[sid]:
+                        unavailability_reasons.append("sick_leave")
+                    elif req.effective_date in emp_leaves[sid]:
+                        unavailability_reasons.append("approved_leave")
+                    elif sid in assigned_in_slot.get((req.effective_date, req.team_id, req.shift_template_id), set()):
+                        unavailability_reasons.append("already_assigned_in_shift")
+                    elif req.effective_date in emp_worked_dates[sid]:
+                        unavailability_reasons.append("already_working_another_shift_today")
+                    else:
+                        # Check rest
+                        rest_violated = False
+                        for prev_s, prev_e in emp_shift_intervals[sid]:
+                            if s_start >= prev_e:
+                                rest_h = (s_start - prev_e).total_seconds() / 3600.0
+                                if rest_h < min_rest_hours - 1e-5:
+                                    rest_violated = True
+                                    break
+                            elif prev_s >= s_end:
+                                rest_h = (prev_s - s_end).total_seconds() / 3600.0
+                                if rest_h < min_rest_hours - 1e-5:
+                                    rest_violated = True
+                                    break
+                            else:
+                                rest_violated = True
+                                break
+                        if rest_violated:
+                            unavailability_reasons.append("rest_rule")
+                            continue
+
+                        # Check 6 consecutive days
+                        w_dates = emp_worked_dates[sid]
+                        cons_violated = False
+                        for start_offset in range(max_consecutive_days + 1):
+                            win_start = req.effective_date - timedelta(days=start_offset)
+                            cnt = 1
+                            for day_off in range(max_consecutive_days + 1):
+                                chk_d = win_start + timedelta(days=day_off)
+                                if chk_d != req.effective_date and chk_d in w_dates:
+                                    cnt += 1
+                            if cnt > max_consecutive_days:
+                                cons_violated = True
+                                break
+                        if cons_violated:
+                            unavailability_reasons.append("consecutive_days")
+                            continue
+
+                        # Check 48h cap
+                        cur_wh = emp_week_hours[(sid, iso_y, iso_w)]
+                        if cur_wh + paid_hours_per_shift > max_weekly_hours + 1e-5:
+                            unavailability_reasons.append("overtime_cap")
+                            continue
+
+                        unavailability_reasons.append("scheduling_contention")
+
+                # Synthesize dominant reason
+                if "sick_leave" in unavailability_reasons:
                     reason = "Unscheduled sick leave absence"
-                elif planned_leave_count > 0:
-                    reason = "Approved leave reduction"
-                elif target_shortfall > 0 and gap_headcount == 0:
-                    reason = "Target buffer omitted to prevent contractual overtime"
+                elif "approved_leave" in unavailability_reasons:
+                    reason = "Approved leave absence"
+                elif "already_assigned_in_shift" in unavailability_reasons or "already_working_another_shift_today" in unavailability_reasons:
+                    reason = "Single shift per day constraint"
+                elif "rest_rule" in unavailability_reasons:
+                    reason = "Mandatory 11h rest rule"
+                elif "consecutive_days" in unavailability_reasons:
+                    reason = "6-day consecutive working limit"
+                elif "overtime_cap" in unavailability_reasons:
+                    reason = "48h weekly overtime ceiling"
                 else:
-                    reason = "Rest rule and working hour constraints"
+                    reason = "Working hour and rest constraints"
 
         gap_seq += 1
         gap_id = format_coverage_gap_id(req.effective_date.year, gap_seq)
@@ -135,6 +231,7 @@ def compute_coverage_gaps(
                 target_shortfall=target_shortfall,
                 reason=reason,
                 is_critical=is_critical,
+                has_gap=has_gap,
                 computed_at=now_ts,
             )
         )
@@ -158,8 +255,6 @@ def compute_weekly_hours_summaries(
     max_ot_cap = cfg.labor_constraints.overtime_cap_weekly_hours
     now_ts = f"{horizon_start.isoformat()}T00:00:00Z"
 
-    # Identify all (iso_year, iso_week) within the horizon
-    # An ISO week is partial if Monday < horizon_start or Sunday > horizon_end
     all_iso_weeks: Set[Tuple[int, int]] = set()
     cur = horizon_start
     while cur <= horizon_end:
@@ -173,7 +268,6 @@ def compute_weekly_hours_summaries(
         is_partial = (mon < horizon_start or sun > horizon_end)
         partial_weeks_map[(y, w)] = is_partial
 
-    # Aggregate active assignment paid hours by (employee_id, iso_year, iso_week)
     emp_sched_hours: Dict[Tuple[str, int, int], float] = defaultdict(float)
     for a in assignments:
         if a.assignment_status == "ACTIVE":
