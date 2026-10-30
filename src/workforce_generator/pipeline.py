@@ -59,9 +59,10 @@ def run_pipeline(cfg: GeneratorConfig | None = None, overrides: dict | None = No
     # 2: Shift scheduler
     # 3: Swap requests and lifecycle events
     # 4: Attendance simulation
+    # 5: Reserved for anomaly injection by the dataset CLI
     seed_seq = np.random.SeedSequence(cfg.seed)
     rng_org, rng_leave, rng_sched, rng_swap, rng_attendance = [
-        np.random.default_rng(s) for s in seed_seq.spawn(5)
+        np.random.default_rng(s) for s in seed_seq.spawn(6)[:5]
     ]
 
     # Stage A: Organization (Teams, Skills, Employees, EmployeeSkills)
