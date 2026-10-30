@@ -65,18 +65,27 @@ def compute_coverage_gaps(
     # Employee weekly paid hours: (employee_id, iso_year, iso_week) -> float
     emp_week_hours: Dict[Tuple[str, int, int], float] = defaultdict(float)
 
-    for a in assignments:
-        if a.assignment_status == "ACTIVE":
-            if a.fulfills_skill_id:
-                key = (a.shift_date, a.team_id, a.shift_template_id, a.fulfills_skill_id)
-                scheduled_by_slot[key] += 1
-            assigned_in_slot[(a.shift_date, a.team_id, a.shift_template_id)].add(a.employee_id)
-            emp_worked_dates[a.employee_id].add(a.shift_date)
-            start_dt = parse_iso_utc(a.scheduled_start)
-            end_dt = parse_iso_utc(a.scheduled_end)
-            emp_shift_intervals[a.employee_id].append((start_dt, end_dt))
-            iso_year, iso_week, _ = a.shift_date.isocalendar()
-            emp_week_hours[(a.employee_id, iso_year, iso_week)] += paid_hours_per_shift
+    active_assignments = [
+        assignment for assignment in assignments if assignment.assignment_status == "ACTIVE"
+    ]
+    for assignment in active_assignments:
+        if assignment.fulfills_skill_id:
+            key = (
+                assignment.shift_date,
+                assignment.team_id,
+                assignment.shift_template_id,
+                assignment.fulfills_skill_id,
+            )
+            scheduled_by_slot[key] += 1
+        assigned_in_slot[
+            (assignment.shift_date, assignment.team_id, assignment.shift_template_id)
+        ].add(assignment.employee_id)
+        emp_worked_dates[assignment.employee_id].add(assignment.shift_date)
+        start_dt = parse_iso_utc(assignment.scheduled_start)
+        end_dt = parse_iso_utc(assignment.scheduled_end)
+        emp_shift_intervals[assignment.employee_id].append((start_dt, end_dt))
+        iso_year, iso_week, _ = assignment.shift_date.isocalendar()
+        emp_week_hours[(assignment.employee_id, iso_year, iso_week)] += paid_hours_per_shift
 
     # Pre-index approved leave dates per employee
     emp_leaves: Dict[str, Set[date]] = defaultdict(set)
@@ -260,10 +269,12 @@ def compute_weekly_hours_summaries(
         partial_weeks_map[(y, w)] = is_partial
 
     emp_sched_hours: Dict[Tuple[str, int, int], float] = defaultdict(float)
-    for a in assignments:
-        if a.assignment_status == "ACTIVE":
-            iso_year, iso_week, _ = a.shift_date.isocalendar()
-            emp_sched_hours[(a.employee_id, iso_year, iso_week)] += paid_hours_per_shift
+    active_assignments = [
+        assignment for assignment in assignments if assignment.assignment_status == "ACTIVE"
+    ]
+    for assignment in active_assignments:
+        iso_year, iso_week, _ = assignment.shift_date.isocalendar()
+        emp_sched_hours[(assignment.employee_id, iso_year, iso_week)] += paid_hours_per_shift
 
     summaries: List[WeeklyHoursSummary] = []
     sorted_weeks = sorted(all_iso_weeks)

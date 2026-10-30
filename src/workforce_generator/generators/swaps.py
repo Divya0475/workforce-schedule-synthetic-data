@@ -47,9 +47,11 @@ def generate_swap_requests_and_events(
             managers_by_team[employee.team_id].append(employee)
 
     active_by_team_week = defaultdict(list)
+    active_by_employee = defaultdict(list)
     for assignment in assignments:
         if assignment.assignment_status != cfg.swap_rules.swapped_out_status:
             if assignment.assignment_status == cfg.swap_rules.active_status:
+                active_by_employee[assignment.employee_id].append(assignment)
                 iso_year, iso_week, _ = assignment.shift_date.isocalendar()
                 active_by_team_week[(assignment.team_id, iso_year, iso_week)].append(assignment)
 
@@ -97,6 +99,7 @@ def generate_swap_requests_and_events(
                     max_consecutive_days=cfg.labor_constraints.max_consecutive_working_days,
                     max_weekly_hours=cfg.labor_constraints.overtime_cap_weekly_hours,
                     paid_hours_per_shift=cfg.labor_constraints.paid_hours_per_shift,
+                    assignments_by_employee=active_by_employee,
                 )
                 if not eligibility_errors:
                     selected = candidate
@@ -236,5 +239,11 @@ def generate_swap_requests_and_events(
                 )
                 assignment_index[new_assignment.assignment_id] = len(assignments)
                 assignments.append(new_assignment)
+                active_by_employee[old_assignment.employee_id] = [
+                    active
+                    for active in active_by_employee[old_assignment.employee_id]
+                    if active.assignment_id != old_assignment.assignment_id
+                ]
+                active_by_employee[receiver.employee_id].append(new_assignment)
 
     return swaps, events, assignments

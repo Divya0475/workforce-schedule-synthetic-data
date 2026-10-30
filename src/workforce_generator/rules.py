@@ -208,6 +208,7 @@ def check_swap_eligibility(
     max_consecutive_days: int = 6,
     max_weekly_hours: float = 48.0,
     paid_hours_per_shift: float = 7.5,
+    assignments_by_employee: Dict[str, List[ShiftAssignment]] | None = None,
 ) -> List[str]:
     """Validate a proposed reciprocal exchange against each employee's full schedule."""
     errors = []
@@ -287,17 +288,19 @@ def check_swap_eligibility(
         requestor_assignment.assignment_id,
         target_assignment.assignment_id,
     }
-    remaining = [
-        assignment
-        for assignment in assignments
-        if assignment.assignment_status == "ACTIVE"
-        and assignment.assignment_id not in exchanged_ids
-    ]
+    if assignments_by_employee is None:
+        remaining_by_employee = defaultdict(list)
+        for assignment in assignments:
+            if assignment.assignment_status == "ACTIVE":
+                remaining_by_employee[assignment.employee_id].append(assignment)
+    else:
+        remaining_by_employee = assignments_by_employee
     for employee in (requestor_employee, target_employee):
         employee_schedule = [
             assignment
-            for assignment in remaining
-            if assignment.employee_id == employee.employee_id
+            for assignment in remaining_by_employee.get(employee.employee_id, [])
+            if assignment.assignment_id not in exchanged_ids
+            and assignment.assignment_status == "ACTIVE"
         ]
         employee_schedule.extend(
             assignment
