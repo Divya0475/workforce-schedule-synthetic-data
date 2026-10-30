@@ -217,4 +217,52 @@ class LeaveRequestEvent:
         return asdict(self)
 
 
+@dataclass
+class SwapRequest:
+    swap_request_id: str
+    requestor_employee_id: str
+    requestor_assignment_id: str
+    target_employee_id: str
+    target_assignment_id: str
+    current_status: str
+    manager_employee_id: Optional[str]
+    requested_at: str
+    decided_at: Optional[str] = None
+    applied_at: Optional[str] = None
+    rejection_reason: Optional[str] = None
+
+    def to_dict(self) -> Dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass
+class SwapRequestEvent:
+    swap_event_id: str
+    swap_request_id: str
+    from_status: Optional[str]
+    to_status: str
+    event_timestamp: str
+    actor_type: str
+    actor_id: Optional[str] = None
+    notes: Optional[str] = None
+
+    def to_dict(self) -> Dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass
+class AttendanceEvent:
+    attendance_event_id: str
+    employee_id: str
+    assignment_id: str
+    event_type: str
+    event_timestamp: str
+    source: str
+    variance_minutes: Optional[int]
+    worked_minutes: Optional[int]
+    is_exception: bool
+    exception_type: Optional[str] = None
+
+    def to_dict(self) -> Dict[str, Any]:
+        return asdict(self)
 

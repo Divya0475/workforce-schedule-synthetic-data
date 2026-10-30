@@ -15,6 +15,7 @@ Evaluates hard scheduling constraints:
 from __future__ import annotations
 
 from collections import defaultdict
+from dataclasses import replace
 from datetime import date, datetime, timedelta
 from typing import Dict, List, Optional, Set, Tuple
 
@@ -22,9 +23,12 @@ from workforce_generator.models.entities import (
     Employee,
     EmployeeSkill,
     LeaveRequest,
+    SwapRequest,
+    SwapRequestEvent,
     ShiftAssignment,
     ShiftTemplate,
 )
+from workforce_generator.models.identifiers import format_attendance_event_id
 
 
 def get_shift_datetimes(
@@ -192,6 +196,438 @@ def check_certification_validity(
     return errors
 
 
+def check_swap_eligibility(
+    requestor_assignment: ShiftAssignment,
+    target_assignment: ShiftAssignment,
+    requestor_employee: Employee,
+    target_employee: Employee,
+    assignments: List[ShiftAssignment],
+    employee_skills: List[EmployeeSkill],
+    leave_requests: List[LeaveRequest],
+    min_rest_hours: float = 11.0,
+    max_consecutive_days: int = 6,
+    max_weekly_hours: float = 48.0,
+    paid_hours_per_shift: float = 7.5,
+) -> List[str]:
+    """Validate a proposed reciprocal exchange against each employee's full schedule."""
+    errors = []
+    if requestor_employee.employee_id == target_employee.employee_id:
+        errors.append("SWAP_SAME_EMPLOYEE: request participants must differ")
+    if requestor_employee.team_id != target_employee.team_id:
+        errors.append("SWAP_DIFFERENT_TEAM: participants must belong to the same team")
+    if requestor_employee.role == "MANAGER" or target_employee.role == "MANAGER":
+        errors.append("SWAP_MANAGER_PARTICIPANT: managers cannot participate")
+    if requestor_assignment.assignment_status != "ACTIVE" or target_assignment.assignment_status != "ACTIVE":
+        errors.append("SWAP_INACTIVE_ASSIGNMENT: both offered assignments must be ACTIVE")
+    if requestor_assignment.team_id != target_assignment.team_id:
+        errors.append("SWAP_DIFFERENT_TEAM_ASSIGNMENTS: assignments must belong to the same team")
+    if requestor_assignment.employee_id != requestor_employee.employee_id:
+        errors.append("SWAP_REQUESTOR_ASSIGNMENT_MISMATCH")
+    if target_assignment.employee_id != target_employee.employee_id:
+        errors.append("SWAP_TARGET_ASSIGNMENT_MISMATCH")
+    if requestor_assignment.shift_date.isocalendar()[:2] != target_assignment.shift_date.isocalendar()[:2]:
+        errors.append("SWAP_DIFFERENT_ISO_WEEK: assignments must be in the same ISO week")
+    if errors:
+        return errors
+
+    cert_map = defaultdict(list)
+    for employee_skill in employee_skills:
+        cert_map[(employee_skill.employee_id, employee_skill.skill_id)].append(
+            (employee_skill.certified_date, employee_skill.expiry_date)
+        )
+    approved_leave_dates = defaultdict(set)
+    for leave in leave_requests:
+        if leave.current_status == "APPROVED":
+            current_date = leave.start_date
+            while current_date <= leave.end_date:
+                approved_leave_dates[leave.employee_id].add(current_date)
+                current_date += timedelta(days=1)
+
+    incoming = (
+        (target_employee, requestor_assignment),
+        (requestor_employee, target_assignment),
+    )
+    incoming_assignments = []
+    for receiver, assignment in incoming:
+        if assignment.fulfills_skill_id:
+            is_qualified = any(
+                certified_date <= assignment.shift_date
+                and (expiry_date is None or expiry_date >= assignment.shift_date)
+                for certified_date, expiry_date in cert_map.get(
+                    (receiver.employee_id, assignment.fulfills_skill_id), []
+                )
+            )
+            if not is_qualified:
+                errors.append(
+                    f"SWAP_UNQUALIFIED_RECEIVER: {receiver.employee_id} lacks "
+                    f"{assignment.fulfills_skill_id} for {assignment.assignment_id}"
+                )
+        if assignment.shift_date in approved_leave_dates[receiver.employee_id]:
+            errors.append(
+                f"SWAP_APPROVED_LEAVE: {receiver.employee_id} has approved leave "
+                f"on {assignment.shift_date}"
+            )
+        if assignment.shift_date < receiver.hire_date or (
+            receiver.termination_date and assignment.shift_date > receiver.termination_date
+        ):
+            errors.append(
+                f"SWAP_EMPLOYEE_BOUNDS: {receiver.employee_id} is inactive on {assignment.shift_date}"
+            )
+        incoming_assignments.append(
+            replace(
+                assignment,
+                employee_id=receiver.employee_id,
+                assigned_role=receiver.role,
+            )
+        )
+    if errors:
+        return errors
+
+    exchanged_ids = {
+        requestor_assignment.assignment_id,
+        target_assignment.assignment_id,
+    }
+    remaining = [
+        assignment
+        for assignment in assignments
+        if assignment.assignment_status == "ACTIVE"
+        and assignment.assignment_id not in exchanged_ids
+    ]
+    for employee in (requestor_employee, target_employee):
+        employee_schedule = [
+            assignment
+            for assignment in remaining
+            if assignment.employee_id == employee.employee_id
+        ]
+        employee_schedule.extend(
+            assignment
+            for assignment in incoming_assignments
+            if assignment.employee_id == employee.employee_id
+        )
+        intervals = [
+            (
+                parse_iso_utc(assignment.scheduled_start),
+                parse_iso_utc(assignment.scheduled_end),
+                assignment,
+            )
+            for assignment in employee_schedule
+        ]
+        intervals.sort(key=lambda interval: (interval[0], interval[1]))
+        for previous, current in zip(intervals, intervals[1:]):
+            rest_hours = (current[0] - previous[1]).total_seconds() / 3600.0
+            if rest_hours < min_rest_hours - 1e-5:
+                errors.append(
+                    f"SWAP_REST_VIOLATION: {employee.employee_id} would have "
+                    f"{rest_hours:.1f}h rest between {previous[2].assignment_id} "
+                    f"and {current[2].assignment_id}"
+                )
+        worked_dates = {assignment.shift_date for assignment in employee_schedule}
+        if any(
+            sum(
+                1
+                for offset in range(max_consecutive_days + 1)
+                if window_start + timedelta(days=offset) in worked_dates
+            )
+            > max_consecutive_days
+            for window_start in worked_dates
+        ):
+            errors.append(
+                f"SWAP_CONSECUTIVE_DAYS: {employee.employee_id} would exceed "
+                f"{max_consecutive_days} consecutive working days"
+            )
+        hours_by_week = defaultdict(float)
+        for assignment in employee_schedule:
+            iso_year, iso_week, _ = assignment.shift_date.isocalendar()
+            hours_by_week[(iso_year, iso_week)] += paid_hours_per_shift
+        if any(hours > max_weekly_hours + 1e-5 for hours in hours_by_week.values()):
+            errors.append(
+                f"SWAP_OVERTIME_CAP: {employee.employee_id} would exceed "
+                f"{max_weekly_hours:g} paid hours in an ISO week"
+            )
+    return errors
+
+
+def check_swap_invariants(
+    swap_requests: List[SwapRequest],
+    swap_events: List[SwapRequestEvent],
+    assignments: List[ShiftAssignment],
+    employees: List[Employee],
+    employee_skills: List[EmployeeSkill],
+) -> List[str]:
+    """Check swap lifecycle, authorization, skill, and non-destructive history invariants."""
+    errors = []
+    employee_map = {employee.employee_id: employee for employee in employees}
+    assignment_map = {assignment.assignment_id: assignment for assignment in assignments}
+    events_by_request = defaultdict(list)
+    for event_index, event in enumerate(swap_events):
+        events_by_request[event.swap_request_id].append((event_index, event))
+    replacements_by_request = defaultdict(list)
+    for assignment in assignments:
+        if assignment.swap_request_id:
+            replacements_by_request[assignment.swap_request_id].append(assignment)
+
+    for request in swap_requests:
+        events = sorted(
+            events_by_request.get(request.swap_request_id, []),
+            key=lambda item: (parse_iso_utc(item[1].event_timestamp), item[0]),
+        )
+        if not events:
+            errors.append(f"SWAP_MISSING_EVENTS: {request.swap_request_id}")
+            continue
+        if events[0][1].from_status is not None or events[0][1].to_status != "REQUESTED":
+            errors.append(f"SWAP_INVALID_INITIAL_EVENT: {request.swap_request_id}")
+        previous_time = None
+        previous_status = None
+        for _, event in events:
+            event_time = parse_iso_utc(event.event_timestamp)
+            if previous_time is not None and event_time < previous_time:
+                errors.append(f"SWAP_TIMESTAMP_ORDER: {request.swap_request_id}")
+            if previous_status is not None and event.from_status != previous_status:
+                errors.append(f"SWAP_EVENT_CHAIN: {request.swap_request_id}")
+            if previous_status is not None and (
+                (previous_status == "REQUESTED" and event.to_status not in {"APPROVED", "REJECTED"})
+                or (previous_status == "APPROVED" and event.to_status != "APPLIED")
+                or previous_status in {"REJECTED", "APPLIED"}
+            ):
+                errors.append(f"SWAP_INVALID_TRANSITION: {request.swap_request_id}")
+            is_initial_request = event.to_status == "REQUESTED" and event.from_status is None
+            if is_initial_request:
+                if (
+                    event.actor_type != "EMPLOYEE"
+                    or event.actor_id != request.requestor_employee_id
+                ):
+                    errors.append(f"SWAP_INVALID_REQUESTOR_ACTOR: {request.swap_request_id}")
+            elif event.actor_type == "SYSTEM":
+                if event.actor_id is not None:
+                    errors.append(f"SWAP_SYSTEM_ACTOR_HAS_ID: {request.swap_request_id}")
+            elif event.actor_type == "EMPLOYEE":
+                actor = employee_map.get(event.actor_id)
+                if actor is None or actor.role != "MANAGER":
+                    errors.append(f"SWAP_INVALID_MANAGER_ACTOR: {request.swap_request_id}")
+                elif actor.employee_id in {
+                    request.requestor_employee_id,
+                    request.target_employee_id,
+                }:
+                    errors.append(f"SWAP_PARTICIPANT_APPROVER: {request.swap_request_id}")
+                elif actor.team_id != employee_map.get(
+                    request.requestor_employee_id, actor
+                ).team_id:
+                    errors.append(f"SWAP_WRONG_TEAM_APPROVER: {request.swap_request_id}")
+            else:
+                errors.append(f"SWAP_INVALID_ACTOR_TYPE: {request.swap_request_id}")
+            if event.to_status in {"APPROVED", "REJECTED"}:
+                if event.actor_type not in {"EMPLOYEE", "SYSTEM"}:
+                    errors.append(f"SWAP_UNAUTHORIZED_DECISION: {request.swap_request_id}")
+                if request.manager_employee_id != event.actor_id:
+                    errors.append(f"SWAP_DECISION_ACTOR_MISMATCH: {request.swap_request_id}")
+            previous_time = event_time
+            previous_status = event.to_status
+
+        latest_event = events[-1][1]
+        if request.current_status != latest_event.to_status:
+            errors.append(f"SWAP_STATUS_MISMATCH: {request.swap_request_id}")
+        if request.current_status == "REJECTED" and not request.rejection_reason:
+            errors.append(f"SWAP_REJECTION_WITHOUT_REASON: {request.swap_request_id}")
+
+        requestor = employee_map.get(request.requestor_employee_id)
+        target = employee_map.get(request.target_employee_id)
+        requestor_assignment = assignment_map.get(request.requestor_assignment_id)
+        target_assignment = assignment_map.get(request.target_assignment_id)
+        if any(
+            item is None
+            for item in (requestor, target, requestor_assignment, target_assignment)
+        ):
+            errors.append(f"SWAP_MISSING_REFERENCE: {request.swap_request_id}")
+            continue
+        if requestor.team_id != target.team_id:
+            errors.append(f"SWAP_DIFFERENT_TEAM: {request.swap_request_id}")
+        if requestor_assignment.shift_date.isocalendar()[:2] != target_assignment.shift_date.isocalendar()[:2]:
+            errors.append(f"SWAP_DIFFERENT_ISO_WEEK: {request.swap_request_id}")
+        earliest_start = min(
+            parse_iso_utc(requestor_assignment.scheduled_start),
+            parse_iso_utc(target_assignment.scheduled_start),
+        )
+        if parse_iso_utc(request.requested_at) >= earliest_start:
+            errors.append(f"SWAP_REQUEST_NOT_BEFORE_SHIFTS: {request.swap_request_id}")
+
+        applied_events = [event for _, event in events if event.to_status == "APPLIED"]
+        replacements = replacements_by_request.get(request.swap_request_id, [])
+        if request.current_status == "APPLIED":
+            if not any(event.to_status == "APPROVED" for _, event in events):
+                errors.append(f"SWAP_APPLIED_WITHOUT_APPROVAL: {request.swap_request_id}")
+            if len(applied_events) != 1 or len(replacements) != 2:
+                errors.append(f"SWAP_APPLIED_HISTORY_INCOMPLETE: {request.swap_request_id}")
+            if len(applied_events) == 1:
+                applied_at = applied_events[0].event_timestamp
+                if request.applied_at != applied_at:
+                    errors.append(f"SWAP_APPLIED_TIMESTAMP_MISMATCH: {request.swap_request_id}")
+                for old_assignment, expected_employee_id in (
+                    (requestor_assignment, request.requestor_employee_id),
+                    (target_assignment, request.target_employee_id),
+                ):
+                    if old_assignment.employee_id != expected_employee_id:
+                        errors.append(f"SWAP_IN_PLACE_OVERWRITE: {request.swap_request_id}")
+                    if (
+                        old_assignment.assignment_status != "SWAPPED_OUT"
+                        or old_assignment.effective_to != applied_at
+                    ):
+                        errors.append(f"SWAP_OLD_HISTORY_NOT_CLOSED: {request.swap_request_id}")
+                expected_receivers = {
+                    request.requestor_assignment_id: request.target_employee_id,
+                    request.target_assignment_id: request.requestor_employee_id,
+                }
+                found_replacements = {
+                    replacement.replaces_assignment_id: replacement
+                    for replacement in replacements
+                }
+                if set(found_replacements) != set(expected_receivers):
+                    errors.append(f"SWAP_REPLACEMENT_LINEAGE: {request.swap_request_id}")
+                for old_id, receiver_id in expected_receivers.items():
+                    replacement = found_replacements.get(old_id)
+                    if replacement is None:
+                        continue
+                    if (
+                        replacement.employee_id != receiver_id
+                        or replacement.assignment_status != "ACTIVE"
+                        or replacement.effective_from != applied_at
+                        or replacement.effective_to is not None
+                    ):
+                        errors.append(f"SWAP_REPLACEMENT_INVALID: {request.swap_request_id}")
+                    skill_id = replacement.fulfills_skill_id
+                    if skill_id and not any(
+                        skill.employee_id == receiver_id
+                        and skill.skill_id == skill_id
+                        and skill.certified_date <= replacement.shift_date
+                        and (skill.expiry_date is None or skill.expiry_date >= replacement.shift_date)
+                        for skill in employee_skills
+                    ):
+                        errors.append(f"SWAP_UNQUALIFIED_RECEIVER: {request.swap_request_id}")
+        elif replacements:
+            errors.append(f"SWAP_UNAPPLIED_HAS_REPLACEMENTS: {request.swap_request_id}")
+        if request.current_status in {"APPROVED", "REJECTED"}:
+            decision_events = [
+                event for _, event in events if event.to_status in {"APPROVED", "REJECTED"}
+            ]
+            if decision_events and request.decided_at != decision_events[-1].event_timestamp:
+                errors.append(f"SWAP_DECISION_TIMESTAMP_MISMATCH: {request.swap_request_id}")
+
+    return errors
+
+
+def check_attendance_invariants(
+    attendance_events,
+    assignments: List[ShiftAssignment],
+    leave_requests: List[LeaveRequest],
+    late_threshold_minutes: int = 10,
+    early_leave_threshold_minutes: int = 15,
+    overtime_threshold_minutes: int = 15,
+    horizon_end: date | None = None,
+) -> List[str]:
+    """Independently verify attendance references and event-derived fields."""
+    errors = []
+    assignment_map = {assignment.assignment_id: assignment for assignment in assignments}
+    approved_leave_dates = defaultdict(set)
+    for leave in leave_requests:
+        if leave.current_status == "APPROVED":
+            current_date = leave.start_date
+            while current_date <= leave.end_date:
+                approved_leave_dates[leave.employee_id].add(current_date)
+                current_date += timedelta(days=1)
+
+    expected_assignment_ids = {
+        assignment.assignment_id
+        for assignment in assignments
+        if assignment.assignment_status == "ACTIVE"
+        and (horizon_end is None or assignment.shift_date <= horizon_end)
+        and assignment.shift_date not in approved_leave_dates[assignment.employee_id]
+    }
+    events_by_assignment = defaultdict(list)
+    identifiers = set()
+    for event in attendance_events:
+        if event.attendance_event_id in identifiers:
+            errors.append(f"ATTENDANCE_DUPLICATE_ID: {event.attendance_event_id}")
+        identifiers.add(event.attendance_event_id)
+        assignment = assignment_map.get(event.assignment_id)
+        if assignment is None:
+            errors.append(f"ATTENDANCE_UNKNOWN_ASSIGNMENT: {event.assignment_id}")
+            continue
+        if assignment.assignment_status != "ACTIVE":
+            errors.append(f"ATTENDANCE_ON_SWAPPED_OUT: {event.assignment_id}")
+        if event.employee_id != assignment.employee_id:
+            errors.append(f"ATTENDANCE_EMPLOYEE_MISMATCH: {event.assignment_id}")
+        if assignment.shift_date in approved_leave_dates[event.employee_id]:
+            errors.append(f"ATTENDANCE_DURING_APPROVED_LEAVE: {event.assignment_id}")
+        if event.event_type not in {"CLOCK_IN", "CLOCK_OUT", "NO_SHOW"}:
+            errors.append(f"ATTENDANCE_INVALID_EVENT_TYPE: {event.event_type}")
+        if format_attendance_event_id(
+            event.employee_id, parse_iso_utc(event.event_timestamp)
+        ) != event.attendance_event_id:
+            errors.append(f"ATTENDANCE_ID_TIMESTAMP_MISMATCH: {event.attendance_event_id}")
+        events_by_assignment[event.assignment_id].append(event)
+
+    missing_punches = expected_assignment_ids - set(events_by_assignment)
+    for assignment_id in sorted(missing_punches):
+        errors.append(f"ATTENDANCE_MISSING_EVENTS: {assignment_id}")
+
+    for assignment_id, events in events_by_assignment.items():
+        assignment = assignment_map.get(assignment_id)
+        if assignment is None:
+            continue
+        no_shows = [event for event in events if event.event_type == "NO_SHOW"]
+        clock_ins = [event for event in events if event.event_type == "CLOCK_IN"]
+        clock_outs = [event for event in events if event.event_type == "CLOCK_OUT"]
+        if no_shows:
+            if len(no_shows) != 1 or clock_ins or clock_outs:
+                errors.append(f"ATTENDANCE_NO_SHOW_PUNCH_CONFLICT: {assignment_id}")
+            event = no_shows[0]
+            if (
+                event.variance_minutes is not None
+                or event.worked_minutes != 0
+                or not event.is_exception
+                or event.exception_type != "NO_SHOW"
+                or parse_iso_utc(event.event_timestamp)
+                != parse_iso_utc(assignment.scheduled_start)
+            ):
+                errors.append(f"ATTENDANCE_NO_SHOW_DERIVATION: {assignment_id}")
+            continue
+        if len(clock_ins) != 1 or len(clock_outs) != 1:
+            errors.append(f"ATTENDANCE_PUNCH_PAIR: {assignment_id}")
+            continue
+        clock_in, clock_out = clock_ins[0], clock_outs[0]
+        scheduled_start = parse_iso_utc(assignment.scheduled_start)
+        scheduled_end = parse_iso_utc(assignment.scheduled_end)
+        clock_in_time = parse_iso_utc(clock_in.event_timestamp)
+        clock_out_time = parse_iso_utc(clock_out.event_timestamp)
+        expected_in_variance = int(round((clock_in_time - scheduled_start).total_seconds() / 60))
+        expected_out_variance = int(round((clock_out_time - scheduled_end).total_seconds() / 60))
+        expected_worked = int(round((clock_out_time - clock_in_time).total_seconds() / 60))
+        if clock_in.variance_minutes != expected_in_variance or clock_in.worked_minutes is not None:
+            errors.append(f"ATTENDANCE_CLOCK_IN_DERIVATION: {assignment_id}")
+        if clock_out.variance_minutes != expected_out_variance or clock_out.worked_minutes != expected_worked:
+            errors.append(f"ATTENDANCE_CLOCK_OUT_DERIVATION: {assignment_id}")
+        expected_in_exception = expected_in_variance > late_threshold_minutes
+        if (
+            clock_in.is_exception != expected_in_exception
+            or clock_in.exception_type != ("LATE" if expected_in_exception else None)
+        ):
+            errors.append(f"ATTENDANCE_LATE_DERIVATION: {assignment_id}")
+        if expected_out_variance < -early_leave_threshold_minutes:
+            expected_out_exception = True
+            expected_out_type = "EARLY_LEAVE"
+        elif expected_out_variance > overtime_threshold_minutes:
+            expected_out_exception = True
+            expected_out_type = "OVERTIME"
+        else:
+            expected_out_exception = False
+            expected_out_type = None
+        if (
+            clock_out.is_exception != expected_out_exception
+            or clock_out.exception_type != expected_out_type
+        ):
+            errors.append(f"ATTENDANCE_CLOCK_OUT_EXCEPTION: {assignment_id}")
+    return errors
+
+
 def check_rest_period(
     assignments: List[ShiftAssignment],
     min_rest_hours: float = 11.0,
@@ -322,4 +758,3 @@ def validate_all_schedule_rules(
     violations.extend(check_consecutive_working_days(assignments))
     violations.extend(check_overtime_cap(assignments, horizon_start, horizon_end))
     return violations
-
