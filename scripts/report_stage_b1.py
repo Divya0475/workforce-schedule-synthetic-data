@@ -57,16 +57,17 @@ def run_and_report_b1(scale: str = "starter") -> None:
     print(f"STAGE B1 AUDIT REPORT: {profile_name}")
     print("=" * 100)
 
-    rng = np.random.default_rng(cfg.seed)
+    seed_seq = np.random.SeedSequence(cfg.seed)
+    rng_org, rng_leave = [np.random.default_rng(s) for s in seed_seq.spawn(2)]
 
     t0 = time.perf_counter()
-    teams, skills, employees, employee_skills = generate_organization(cfg, rng)
+    teams, skills, employees, employee_skills = generate_organization(cfg, rng_org)
     holidays = generate_holidays(cfg)
     coverage_reqs = generate_coverage_requirements(cfg, teams, holidays)
     t_prep = time.perf_counter()
 
     leave_requests, leave_events = generate_leave_requests_and_events(
-        cfg, rng, employees, employee_skills, coverage_reqs, holidays
+        cfg, rng_leave, employees, employee_skills, coverage_reqs, holidays
     )
     t_end = time.perf_counter()
 
@@ -97,28 +98,122 @@ def run_and_report_b1(scale: str = "starter") -> None:
     print(ct.to_string())
 
     # --------------------------------------------------------------------------
-    # 2. Approval rate by month
+    # 2. Approval rate by month and by team
     # --------------------------------------------------------------------------
-    print("\n--- 2. APPROVAL RATE BY MONTH ---")
+    print("\n--- 2A. APPROVAL RATE BY MONTH ---")
     req_df["start_month"] = pd.to_datetime(req_df["start_date"]).dt.to_period("M").astype(str)
 
+    # Note: requests with SUBMITTED or CANCELLED_BEFORE_DECISION were not decided.
+    # Decided requests are APPROVED, CANCELLED (post-approval), and REJECTED.
     monthly_stats = req_df.groupby("start_month").agg(
         total_requests=("leave_request_id", "count"),
         approved=("current_status", lambda s: (s == "APPROVED").sum()),
-        cancelled=("current_status", lambda s: (s == "CANCELLED").sum()),
+        cancelled_post_approval=("current_status", lambda s: (s == "CANCELLED").sum()),
         rejected=("current_status", lambda s: (s == "REJECTED").sum()),
+        pending_submitted=("current_status", lambda s: (s == "SUBMITTED").sum()),
+        cancelled_pre_decision=("decided_at", lambda d: (d.isna() & (req_df.loc[d.index, "current_status"] == "CANCELLED")).sum()),
     ).reset_index()
 
-    # Note: CANCELLED requests were approved before cancellation, so effective approved decisions = approved + cancelled
-    monthly_stats["initially_approved"] = monthly_stats["approved"] + monthly_stats["cancelled"]
-    monthly_stats["approval_rate_pct"] = (monthly_stats["initially_approved"] / monthly_stats["total_requests"]) * 100.0
-    monthly_stats["approval_rate_pct"] = monthly_stats["approval_rate_pct"].map(lambda x: f"{x:.1f}%")
-    print(monthly_stats.to_string(index=False))
+    monthly_stats["initially_approved"] = monthly_stats["approved"] + (monthly_stats["cancelled_post_approval"] - monthly_stats["cancelled_pre_decision"])
+    monthly_stats["decided_requests"] = monthly_stats["initially_approved"] + monthly_stats["rejected"]
+    monthly_stats["approval_rate_pct"] = (monthly_stats["initially_approved"] / monthly_stats["decided_requests"].replace(0, np.nan)) * 100.0
+    monthly_stats["approval_rate_pct"] = monthly_stats["approval_rate_pct"].map(lambda x: f"{x:.1f}%" if pd.notna(x) else "N/A")
+    print(monthly_stats[["start_month", "total_requests", "decided_requests", "initially_approved", "rejected", "approval_rate_pct"]].to_string(index=False))
+
+    print("\n--- 2B. APPROVAL RATE BY TEAM ---")
+    team_stats = req_df.groupby("team_id").agg(
+        total_requests=("leave_request_id", "count"),
+        approved=("current_status", lambda s: (s == "APPROVED").sum()),
+        cancelled_post_approval=("current_status", lambda s: (s == "CANCELLED").sum()),
+        rejected=("current_status", lambda s: (s == "REJECTED").sum()),
+        cancelled_pre_decision=("decided_at", lambda d: (d.isna() & (req_df.loc[d.index, "current_status"] == "CANCELLED")).sum()),
+    ).reset_index()
+    team_stats["initially_approved"] = team_stats["approved"] + (team_stats["cancelled_post_approval"] - team_stats["cancelled_pre_decision"])
+    team_stats["decided_requests"] = team_stats["initially_approved"] + team_stats["rejected"]
+    team_stats["approval_rate_pct"] = (team_stats["initially_approved"] / team_stats["decided_requests"].replace(0, np.nan)) * 100.0
+    team_stats["approval_rate_pct"] = team_stats["approval_rate_pct"].map(lambda x: f"{x:.1f}%" if pd.notna(x) else "N/A")
+    team_stats = team_stats.merge(team_df[["team_id", "department"]], on="team_id", how="left")
+    cols_team = ["team_id", "department", "total_requests", "decided_requests", "initially_approved", "rejected", "approval_rate_pct"]
+    print(team_stats[cols_team].head(25).to_string(index=False))
+    if len(team_stats) > 25:
+        print(f"  ... ({len(team_stats) - 25} additional teams omitted from preview)")
 
     # --------------------------------------------------------------------------
-    # 3. Rejection reasons breakdown
+    # 3. Employees who can never get weekday leave (Oncology pinch & structural bottlenecks)
     # --------------------------------------------------------------------------
-    print("\n--- 3. REJECTION REASONS BREAKDOWN ---")
+    print("\n--- 3. EMPLOYEES WHO CAN NEVER GET WEEKDAY LEAVE ---")
+    # An employee can never get weekday leave if for some required skill on their team,
+    # non-manager baseline qualified holders <= ceil(daily_min_sum * buffer)
+    from datetime import date, timedelta
+    import math
+
+    # Map employee -> skills
+    emp_skills_map: Dict[str, set] = {}
+    for es in employee_skills:
+        emp_skills_map.setdefault(es.employee_id, set()).add(es.skill_id)
+
+    # Non-manager active employees per (team_id, skill_id) on weekdays
+    team_emps: Dict[str, list] = {}
+    for e in employees:
+        if e.role != "MANAGER":
+            team_emps.setdefault(e.team_id, []).append(e)
+
+    # Compute daily weekday min demand by (team_id, skill_id)
+    daily_min_demand: Dict[tuple, int] = {}
+    for req in coverage_reqs:
+        d = req.effective_date if isinstance(req.effective_date, date) else date.fromisoformat(req.effective_date)
+        if d.weekday() < 5 and req.min_headcount > 0:
+            key = (req.team_id, d, req.skill_id)
+            daily_min_demand[key] = daily_min_demand.get(key, 0) + req.min_headcount
+
+    # Identify constrained skills where baseline holders <= threshold
+    pinched_employees = []
+    buffer = cfg.leave_rules.leave_coverage_buffer
+
+    for e in employees:
+        if e.role == "MANAGER":
+            continue
+        e_skills = emp_skills_map.get(e.employee_id, set())
+        for (team_id, d, skill_id), min_sum in daily_min_demand.items():
+            if team_id != e.team_id:
+                continue
+            if skill_id in e_skills:
+                # Count non-manager active holders on date d
+                holders = [
+                    h for h in team_emps.get(team_id, [])
+                    if skill_id in emp_skills_map.get(h.employee_id, set())
+                    and (h.hire_date if isinstance(h.hire_date, date) else date.fromisoformat(h.hire_date)) <= d
+                    and (h.termination_date is None or (h.termination_date if isinstance(h.termination_date, date) else date.fromisoformat(h.termination_date)) >= d)
+                ]
+                threshold = math.ceil(min_sum * buffer)
+                if len(holders) <= threshold:
+                    pinched_employees.append({
+                        "employee_id": e.employee_id,
+                        "team_id": e.team_id,
+                        "skill_id": skill_id,
+                        "weekday_date": d.isoformat(),
+                        "min_demand": min_sum,
+                        "threshold": threshold,
+                        "team_holders": len(holders),
+                    })
+
+    if pinched_employees:
+        pinch_df = pd.DataFrame(pinched_employees)
+        unique_pinched = pinch_df.groupby(["employee_id", "team_id", "skill_id"]).agg(
+            min_demand=("min_demand", "first"),
+            threshold=("threshold", "first"),
+            team_holders=("team_holders", "first"),
+            constrained_days_count=("weekday_date", "count"),
+        ).reset_index()
+        print(unique_pinched.to_string(index=False))
+        print(f"  Total structurally constrained employees: {len(unique_pinched)}")
+    else:
+        print("  None. All teams have sufficient baseline skill holders for weekday leaves.")
+
+    # --------------------------------------------------------------------------
+    # 4. Rejection reasons breakdown
+    # --------------------------------------------------------------------------
+    print("\n--- 4. REJECTION REASONS BREAKDOWN ---")
     rejections = req_df[req_df["current_status"] == "REJECTED"]
     if len(rejections) == 0:
         print("  Zero rejections recorded.")
@@ -158,3 +253,4 @@ if __name__ == "__main__":
         run_and_report_b1("starter")
     if args.scale in ("full", "both"):
         run_and_report_b1("full")
+

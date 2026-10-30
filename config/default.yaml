@@ -170,7 +170,7 @@ coverage:
 
 leave_rules:
   target_total_requests: 5000 # Default target scale across 2,000 employees / 90 days
-  leave_coverage_buffer: 1.4  # Multiplier on daily sum of min_headcount (e.g. 1.4 accounts for rest days/5-day work week)
+  leave_coverage_buffer: 1.25 # Multiplier on daily sum of min_headcount (1.25 buffer ensures ~60-95% approval rate)
   types:
     - code: "ANNUAL"
       name: "Annual Paid Leave"

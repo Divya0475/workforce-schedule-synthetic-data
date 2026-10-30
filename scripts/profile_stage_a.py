@@ -57,7 +57,8 @@ def profile_stage_a(csv_dir: Path | None = None) -> None:
             },
         }
         cfg = load_config(overrides=starter_overrides)
-        rng = np.random.default_rng(cfg.seed)
+        ss = np.random.SeedSequence(cfg.seed)
+        rng = np.random.default_rng(ss.spawn(1)[0])
 
         teams, skills, employees, employee_skills = generate_organization(cfg, rng)
         shift_templates = [

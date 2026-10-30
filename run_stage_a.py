@@ -35,7 +35,8 @@ def run_stage_a() -> Dict[str, pd.DataFrame]:
     }
 
     config = load_config(overrides=starter_overrides)
-    rng = np.random.default_rng(config.seed)
+    ss = np.random.SeedSequence(config.seed)
+    rng_org = np.random.default_rng(ss.spawn(1)[0])
 
     print("=" * 80)
     print("STAGE A: WORKFORCE SYNTHETIC DATA GENERATOR (STARTER PROFILE)")
@@ -45,7 +46,7 @@ def run_stage_a() -> Dict[str, pd.DataFrame]:
     print("=" * 80)
 
     # 1. Organization (Teams, Skills, Employees, EmployeeSkill)
-    teams, skills, employees, employee_skills = generate_organization(config, rng)
+    teams, skills, employees, employee_skills = generate_organization(config, rng_org)
 
     # 2. Shift Templates
     shift_templates = [

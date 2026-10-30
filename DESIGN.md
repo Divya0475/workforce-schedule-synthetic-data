@@ -207,14 +207,30 @@ All parameters and thresholds are externalized in [`config/default.yaml`](file:/
 
 ### 4.3 Leave Request Approval Policy
 1. An employee submits a leave request for $[d_{\text{start}}, d_{\text{end}}]$.
-2. The engine computes counterfactual staffing across the employee's assigned shifts:
-   $$\text{AvailableHeadcount}(d, T, S, K) = \text{CurrentActiveHeadcount}(d, T, S, K) - 1$$
-3. **Decision Rule**:
-   - If $\text{AvailableHeadcount}(d, T, S, K) \ge \text{min\_headcount}(d, T, S, K)$ for all affected dates and skills:
-     $\rightarrow$ Status transitions to `APPROVED`.
-   - Else:
-     $\rightarrow$ Status transitions to `REJECTED` with an explicit reason logged in `LeaveRequestEvent`.
-4. Approver must be a Manager of the requester's team (`role == 'MANAGER'`, `team_id == requester.team_id`) or `'SYSTEM'`.
+2. **Leave Hours Accounting vs. Paid Shifts**:
+   - Contract leave hours are computed as $\text{weekly\_contract\_hours} / 5$ per workday across Monday–Friday ($8.0\text{h}$ for 1.0 FTE, $6.4\text{h}$ for 0.8 FTE, $4.0\text{h}$ for 0.5 FTE).
+   - This contract accounting convention differs from individual operational shift lengths ($7.5\text{ net paid hours}$ per worked shift), aligning with standard HR payroll accrual systems.
+   - Statutory holidays falling within an `ANNUAL` leave window are strictly exempt and deduct $0.0\text{ hours}$.
+3. **Statutory Sick Leave Exemption**:
+   - `SICK` leave reflects unscheduled, legally protected medical necessity and is strictly exempt from forward-looking operational coverage threshold checks.
+4. **Coverage-Gated Decision Rule (Planned Leave)**:
+   - For all planned leave types (`ANNUAL`, `UNPAID`, `PARENTAL`, `BEREAVEMENT`), the engine computes counterfactual staffing across the employee's team, requested dates, and held skills:
+     $$\text{RemainingHolders}(T, d, K) = \text{QualifiedActiveNonLeaveHolders}(T, d, K) - 1$$
+   - Decision rule:
+     - If $\text{RemainingHolders}(T, d, K) \ge \lceil \sum_{s} \text{min\_headcount}(T, d, s, K) \times \text{buffer} \rceil$ for all affected dates and demanded skills:
+       $\rightarrow$ Status transitions to `APPROVED`.
+     - Else:
+       $\rightarrow$ Status transitions to `REJECTED` with an explicit reason logged in `decision_reason` and `LeaveRequestEvent`.
+5. **Pending Cutoff & Lifecycle Invariants**:
+   - Requests submitted near the planning horizon cutoff remain in `SUBMITTED` status without a decision, mirroring active open operational backlogs.
+   - Requests can be cancelled by employees before a decision is reached (`from_status = 'SUBMITTED' -> to_status = 'CANCELLED'`, with `decided_at = NULL` and `decision_reason = NULL`).
+   - Approved requests may be cancelled prior to leave completion (`from_status = 'APPROVED' -> to_status = 'CANCELLED'`).
+6. **The Specialized Skill Pinch (e.g., `SKL-ONCOLOGY`)**:
+   - When a specialized skill has minimal staffing baseline (e.g. `TEAM-002` where only 2 non-manager staff hold `SKL-ONCOLOGY`) and a non-zero weekday minimum requirement exists ($\text{min} = 1 \implies \lceil 1 \times 1.25 \rceil = 2$ required buffer):
+   - Neither oncology-certified employee can take planned weekday leave without triggering a coverage violation. These employees represent permanent critical operational constraints ("employees who can never get weekday leave") unless redundant staffing or cross-team float pools are deployed.
+7. **Approver Governance**:
+   - For non-manager staff, decisions are approved by the team's `MANAGER` (`actor_id != requester`) or `SYSTEM`.
+   - For managers requesting administrative leave, decisions are authorized by `SYSTEM` or by a manager from another operational team (`actor_id != requester`), preventing self-authorization.
 
 ### 4.4 Shift Swap Policy & Non-Destructive Mechanics
 1. Two employees $E_1$ (assigned to $A_1$) and $E_2$ (assigned to $A_2$) agree on a trade.
