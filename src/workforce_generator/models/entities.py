@@ -140,3 +140,39 @@ class ShiftAssignment:
         return d
 
 
+@dataclass
+class LeaveRequest:
+    leave_request_id: str
+    employee_id: str
+    leave_type: str
+    start_date: date
+    end_date: date
+    requested_hours: float
+    current_status: str
+    submitted_at: str
+    decided_at: Optional[str] = None
+    decision_reason: Optional[str] = None
+
+    def to_dict(self) -> Dict[str, Any]:
+        d = asdict(self)
+        d["start_date"] = self.start_date.isoformat()
+        d["end_date"] = self.end_date.isoformat()
+        return d
+
+
+@dataclass
+class LeaveRequestEvent:
+    leave_event_id: str
+    leave_request_id: str
+    from_status: Optional[str]
+    to_status: str
+    event_timestamp: str
+    actor_type: str  # EMPLOYEE or SYSTEM
+    actor_id: Optional[str] = None
+    reason: Optional[str] = None
+
+    def to_dict(self) -> Dict[str, Any]:
+        return asdict(self)
+
+
+

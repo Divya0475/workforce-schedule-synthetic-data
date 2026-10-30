@@ -111,6 +111,7 @@ class LeaveTypeConfig:
 class LeaveRulesConfig:
     target_total_requests: int
     types: List[LeaveTypeConfig]
+    leave_coverage_buffer: float = 1.4
     enforce_coverage_minimum: bool = True
     allow_retroactive_sick_leave: bool = True
     max_annual_leave_consecutive_days: int = 14
@@ -305,6 +306,7 @@ def load_config(
     leave_cfg = LeaveRulesConfig(
         target_total_requests=int(lr_data.get("target_total_requests", 5000)),
         types=leave_types,
+        leave_coverage_buffer=float(lr_data.get("leave_coverage_buffer", 1.4)),
         enforce_coverage_minimum=bool(lr_data.get("approval_policy", {}).get("enforce_coverage_minimum", True)),
         allow_retroactive_sick_leave=bool(lr_data.get("approval_policy", {}).get("allow_retroactive_sick_leave", True)),
         max_annual_leave_consecutive_days=int(
