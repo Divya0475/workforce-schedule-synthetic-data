@@ -1,0 +1,236 @@
+# Workforce Scheduling Synthetic Data Generator Configuration
+# All business rules, operational constraints, and generation parameters are declared here.
+#
+# ==============================================================================
+# SCALE PROFILES & EXECUTION MODES
+# ==============================================================================
+# Default Scale (Production/Benchmark Profile):
+#   - Seed: 20261022
+#   - Employees: 2,000 (100 teams x 20 employees/team)
+#   - Scheduling Horizon: 90 days (2026-01-01 to 2026-03-31)
+#   - Leave Requests: 5,000 total requests
+#   - Shifts: 3 shifts/day x 100 teams x 90 days = 27,000 shift instances
+#   - Assignments: ~108,000+ scheduled assignment rows
+#
+# Starter Profile (Fast Development / CI Testing Profile):
+#   - Employees: 50 (5 teams x 10 employees/team)
+#   - Scheduling Horizon: 14 days (2026-01-01 to 2026-01-14)
+#   - Leave Requests: 100 total requests
+#   - Uses the EXACT SAME code path via CLI parameter overrides:
+#       python run_generator.py \
+#         --seed 20261022 \
+#         --num-teams 5 \
+#         --employees-per-team 10 \
+#         --start-date 2026-01-01 \
+#         --end-date 2026-01-14 \
+#         --target-leave-requests 100 \
+#         --export-formats csv,json,sql \
+#         --output-dir output/starter
+# ==============================================================================
+
+seed: 20261022
+
+horizon:
+  start_date: "2026-01-01"
+  end_date: "2026-03-31" # 90-day quarterly horizon (Q1 2026)
+  timezone: "UTC"
+
+workforce:
+  num_teams: 100
+  employees_per_team: 20 # 100 teams * 20 = 2,000 employees total
+  roles:
+    - code: "STAFF"
+      name: "Staff Member"
+      weight: 0.65
+    - code: "SENIOR"
+      name: "Senior Specialist"
+      weight: 0.20
+    - code: "LEAD"
+      name: "Team Lead"
+      weight: 0.10
+    - code: "MANAGER"
+      name: "Team Manager"
+      weight: 0.05
+  fte_distribution:
+    1.0: 0.85 # 85% Full-time (40h/week)
+    0.8: 0.10 # 10% Part-time (32h/week)
+    0.5: 0.05 # 5% Half-time (20h/week)
+  skills_per_employee:
+    min: 1
+    max: 3
+
+shifts:
+  templates:
+    - id: "SFT-A"
+      code: "A"
+      name: "Morning"
+      start_time: "06:00:00"
+      end_time: "14:00:00"
+      duration_hours: 8.0
+      unpaid_break_minutes: 30
+      is_overnight: false
+    - id: "SFT-B"
+      code: "B"
+      name: "Afternoon"
+      start_time: "14:00:00"
+      end_time: "22:00:00"
+      duration_hours: 8.0
+      unpaid_break_minutes: 30
+      is_overnight: false
+    - id: "SFT-C"
+      code: "C"
+      name: "Night"
+      start_time: "22:00:00"
+      end_time: "06:00:00"
+      duration_hours: 8.0
+      unpaid_break_minutes: 30
+      is_overnight: true
+
+labor_constraints:
+  regular_weekly_hours_standard: 40.0
+  overtime_cap_weekly_hours: 48.0
+  min_rest_hours_between_shifts: 11.0 # Minimum rest between shift end and next shift start
+  max_consecutive_working_days: 6    # Must have >= 1 rest day after 6 consecutive days
+  max_daily_working_hours: 12.0      # Safety cap for voluntary overtime extensions
+
+coverage:
+  default_requirements:
+    # Minimum required heads per shift slot per skill for each team
+    weekday:
+      A:
+        min_total_headcount: 3
+        skill_requirements:
+          - skill_code: "TRIAGE"
+            min_headcount: 1
+          - skill_code: "DISPATCH"
+            min_headcount: 1
+      B:
+        min_total_headcount: 3
+        skill_requirements:
+          - skill_code: "TRIAGE"
+            min_headcount: 1
+          - skill_code: "DISPATCH"
+            min_headcount: 1
+      C:
+        min_total_headcount: 2
+        skill_requirements:
+          - skill_code: "TRIAGE"
+            min_headcount: 1
+    weekend:
+      A:
+        min_total_headcount: 2
+        skill_requirements:
+          - skill_code: "TRIAGE"
+            min_headcount: 1
+      B:
+        min_total_headcount: 2
+        skill_requirements:
+          - skill_code: "TRIAGE"
+            min_headcount: 1
+      C:
+        min_total_headcount: 1
+        skill_requirements:
+          - skill_code: "TRIAGE"
+            min_headcount: 1
+
+leave_rules:
+  target_total_requests: 5000 # Default target scale across 2,000 employees / 90 days
+  types:
+    - code: "ANNUAL"
+      name: "Annual Paid Leave"
+      paid: true
+      advance_notice_days_required: 7
+    - code: "SICK"
+      name: "Sick Leave"
+      paid: true
+      advance_notice_days_required: 0
+    - code: "UNPAID"
+      name: "Unpaid Personal Leave"
+      paid: false
+      advance_notice_days_required: 3
+    - code: "PARENTAL"
+      name: "Parental Leave"
+      paid: true
+      advance_notice_days_required: 30
+    - code: "BEREAVEMENT"
+      name: "Bereavement Leave"
+      paid: true
+      advance_notice_days_required: 0
+  approval_policy:
+    # Leave is approved IF remaining qualified on-duty headcount >= coverage minimum
+    enforce_coverage_minimum: true
+    allow_retroactive_sick_leave: true
+    max_annual_leave_consecutive_days: 14
+  request_rate_per_employee_month: 0.833 # Calibrated to yield ~5,000 requests for 2,000 employees over 3 months
+
+swap_rules:
+  lifecycle:
+    initial_state: "REQUESTED"
+    terminal_states: ["REJECTED", "APPLIED"]
+  eligibility:
+    require_matching_skill: true        # Swap partner must possess all critical skills for the shift
+    require_rest_period_compliance: true # Neither employee may violate the 11h rest rule post-swap
+    require_weekly_hour_cap: true       # Neither employee may exceed 48h weekly overtime cap
+    require_manager_approval: true      # Transition from REQUESTED -> APPROVED -> APPLIED
+  request_rate_per_assignment: 0.04     # 4% of assignments trigger a swap inquiry
+  history_preservation:
+    mode: "NON_DESTRUCTIVE_INSERT"     # Retains original row as SWAPPED_OUT, inserts new row as ACTIVE
+    active_status: "ACTIVE"
+    swapped_out_status: "SWAPPED_OUT"
+
+attendance_simulation:
+  punctuality_probabilities:
+    on_time: 0.88          # Clock-in within [-5m, +3m] of shift start
+    early: 0.05            # Clock-in 6m to 30m early
+    late_grace: 0.04       # Clock-in 4m to 10m late (within grace period)
+    late_unexcused: 0.02   # Clock-in > 10m late (exception flagged)
+    no_show: 0.01          # Unexcused absence (missing clock-in)
+  clock_out_variance:
+    on_time: 0.86
+    early_departure: 0.03  # Departure > 15m before end
+    overtime_shift: 0.11   # Overtime extension 15m to 120m
+  exception_thresholds:
+    late_minutes: 10
+    early_leave_minutes: 15
+    overtime_minutes: 15
+  exception_types:
+    - "LATE"        # Clock-in > 10m late
+    - "EARLY_LEAVE" # Departure > 15m early
+    - "NO_SHOW"     # Missing clock-in / unexcused absence
+    - "OVERTIME"    # Extension > 15m past scheduled end
+
+anomalies:
+  enabled: true
+  output_dirty_dataset: true
+  ground_truth_file: "ground_truth" # Emits ground_truth.csv and ground_truth.json
+  injected_cases:
+    - id: "ANOMALY-001"
+      name: "DOUBLE_BOOKED_EMPLOYEE"
+      description: "Employee assigned to two overlapping shifts on the same date"
+      target_count: 5
+    - id: "ANOMALY-002"
+      name: "APPROVED_LEAVE_OVERLAPPING_SHIFT"
+      description: "Active shift assignment exists during an approved leave window"
+      target_count: 5
+    - id: "ANOMALY-003"
+      name: "REQUIRED_SKILL_ABSENT"
+      description: "Shift assignment where active staff lack a mandatory coverage skill"
+      target_count: 5
+    - id: "ANOMALY-004"
+      name: "OVERTIME_CAP_EXCEEDED"
+      description: "Employee assigned hours exceeding 48.0 hours in an ISO calendar week"
+      target_count: 5
+    - id: "ANOMALY-005"
+      name: "SWAP_APPLIED_WITHOUT_APPROVAL"
+      description: "Shift swap applied without required manager approval or while in REJECTED status"
+      target_count: 5
+
+exports:
+  formats:
+    - "csv"
+    - "json"
+    - "sql" # Generates ANSI SQL seed statements (DDL + INSERT batches)
+  # Parquet is explicitly excluded per project architecture
+  include_clean: true
+  include_dirty: true
+  compression: null
