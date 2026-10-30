@@ -42,9 +42,23 @@ def generate_swap_requests_and_events(
     """Generate requested, rejected, and applied exchanges after baseline scheduling."""
     employee_map = {employee.employee_id: employee for employee in employees}
     managers_by_team = defaultdict(list)
+    certifications_by_employee_skill = defaultdict(list)
     for employee in employees:
         if employee.role == "MANAGER":
             managers_by_team[employee.team_id].append(employee)
+    for skill in employee_skills:
+        certifications_by_employee_skill[(skill.employee_id, skill.skill_id)].append(
+            (skill.certified_date, skill.expiry_date)
+        )
+
+    approved_leave_dates_by_employee = defaultdict(set)
+    for leave in leave_requests:
+        if leave.current_status != "APPROVED":
+            continue
+        current_date = leave.start_date
+        while current_date <= leave.end_date:
+            approved_leave_dates_by_employee[leave.employee_id].add(current_date)
+            current_date += timedelta(days=1)
 
     active_by_team_week = defaultdict(list)
     active_by_employee = defaultdict(list)
@@ -100,6 +114,8 @@ def generate_swap_requests_and_events(
                     max_weekly_hours=cfg.labor_constraints.overtime_cap_weekly_hours,
                     paid_hours_per_shift=cfg.labor_constraints.paid_hours_per_shift,
                     assignments_by_employee=active_by_employee,
+                    certifications_by_employee_skill=certifications_by_employee_skill,
+                    approved_leave_dates_by_employee=approved_leave_dates_by_employee,
                 )
                 if not eligibility_errors:
                     selected = candidate

@@ -209,6 +209,10 @@ def check_swap_eligibility(
     max_weekly_hours: float = 48.0,
     paid_hours_per_shift: float = 7.5,
     assignments_by_employee: Dict[str, List[ShiftAssignment]] | None = None,
+    certifications_by_employee_skill: Dict[
+        Tuple[str, str], List[Tuple[date, Optional[date]]]
+    ] | None = None,
+    approved_leave_dates_by_employee: Dict[str, Set[date]] | None = None,
 ) -> List[str]:
     """Validate a proposed reciprocal exchange against each employee's full schedule."""
     errors = []
@@ -231,18 +235,20 @@ def check_swap_eligibility(
     if errors:
         return errors
 
-    cert_map = defaultdict(list)
-    for employee_skill in employee_skills:
-        cert_map[(employee_skill.employee_id, employee_skill.skill_id)].append(
-            (employee_skill.certified_date, employee_skill.expiry_date)
-        )
-    approved_leave_dates = defaultdict(set)
-    for leave in leave_requests:
-        if leave.current_status == "APPROVED":
-            current_date = leave.start_date
-            while current_date <= leave.end_date:
-                approved_leave_dates[leave.employee_id].add(current_date)
-                current_date += timedelta(days=1)
+    if certifications_by_employee_skill is None:
+        certifications_by_employee_skill = defaultdict(list)
+        for employee_skill in employee_skills:
+            certifications_by_employee_skill[
+                (employee_skill.employee_id, employee_skill.skill_id)
+            ].append((employee_skill.certified_date, employee_skill.expiry_date))
+    if approved_leave_dates_by_employee is None:
+        approved_leave_dates_by_employee = defaultdict(set)
+        for leave in leave_requests:
+            if leave.current_status == "APPROVED":
+                current_date = leave.start_date
+                while current_date <= leave.end_date:
+                    approved_leave_dates_by_employee[leave.employee_id].add(current_date)
+                    current_date += timedelta(days=1)
 
     incoming = (
         (target_employee, requestor_assignment),
@@ -254,7 +260,7 @@ def check_swap_eligibility(
             is_qualified = any(
                 certified_date <= assignment.shift_date
                 and (expiry_date is None or expiry_date >= assignment.shift_date)
-                for certified_date, expiry_date in cert_map.get(
+                for certified_date, expiry_date in certifications_by_employee_skill.get(
                     (receiver.employee_id, assignment.fulfills_skill_id), []
                 )
             )
@@ -263,7 +269,9 @@ def check_swap_eligibility(
                     f"SWAP_UNQUALIFIED_RECEIVER: {receiver.employee_id} lacks "
                     f"{assignment.fulfills_skill_id} for {assignment.assignment_id}"
                 )
-        if assignment.shift_date in approved_leave_dates[receiver.employee_id]:
+        if assignment.shift_date in approved_leave_dates_by_employee.get(
+            receiver.employee_id, set()
+        ):
             errors.append(
                 f"SWAP_APPROVED_LEAVE: {receiver.employee_id} has approved leave "
                 f"on {assignment.shift_date}"
