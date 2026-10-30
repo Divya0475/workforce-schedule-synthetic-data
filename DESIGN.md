@@ -248,10 +248,12 @@ All parameters and thresholds are externalized in [`config/default.yaml`](file:/
 4. **Approval & Application**:
    - The lifecycle is `REQUESTED -> APPROVED | REJECTED -> APPLIED`; requests may remain `REQUESTED`. Rejections include a reason.
    - Approval or rejection is authored by a same-team Manager other than the requester or target, or by `'SYSTEM'` (`actor_id = NULL`). Every transition has an append-only `SwapRequestEvent`, and `current_status` mirrors its latest event.
+   - Approved swaps are applied immediately, so no request remains `APPROVED` at pipeline completion. A small share of requests are deliberately generated with skill, rest, or approved-leave eligibility failures; each rejection reason is the corresponding eligibility-check finding, while valid requests may remain pending or proceed to approval and application.
    - Upon `APPLIED`:
      - $A_1$ and $A_2$ have `assignment_status` updated to `'SWAPPED_OUT'` and `effective_to` closed to `applied_at`.
      - Old rows are **never deleted or reassigned**; their `employee_id` remains unchanged.
      - New replacement rows $A_{\text{new1}}$ (assigned to $E_2$) and $A_{\text{new2}}$ (assigned to $E_1$) are inserted with `assignment_status = 'ACTIVE'`, `effective_from = applied_at`, `effective_to = NULL`, linking to `swap_request_id` and `replaces_assignment_id`.
+   - With the configured 7.5 paid hours per shift and maximum six consecutive working days, an employee can work at most six shifts (45 paid hours) in an ISO week. The 48-hour cap is therefore effectively redundant under these defaults; the consecutive-day rule binds first.
 
 ### 4.5 Attendance & Punch Simulation
 - **Active Assignment Linkage**: Events are generated only for `ACTIVE` assignments on or before the horizon end date and not on approved-leave dates. Superseded `SWAPPED_OUT` records never have attendance events.
