@@ -133,10 +133,26 @@ For each operational team of 20 employees over a 7-day calendar week:
    - Available active workforce during leave: $\approx 18.9$ employees, providing $\approx 90.2$ available shifts/week, which vastly exceeds the required $50$ shifts/week.
    - Rest period constraints (11h rest) and maximum 6-consecutive-day limits are easily accommodated because employees only need to work an average of $2.5$ shifts per week to cover demand ($50 / 20 = 2.5$).
 
-### 3.2 Expected Coverage Gaps in Clean Baseline
+### 3.2 Starter Profile Capacity Model (Tight Sizing with Expected Gaps)
+For testing and development, the **Starter Profile** intentionally sizes capacity so demand is feasible under overtime, but tight enough that boundary transitions (mid-horizon hires/terminations) and skill constraints produce a small, realistic number of expected coverage gaps:
+1. **Team Composition**: 5 teams, each 10 employees (1 Manager, 9 Schedulable Staff).
+2. **Weekly Schedulable Capacity per Team**:
+   - Average contractual paid hours: $9 \times 38.2 = 343.8\text{ paid hours/team/week}$.
+   - At $7.5\text{ net paid hours}$ per 8.0h shift slot (accounting for 30m unpaid break):
+     $$\text{Standard Capacity}_{\text{starter}} = \frac{343.8}{7.5} \approx 45.84\text{ shifts/week}$$
+   - At statutory overtime cap ($48.0\text{ h/week}$ per employee):
+     $$\text{Overtime Ceiling}_{\text{starter}} = \frac{9 \times 48.0}{7.5} = 57.6\text{ shifts/week}$$
+3. **Weekly Demand per Team**:
+   - 40 weekday person-shifts + 10 weekend person-shifts = **50 required person-shifts/week**.
+4. **Feasibility & Expected Gaps**:
+   - Base standard capacity ($45.84$) is below demand ($50.0$).
+   - The team requires voluntary/scheduled overtime ($50 / 57.6 \approx 86.8\%$ of statutory ceiling).
+   - Because capacity utilization is $\approx 87\%$ and boundary events occur (mid-horizon hires not available initially, mid-horizon terminations losing active headcount), the starter profile naturally exhibits a small number of **expected coverage gaps** (typically 1 to 5 gaps over 14 days) during scheduling, providing ideal verification coverage.
+
+### 3.3 Expected Coverage Gaps in Clean Baseline (Production Scale)
 > [!IMPORTANT]
-> **Expected Number of Coverage Gaps in Clean Baseline**: **EXACTLY ZERO (0)**.
-> Because the capacity ratio is $> 1.9\times$ demand and skill distribution ensures all teams have sufficient `TRIAGE` and `DISPATCH` certified staff, the greedy scheduler produces **0 coverage gaps** across all 27,000 shift slots. In the derived `CoverageGap` table, `is_critical` will be `FALSE` for 100% of rows in the clean baseline.
+> **Production Scale Baseline Expected Coverage Gaps**: **EXACTLY ZERO (0)**.
+> At full scale (100 teams, 20 employees/team), reserve margins exceed $44\%$, ensuring 100% complete coverage satisfaction with 0 gaps in the clean baseline.
 
 ---
 
@@ -144,13 +160,21 @@ For each operational team of 20 employees over a 7-day calendar week:
 
 All parameters and thresholds are externalized in [`config/default.yaml`](file:///e:/workforce-schedule-synthetic-data/config/default.yaml).
 
-### 4.1 Labor Law & Fatigue Constraints
-1. **Rest Interval**: Minimum **11 hours** of continuous rest between the conclusion of shift $S_i$ and commencement of shift $S_{i+1}$.
-2. **Consecutive Days**: An employee may work a maximum of **6 consecutive days**. On or before the 7th day, at least one full 24-hour calendar rest day is mandatory.
-3. **Weekly Hours & Overtime**:
-   - Standard work week: 40.0 hours (pro-rated by FTE).
-   - Hard statutory overtime cap: **48.0 hours** in any ISO calendar week (Monday through Sunday).
-   - No shift assignment or swap approval may cause an employee's weekly scheduled hours to exceed 48.0.
+### 4.1 Labor Law, Working-Hour Caps & Meal Break Convention
+1. **Gross Shift vs. Net Paid Hours**:
+   - **Operational Shift Window**: 8.0 gross elapsed hours (e.g., Shift A: `06:00:00` to `14:00:00`).
+   - **Meal Break Convention**: Standard 30-minute (`0.5 hour`) unpaid meal break during each 8-hour shift.
+   - **Net Paid Working Hours**: **7.5 paid hours per shift** ($8.0 - 0.5 = 7.5\text{ hours}$).
+   - **Rule**: All statutory fatigue limits (40.0h standard work week, 48.0h weekly overtime cap) count **strictly net paid hours**.
+     - 5 shifts worked in an ISO week = $5 \times 7.5 = 37.5\text{ paid hours}$ ($\le 40.0\text{ h}$).
+     - 6 shifts worked in an ISO week = $6 \times 7.5 = 45.0\text{ paid hours}$ ($\le 48.0\text{ h}$).
+     - A 7th shift would total $52.5\text{ paid hours} > 48.0\text{ h}$, strictly prohibited by the generator and validator.
+2. **Rest Interval**: Minimum **11 hours** of continuous rest between the conclusion of shift $S_i$ and commencement of shift $S_{i+1}$.
+3. **Consecutive Days**: An employee may work a maximum of **6 consecutive days**. On or before the 7th day, at least one full 24-hour calendar rest day is mandatory.
+4. **Weekly Hours & Overtime**:
+   - Standard work week: 40.0 paid hours (pro-rated by FTE).
+   - Hard statutory overtime cap: **48.0 paid hours** in any full ISO calendar week (Monday through Sunday).
+   - No shift assignment or swap approval may cause an employee's weekly scheduled paid hours to exceed 48.0.
 
 ### 4.2 Coverage Requirements
 - For every date, team, shift template, and skill:

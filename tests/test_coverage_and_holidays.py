@@ -45,9 +45,17 @@ def test_starter_coverage_requirements():
     # Total rows per team = 1*3 + 4*3 + 9*5 = 3 + 12 + 45 = 60 rows
     # Total rows for 5 teams = 5 * 60 = 300 rows
     assert len(cov_reqs) == 300
+    team_map = {t.team_id: t for t in teams}
+    dept_map = {d.name: d for d in cfg.departments}
     for req in cov_reqs:
         assert req.min_headcount >= 1
         assert req.target_headcount >= req.min_headcount
         assert req.effective_date >= cfg.horizon.start_date
         assert req.effective_date <= cfg.horizon.end_date
+
+        # Verify skill matches department core skills
+        t = team_map[req.team_id]
+        d_cfg = dept_map.get(t.department)
+        if d_cfg:
+            assert req.skill_id in [f"SKL-{c}" for c in d_cfg.core_skills]
 

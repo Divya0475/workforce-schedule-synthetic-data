@@ -13,9 +13,16 @@
 #   - Assignments: ~108,000+ scheduled assignment rows
 #
 # Starter Profile (Fast Development / CI Testing Profile):
-#   - Employees: 50 (5 teams x 10 employees/team)
+#   - Employees: 50 (5 teams x 10 employees/team: 1 Manager, 9 Schedulable Staff)
 #   - Scheduling Horizon: 14 days (2026-01-01 to 2026-01-14)
 #   - Leave Requests: 100 total requests
+#   - Tight Capacity Sizing:
+#       * Schedulable Staff per team: 9 employees (excluding 1 manager)
+#       * Weekly Supply per team: ~43.0 shifts (at 40h standard / 7.5h paid per shift)
+#       * Overtime Cap Supply per team: ~57.6 shifts max (at 48h statutory overtime cap)
+#       * Weekly Demand per team: 50 person-shifts (40 weekday + 10 weekend)
+#       * Feasibility Margin: Feasible only via overtime (87% of statutory ceiling),
+#         creating realistic tight scheduling with expected coverage gaps under boundary conditions.
 #   - Uses the EXACT SAME code path via CLI parameter overrides:
 #       python run_generator.py \
 #         --seed 20261022 \
@@ -58,6 +65,32 @@ workforce:
   skills_per_employee:
     min: 1
     max: 3
+  prior_certification_ratio: 0.15 # 15% pre-hire certifications (college/external credentials)
+  boundary_cases:
+    mid_horizon_hires_ratio: 0.02       # 2% of employees hired inside the planning horizon
+    mid_horizon_terminations_ratio: 0.02 # 2% of employees terminated inside the horizon
+
+departments:
+  - code: "EMERGENCY"
+    name: "Emergency"
+    core_skills: ["TRIAGE", "ICU_CARE"]
+    secondary_skills: ["PHARMACY", "BILINGUAL_ES"]
+    rare_skills: ["TOXICOLOGY"]
+  - code: "INPATIENT"
+    name: "Inpatient"
+    core_skills: ["ICU_CARE", "PHARMACY"]
+    secondary_skills: ["TRIAGE", "BILINGUAL_ES"]
+    rare_skills: ["ONCOLOGY"]
+  - code: "LOGISTICS"
+    name: "Logistics"
+    core_skills: ["DISPATCH", "SUPPLY_CHAIN"]
+    secondary_skills: ["BILINGUAL_ES"]
+    rare_skills: ["HAZMAT"]
+  - code: "CUSTOMER_SUPPORT"
+    name: "Customer Support"
+    core_skills: ["BILINGUAL_ES", "INTAKE"]
+    secondary_skills: ["DISPATCH"]
+    rare_skills: ["CRISIS_COUNSEL"]
 
 shifts:
   templates:
@@ -92,6 +125,8 @@ labor_constraints:
   min_rest_hours_between_shifts: 11.0 # Minimum rest between shift end and next shift start
   max_consecutive_working_days: 6    # Must have >= 1 rest day after 6 consecutive days
   max_daily_working_hours: 12.0      # Safety cap for voluntary overtime extensions
+  unpaid_break_hours_per_shift: 0.5  # 30-minute unpaid meal break per standard 8.0h window
+  paid_hours_per_shift: 7.5          # Paid working hours counting toward 40h/48h caps (8.0 gross - 0.5 unpaid)
 
 coverage:
   default_requirements:

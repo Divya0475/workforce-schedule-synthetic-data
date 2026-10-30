@@ -93,6 +93,17 @@ def run_stage_a() -> Dict[str, pd.DataFrame]:
         sample = df.head(min(5, len(df)))
         print(sample.to_string(index=False))
 
+    # Export to output/stage_a/ as CSV
+    out_dir = Path(__file__).resolve().parent / "output" / "stage_a"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    print("\n" + "=" * 80)
+    print(f"EXPORTING STAGE A TABLES TO CSV: {out_dir}")
+    print("=" * 80)
+    for name, df in dfs.items():
+        csv_path = out_dir / f"{name}.csv"
+        df.to_csv(csv_path, index=False)
+        print(f"  -> Exported {name:<22} to {csv_path.name} ({len(df)} rows)")
+
     return dfs
 
 

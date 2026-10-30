@@ -28,6 +28,21 @@ class RoleConfig:
 
 
 @dataclass
+class BoundaryCasesConfig:
+    mid_horizon_hires_ratio: float = 0.02
+    mid_horizon_terminations_ratio: float = 0.02
+
+
+@dataclass
+class DepartmentConfig:
+    code: str
+    name: str
+    core_skills: List[str]
+    secondary_skills: List[str] = field(default_factory=list)
+    rare_skills: List[str] = field(default_factory=list)
+
+
+@dataclass
 class WorkforceConfig:
     num_teams: int
     employees_per_team: int
@@ -35,6 +50,8 @@ class WorkforceConfig:
     fte_distribution: Dict[float, float]
     skills_per_employee_min: int = 1
     skills_per_employee_max: int = 3
+    prior_certification_ratio: float = 0.15
+    boundary_cases: BoundaryCasesConfig = field(default_factory=BoundaryCasesConfig)
 
     @property
     def total_employees(self) -> int:
@@ -60,6 +77,8 @@ class LaborConstraintsConfig:
     min_rest_hours_between_shifts: float = 11.0
     max_consecutive_working_days: int = 6
     max_daily_working_hours: float = 12.0
+    unpaid_break_hours_per_shift: float = 0.5
+    paid_hours_per_shift: float = 7.5
 
 
 @dataclass
@@ -151,6 +170,7 @@ class GeneratorConfig:
     seed: int
     horizon: HorizonConfig
     workforce: WorkforceConfig
+    departments: List[DepartmentConfig]
     shifts: List[ShiftTemplateItem]
     labor_constraints: LaborConstraintsConfig
     coverage: CoverageConfig
@@ -193,6 +213,11 @@ def load_config(
     wf_data = data["workforce"]
     roles = [RoleConfig(code=r["code"], name=r["name"], weight=float(r["weight"])) for r in wf_data["roles"]]
     fte_dist = {float(k): float(v) for k, v in wf_data["fte_distribution"].items()}
+    bc_data = wf_data.get("boundary_cases", {})
+    boundary_cases_cfg = BoundaryCasesConfig(
+        mid_horizon_hires_ratio=float(bc_data.get("mid_horizon_hires_ratio", 0.02)),
+        mid_horizon_terminations_ratio=float(bc_data.get("mid_horizon_terminations_ratio", 0.02)),
+    )
     workforce_cfg = WorkforceConfig(
         num_teams=int(wf_data["num_teams"]),
         employees_per_team=int(wf_data["employees_per_team"]),
@@ -200,7 +225,22 @@ def load_config(
         fte_distribution=fte_dist,
         skills_per_employee_min=int(wf_data.get("skills_per_employee", {}).get("min", 1)),
         skills_per_employee_max=int(wf_data.get("skills_per_employee", {}).get("max", 3)),
+        prior_certification_ratio=float(wf_data.get("prior_certification_ratio", 0.15)),
+        boundary_cases=boundary_cases_cfg,
     )
+
+    # Parse Departments
+    dept_list: List[DepartmentConfig] = []
+    for d_item in data.get("departments", []):
+        dept_list.append(
+            DepartmentConfig(
+                code=d_item["code"],
+                name=d_item["name"],
+                core_skills=d_item["core_skills"],
+                secondary_skills=d_item.get("secondary_skills", []),
+                rare_skills=d_item.get("rare_skills", []),
+            )
+        )
 
     # Parse Shifts
     shift_items = []
@@ -226,6 +266,8 @@ def load_config(
         min_rest_hours_between_shifts=float(lc.get("min_rest_hours_between_shifts", 11.0)),
         max_consecutive_working_days=int(lc.get("max_consecutive_working_days", 6)),
         max_daily_working_hours=float(lc.get("max_daily_working_hours", 12.0)),
+        unpaid_break_hours_per_shift=float(lc.get("unpaid_break_hours_per_shift", 0.5)),
+        paid_hours_per_shift=float(lc.get("paid_hours_per_shift", 7.5)),
     )
 
     # Parse Coverage
@@ -330,6 +372,7 @@ def load_config(
         seed=int(data["seed"]),
         horizon=horizon_cfg,
         workforce=workforce_cfg,
+        departments=dept_list,
         shifts=shift_items,
         labor_constraints=labor_cfg,
         coverage=coverage_cfg,

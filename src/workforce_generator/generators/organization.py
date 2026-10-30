@@ -1,9 +1,9 @@
-"""Generates Teams, Skills, Employees, and EmployeeSkill bridge records."""
+"""Generates Teams, Skills, Employees, and EmployeeSkill bridge records with department maps."""
 
 from __future__ import annotations
 
 from datetime import date, timedelta
-from typing import List, Tuple
+from typing import Dict, List, Tuple
 import numpy as np
 
 from workforce_generator.config import GeneratorConfig
@@ -36,66 +36,102 @@ LAST_NAMES = [
     "Carter", "Roberts", "Gomez", "Phillips", "Evans", "Turner", "Diaz", "Parker",
 ]
 
-DEFAULT_SKILLS = [
-    Skill(skill_id="SKL-TRIAGE", code="TRIAGE", name="Emergency Triage & Assessment", category="Clinical", description="Rapid patient condition classification"),
-    Skill(skill_id="SKL-DISPATCH", code="DISPATCH", name="Resource & Unit Dispatch", category="Logistical", description="Emergency communications and unit routing"),
-    Skill(skill_id="SKL-ICU_CARE", code="ICU_CARE", name="Intensive Care Operations", category="Clinical", description="Critical patient monitoring and care"),
-    Skill(skill_id="SKL-PHARMACY", code="PHARMACY", name="Clinical Pharmacology", category="Clinical", description="Medication dispensary and verification"),
-    Skill(skill_id="SKL-BILINGUAL_ES", code="BILINGUAL_ES", name="Bilingual Spanish", category="Linguistic", description="Certified fluent Spanish clinical communication"),
+ALL_SKILL_DEFINITIONS = [
+    Skill("SKL-TRIAGE", "TRIAGE", "Emergency Triage & Assessment", "Clinical", "Rapid patient condition classification"),
+    Skill("SKL-ICU_CARE", "ICU_CARE", "Intensive Care Operations", "Clinical", "Critical patient monitoring and care"),
+    Skill("SKL-PHARMACY", "PHARMACY", "Clinical Pharmacology", "Clinical", "Medication dispensary and verification"),
+    Skill("SKL-DISPATCH", "DISPATCH", "Resource & Unit Dispatch", "Logistical", "Emergency communications and unit routing"),
+    Skill("SKL-SUPPLY_CHAIN", "SUPPLY_CHAIN", "Medical Supply Chain", "Logistical", "Medical inventory and supply routing"),
+    Skill("SKL-INTAKE", "INTAKE", "Patient Intake & Admission", "Administrative", "Patient registration and preliminary intake"),
+    Skill("SKL-BILINGUAL_ES", "BILINGUAL_ES", "Bilingual Spanish", "Linguistic", "Certified fluent Spanish clinical communication"),
+    # Rare specialized skills
+    Skill("SKL-TOXICOLOGY", "TOXICOLOGY", "Clinical Toxicology", "Clinical", "Rare poisoning and overdose interventions"),
+    Skill("SKL-ONCOLOGY", "ONCOLOGY", "Clinical Oncology Protocols", "Clinical", "Specialized cancer therapy protocols"),
+    Skill("SKL-HAZMAT", "HAZMAT", "Hazardous Material Logistics", "Logistical", "Biohazard handling and hazardous waste dispatch"),
+    Skill("SKL-CRISIS_COUNSEL", "CRISIS_COUNSEL", "Crisis Counseling", "Linguistic", "De-escalation and behavioral crisis intervention"),
 ]
-
-DEPARTMENTS = ["Emergency", "Inpatient", "Logistics", "Customer Support"]
 
 
 def generate_organization(
     config: GeneratorConfig,
     rng: np.random.Generator,
 ) -> Tuple[List[Team], List[Skill], List[Employee], List[EmployeeSkill]]:
+    # 1. Build Department dictionary from config
+    departments = config.departments
+    if not departments:
+        # Fallback to standard 4 departments
+        from workforce_generator.config import DepartmentConfig
+        departments = [
+            DepartmentConfig("EMERGENCY", "Emergency", ["TRIAGE", "ICU_CARE"], ["PHARMACY", "BILINGUAL_ES"], ["TOXICOLOGY"]),
+            DepartmentConfig("INPATIENT", "Inpatient", ["ICU_CARE", "PHARMACY"], ["TRIAGE", "BILINGUAL_ES"], ["ONCOLOGY"]),
+            DepartmentConfig("LOGISTICS", "Logistics", ["DISPATCH", "SUPPLY_CHAIN"], ["BILINGUAL_ES"], ["HAZMAT"]),
+            DepartmentConfig("CUSTOMER_SUPPORT", "Customer Support", ["BILINGUAL_ES", "INTAKE"], ["DISPATCH"], ["CRISIS_COUNSEL"]),
+        ]
+
+    dept_by_name = {d.name: d for d in departments}
+    dept_names = [d.name for d in departments]
+
+    # 2. Teams
     teams: List[Team] = []
     num_teams = config.workforce.num_teams
     for t_idx in range(1, num_teams + 1):
         team_id = format_team_id(t_idx)
-        dept = DEPARTMENTS[(t_idx - 1) % len(DEPARTMENTS)]
-        team_name = f"{dept} Operations Team {t_idx:03d}"
+        dept_name = dept_names[(t_idx - 1) % len(dept_names)]
+        team_name = f"{dept_name} Operations Team {t_idx:03d}"
         teams.append(
             Team(
                 team_id=team_id,
                 name=team_name,
-                department=dept,
+                department=dept_name,
                 timezone=config.horizon.timezone,
                 is_active=True,
             )
         )
 
-    skills = DEFAULT_SKILLS.copy()
+    skills = ALL_SKILL_DEFINITIONS.copy()
+    skills_by_code = {s.code: s for s in skills}
 
-    # FTE options and weights
+    # 3. Roles and FTEs
     fte_levels = list(config.workforce.fte_distribution.keys())
     fte_weights = np.array(list(config.workforce.fte_distribution.values()), dtype=float)
     fte_weights /= fte_weights.sum()
 
-    # Non-manager role options and weights
     non_manager_roles = [r for r in config.workforce.roles if r.code != "MANAGER"]
     role_codes = [r.code for r in non_manager_roles]
     role_weights = np.array([r.weight for r in non_manager_roles], dtype=float)
     role_weights /= role_weights.sum()
+
+    start_horizon = config.horizon.start_date
+    end_horizon = config.horizon.end_date
+    horizon_days = config.horizon.total_days
+
+    total_emp_target = config.workforce.total_employees
+    # Boundary case allocation: guarantee at least 1 mid-horizon hire and 1 mid-horizon termination
+    num_mid_hires = max(1, int(round(total_emp_target * config.workforce.boundary_cases.mid_horizon_hires_ratio)))
+    num_mid_terms = max(1, int(round(total_emp_target * config.workforce.boundary_cases.mid_horizon_terminations_ratio)))
+
+    # Track boundary assignments
+    mid_hires_assigned = 0
+    mid_terms_assigned = 0
 
     employees: List[Employee] = []
     employee_skills: List[EmployeeSkill] = []
 
     emp_seq = 0
     esk_seq = 0
-    start_horizon = config.horizon.start_date
+    prior_cert_ratio = config.workforce.prior_certification_ratio
 
-    for team in teams:
-        # For each team, employee 0 is designated MANAGER
-        # Remaining (employees_per_team - 1) are STAFF, SENIOR, LEAD
+    for t_idx, team in enumerate(teams):
+        dept_cfg = dept_by_name.get(team.department, departments[0])
+        core_skills = dept_cfg.core_skills
+        secondary_skills = dept_cfg.secondary_skills
+        rare_skills = dept_cfg.rare_skills
+
         num_emp = config.workforce.employees_per_team
-
-        # Generate roles for this team
+        # Employee 0 in team is MANAGER
         team_roles: List[str] = ["MANAGER"]
         if num_emp > 1:
-            drawn_roles = rng.choice(role_codes, size=num_emp - 1, p=role_weights)
+            drawn_roles = list(rng.choice(role_codes, size=num_emp - 1, p=role_weights))
             team_roles.extend(drawn_roles)
 
         for r_idx, role in enumerate(team_roles):
@@ -104,20 +140,44 @@ def generate_organization(
 
             first_name = str(rng.choice(FIRST_NAMES))
             last_name = str(rng.choice(LAST_NAMES))
-            clean_first = first_name.lower()
-            clean_last = last_name.lower()
-            email = f"{clean_first}.{clean_last}.{emp_seq:04d}@workforce.example.com"
+            email = f"{first_name.lower()}.{last_name.lower()}.{emp_seq:04d}@workforce.example.com"
 
-            # FTE assignment: managers are 1.0 FTE; staff drawn from distribution
+            # FTE
             if role == "MANAGER":
                 fte = 1.00
             else:
                 fte = float(rng.choice(fte_levels, p=fte_weights))
             contract_hours = round(fte * config.labor_constraints.regular_weekly_hours_standard, 1)
 
-            # Hire date between 1 and 5 years prior to schedule start
-            hire_offset_days = int(rng.integers(30, 1800))
-            hire_date = start_horizon - timedelta(days=hire_offset_days)
+            # Determine hire date & termination date (including boundary cases)
+            is_mid_hire = False
+            is_mid_term = False
+
+            # Assign boundary cases to non-managers
+            if role != "MANAGER":
+                if mid_hires_assigned < num_mid_hires and (emp_seq % 25 == 3 or emp_seq == 2):
+                    is_mid_hire = True
+                    mid_hires_assigned += 1
+                elif mid_terms_assigned < num_mid_terms and (emp_seq % 25 == 7 or emp_seq == 4):
+                    is_mid_term = True
+                    mid_terms_assigned += 1
+
+            if is_mid_hire:
+                # Hired inside the horizon: e.g. day 3 to day 10
+                offset = int(rng.integers(2, max(3, min(10, horizon_days - 2))))
+                hire_date = start_horizon + timedelta(days=offset)
+                termination_date = None
+                is_active = True
+            elif is_mid_term:
+                # Hired in past, terminated inside the horizon
+                hire_date = start_horizon - timedelta(days=int(rng.integers(100, 1000)))
+                term_offset = int(rng.integers(max(2, min(5, horizon_days - 4)), horizon_days - 1))
+                termination_date = start_horizon + timedelta(days=term_offset)
+                is_active = False # Terminated during horizon
+            else:
+                hire_date = start_horizon - timedelta(days=int(rng.integers(60, 1800)))
+                termination_date = None
+                is_active = True
 
             emp = Employee(
                 employee_id=emp_id,
@@ -129,40 +189,69 @@ def generate_organization(
                 weekly_contract_hours=contract_hours,
                 fte=fte,
                 hire_date=hire_date,
-                termination_date=None,
-                is_active=True,
+                termination_date=termination_date,
+                is_active=is_active,
             )
             employees.append(emp)
 
-            # Skill assignment:
-            # Schedulable employees get 1 to 3 skills
-            # To ensure coverage feasibility, ensure mandatory skills (TRIAGE, DISPATCH) are present
-            all_skill_codes = [s.code for s in skills]
-            if r_idx == 1 or r_idx == 2 or r_idx == 3:
-                # Guaranteed TRIAGE
-                primary_skill = "TRIAGE"
-            elif r_idx == 4 or r_idx == 5:
-                # Guaranteed DISPATCH
-                primary_skill = "DISPATCH"
+            # Skill assignment according to department mapping
+            # Core skill guaranteed for early staff members to guarantee coverage feasibility
+            if r_idx == 0:
+                # Manager has a core skill
+                primary_skill = core_skills[0] if core_skills else "TRIAGE"
+            elif r_idx <= len(core_skills):
+                # Guaranteed coverage of department core skills
+                primary_skill = core_skills[(r_idx - 1) % len(core_skills)]
             else:
-                primary_skill = str(rng.choice(all_skill_codes))
+                # Drawn from core and secondary skills
+                dept_pool = core_skills + secondary_skills
+                primary_skill = str(rng.choice(dept_pool))
 
+            # Select total number of skills
             num_skills = int(rng.integers(
                 config.workforce.skills_per_employee_min,
                 config.workforce.skills_per_employee_max + 1,
             ))
-            # Pick secondary skills
-            other_skills = [c for c in all_skill_codes if c != primary_skill]
-            chosen_secondary = list(rng.choice(other_skills, size=min(num_skills - 1, len(other_skills)), replace=False))
+
+            # Secondary skill candidates: remaining core/secondary + 10% chance of a rare skill
+            secondary_candidates = [c for c in (core_skills + secondary_skills) if c != primary_skill]
+            if rare_skills and rng.random() < 0.10:
+                rare_chosen = str(rng.choice(rare_skills))
+                if rare_chosen not in secondary_candidates:
+                    secondary_candidates.append(rare_chosen)
+
+            chosen_secondary = []
+            if num_skills > 1 and secondary_candidates:
+                take_k = min(num_skills - 1, len(secondary_candidates))
+                chosen_secondary = list(rng.choice(secondary_candidates, size=take_k, replace=False))
+
             emp_skill_codes = [primary_skill] + chosen_secondary
 
+            # Certifications generation with Requirement 4:
+            # Documented minority (e.g. 15%) prior to hire_date, otherwise certified_date >= hire_date
             for s_code in emp_skill_codes:
                 esk_seq += 1
                 esk_id = format_employee_skill_id(esk_seq)
                 prof = int(rng.integers(2, 6)) if s_code == primary_skill else int(rng.integers(1, 5))
-                cert_offset = int(rng.integers(10, 1000))
-                cert_date = start_horizon - timedelta(days=cert_offset)
-                # Valid for 2-4 years
+
+                # Decide if prior to hire_date
+                is_prior = bool(rng.random() < prior_cert_ratio)
+                if is_prior:
+                    # Acquired before hire_date (e.g. college or previous job certification)
+                    prior_days = int(rng.integers(30, 1000))
+                    cert_date = hire_date - timedelta(days=prior_days)
+                else:
+                    # In-house certification: certified_date >= hire_date
+                    if hire_date <= start_horizon:
+                        # Hired before or on horizon start: certified between hire_date and start_horizon
+                        days_between = max(0, (start_horizon - hire_date).days)
+                        offset = int(rng.integers(0, max(1, days_between + 1)))
+                        cert_date = hire_date + timedelta(days=offset)
+                    else:
+                        # Mid-horizon hire: certified on hire_date
+                        cert_date = hire_date
+
+                # Expiry date is always strictly > certified_date (2 to 4 years validity)
                 expiry_offset = int(rng.integers(700, 1500))
                 expiry_date = cert_date + timedelta(days=expiry_offset)
 
@@ -178,4 +267,3 @@ def generate_organization(
                 employee_skills.append(esk)
 
     return teams, skills, employees, employee_skills
-
