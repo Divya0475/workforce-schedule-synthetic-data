@@ -19,18 +19,12 @@ This project delivers a **100% reproducible, zero-external-dependency synthetic 
   - Total scheduled assignments: ~108,000+ assignment rows.
 - **Starter Profile (Fast Dev / CI Testing)**:
   - Scale: **50 employees**, **5 teams** (10 employees/team), **14 days** (2026-01-01 to 2026-01-14), **100 leave requests**.
-  - Uses the **exact same code path** via CLI argument overrides:
+  - Uses the **exact same generation, anomaly, and export code path**:
     ```bash
-    python run_generator.py \
-      --seed 20261022 \
-      --num-teams 5 \
-      --employees-per-team 10 \
-      --start-date 2026-01-01 \
-      --end-date 2026-01-14 \
-      --target-leave-requests 100 \
-      --export-formats csv,json,sql \
-      --output-dir output/starter
+    python run_generator.py --profile starter --out output
     ```
+- **Full Profile**: `python run_generator.py --profile full --out output`.
+- Default anomalies are **3 of each type** for starter and **15 of each type** for full. Use `--anomalies-per-type N` to override the count.
 
 ---
 
@@ -330,11 +324,13 @@ flowchart TD
         SAS & EMP --> WHS["WeeklyHoursSummary (Overtime roll-ups)"]
     end
 
-    subgraph L7["Level 7: Dual Dataset Emission & Anomalies"]
-        SAS & SWP & LVE & ATT & CGP & WHS --> CLEAN["Clean Baseline Export (CSV, JSON, SQL)"]
-        CLEAN --> ANOM["anomalies.py (Inject 5 Labelled Edge Cases)"]
-        ANOM --> DIRTY["Dirty Dataset Export (CSV, JSON, SQL)"]
-        ANOM --> GTRUTH["ground_truth.csv / json (Isolated Metadata)"]
+    subgraph L7["Level 7: Dirty Dataset and Export"]
+        SAS & SWP & LVE & ATT & CGP & WHS --> CLEAN["Clean Baseline Tables"]
+        CLEAN --> ANOM["anomalies.py (injects into a copy)"]
+        ANOM --> DIRTY["Rebuild dirty attendance and analytics"]
+        CLEAN --> CSV["UTF-8 CSV + SHA-256 manifest"]
+        DIRTY --> CSV
+        ANOM --> GT["ground_truth CSV and JSON (isolated metadata)"]
     end
 ```
 
@@ -346,7 +342,7 @@ flowchart TD
 5. **Step 5: Swap Simulation & Temporal History (Level 4)**: Process peer swaps. For applied swaps, close `effective_to` on original rows, set to `SWAPPED_OUT`, and insert new replacement rows with `assignment_status = 'ACTIVE'` and `effective_from = applied_at`.
 6. **Step 6: Attendance Punches & Exceptions (Level 5)**: Link timeclock punches **strictly to active assignments**. Flag `LATE`, `EARLY_LEAVE`, `NO_SHOW`, and `OVERTIME`.
 7. **Step 7: Derived Analytics Aggregation (Level 6)**: Rebuild `CoverageGap` and `WeeklyHoursSummary` from final `ACTIVE` assignments only. Compare the post-swap minimum gaps with baseline; skill-preserving swaps must not create one.
-8. **Step 8: Dual Dataset Emission & Anomaly Injection (Level 7)**: Export clean baseline dataset; run `anomalies.py` to produce dirty dataset and `ground_truth.csv`/`json`; run `report.py` for distribution analysis.
+8. **Step 8: Anomaly Injection and Export (Level 7)**: Spawn a separate anomaly RNG stream, copy the clean source tables, inject targeted anomalies, rebuild attendance and derived analytics from dirty assignments, and export clean/dirty CSV files, isolated ground truth, and a per-file manifest.
 
 ---
 
@@ -383,35 +379,34 @@ Derived tables provide high-performance query projections computed directly from
 
 ## 7. Anomaly Injection Engine (`anomalies.py`)
 
-The anomaly injection engine (`src/workforce_generator/anomalies.py`) synthesizes realistic data defects into a copy of the clean dataset.
+The anomaly injection engine (`src/workforce_generator/anomalies.py`) copies clean table lists and creates dirty data without mutating clean records. It uses a dedicated spawned RNG stream and deterministic eligible targets. The default counts are 3 per type for starter and 15 per type for full; the CLI can override this count.
 
 ### The 5 Injected Edge Cases:
-1. **`DOUBLE_BOOKED_EMPLOYEE`**: Schedules an employee on two overlapping active shifts on the same date.
-2. **`APPROVED_LEAVE_OVERLAPPING_SHIFT`**: Retains an active shift assignment during an approved leave date.
-3. **`REQUIRED_SKILL_ABSENT`**: Removes or mutates certified staff such that an active shift slot lacks a mandatory skill.
-4. **`OVERTIME_CAP_EXCEEDED`**: Assigns shift hours exceeding 48.0 hours in an ISO calendar week.
-5. **`SWAP_APPLIED_WITHOUT_APPROVAL`**: Sets a swap to `APPLIED` without required manager approval or while `REJECTED`.
+1. **`DOUBLE_BOOKED`**: Adds an overlapping `ACTIVE` assignment for an employee already assigned at that time.
+2. **`LEAVE_OVERLAP`**: Adds an `ACTIVE` assignment during an actual `APPROVED` leave date.
+3. **`SKILL_ABSENT`**: Adds an `ACTIVE` assignment whose employee has no valid certification for its fulfilled skill on that date.
+4. **`OVERTIME_CAP_EXCEEDED`**: Gives an employee exactly seven shifts in a complete ISO week (52.5 paid hours), also triggering the six-day rule.
+5. **`SWAP_WITHOUT_APPROVAL`**: Appends a request with `REQUESTED -> APPLIED` events and non-destructive assignment replacements, deliberately omitting approval.
 
 ### Ground Truth Schema (`ground_truth.csv` / `ground_truth.json`)
-The ground truth file logs every injected anomaly with absolute precision:
+Ground truth is output-only metadata, never an input to generation or to a future validator. Each row has these columns:
 ```csv
-anomaly_id,anomaly_type,table_name,record_id,field_name,expected_value,actual_value,description,injected_at
-ANM-0001,DOUBLE_BOOKED_EMPLOYEE,ShiftAssignment,ASN-2026-004521,employee_id,EMP-000342,EMP-000105,"Employee EMP-000105 assigned to two overlapping shifts on 2026-01-15",2026-10-30T10:00:00Z
-ANM-0002,APPROVED_LEAVE_OVERLAPPING_SHIFT,ShiftAssignment,ASN-2026-008920,assignment_status,SWAPPED_OUT,ACTIVE,"Active shift assignment overlaps with approved leave LVE-2026-000214",2026-10-30T10:00:00Z
-ANM-0003,REQUIRED_SKILL_ABSENT,ShiftAssignment,ASN-2026-012450,employee_id,EMP-000812,EMP-000004,"Shift SHIFT-2026-02-01-TEAM012-A lacks required TRIAGE skill",2026-10-30T10:00:00Z
-ANM-0004,OVERTIME_CAP_EXCEEDED,ShiftAssignment,ASN-2026-018230,duration_hours,8.0,16.0,"Employee EMP-000450 scheduled for 56.0 hours in week 2026-W06",2026-10-30T10:00:00Z
-ANM-0005,SWAP_APPLIED_WITHOUT_APPROVAL,SwapRequest,SWP-2026-000088,current_status,REJECTED,APPLIED,"Swap marked APPLIED without manager approval event",2026-10-30T10:00:00Z
+anomaly_id,issue_type,entity,record_id,related_record_ids,employee_id,description,also_triggers
+ANM-0001,DOUBLE_BOOKED,ShiftAssignment,ASN-2026-077458,"[""ASN-2026-069107""]",EMP-001512,"Injected active assignment overlaps another active assignment for the employee.","[]"
 ```
+`related_record_ids` and `also_triggers` are JSON arrays in the JSON file and JSON-encoded cells in CSV. Each `record_id` identifies the newly injected target row. Every referenced ID resolves to an exported source row.
 
 > [!IMPORTANT]
 > **Ground Truth Isolation Guarantee**:
-> `ground_truth.csv` and `ground_truth.json` are written to disk as external audit references. They are **strictly prohibited** from being imported, read, or utilized as features by `validate.py` or any downstream machine learning model.
+> `ground_truth.csv` and `ground_truth.json` are external evaluation outputs. They are not generator inputs and must never be imported or read by a future validator or downstream model.
+
+The dirty copy's `AttendanceEvent`, `CoverageGap`, and `WeeklyHoursSummary` tables are rebuilt from its assignments and the same roster/leave inputs. No non-targeted source rows are modified.
 
 ---
 
-## 8. Independent Validator (`validate.py`)
+## 8. Future Independent Validator
 
-`validate.py` is an autonomous, rule-based audit script that executes against any generated dataset without access to `ground_truth.*`. It verifies ten fundamental categories of structural, relational, and business constraints:
+An independent validator is **not part of this implementation stage**. When added later, it must operate on exported source tables without loading or consulting `ground_truth.*`. The planned checks include:
 1. **Primary Key Uniqueness**: Confirms 0 duplicate PKs across all 15 tables (including derived tables).
 2. **Foreign Key Integrity**: Confirms all child FKs resolve to valid parent rows.
 3. **Enum & Domain Validation**: Confirms roles (including `MANAGER`), statuses (`ACTIVE`, `SWAPPED_OUT`), exception types (`NO_SHOW`, `LATE`, `EARLY_LEAVE`, `OVERTIME`), etc.
@@ -431,36 +426,30 @@ ANM-0005,SWAP_APPLIED_WITHOUT_APPROVAL,SwapRequest,SWP-2026-000088,current_statu
 
 ---
 
-## 9. Data Exports: CSV, JSON, and SQL Seed Data
+## 9. Data Exports: CSV and Manifest
 
-Data export (`src/workforce_generator/export.py`) serializes both the clean baseline and dirty datasets into three standard storage formats:
-1. **CSV (Comma-Separated Values)**: RFC 4180 compliant CSV files with headers for data warehouses.
-2. **JSON (JavaScript Object Notation)**: Structured JSON array format (one `.json` file per entity).
-3. **ANSI SQL Seed Data (`.sql`)**:
-   - Complete DDL (`CREATE TABLE` statements with primary keys, foreign keys, and column constraints).
-   - Batched `INSERT INTO` statements (chunked in blocks of 500 rows) ready for instant execution into PostgreSQL, MySQL, SQLite, or Snowflake.
-- **Explicit Exclusion**: Parquet is deliberately excluded per architectural guidelines to eliminate external binary dependencies and ensure universal accessibility.
+`python run_generator.py --profile starter|full --out <dir>` writes all 15 tables as UTF-8 CSV with stable dataclass column order, rows sorted by primary key, lowercase `true`/`false`, empty cells for null, ISO date values, and `\n` line endings on every OS.
+
+Output layout:
+```text
+<out>/<profile>/
+├── clean/*.csv
+├── dirty/*.csv
+├── ground_truth/ground_truth.csv
+├── ground_truth/ground_truth.json
+└── manifest.json
+```
+The manifest records clean/dirty row counts and a SHA-256 checksum plus row count for each table and ground-truth file. It does not feed back into generation.
 
 ---
 
 ## 10. Reproducibility & Distribution Reporting
 
-### 10.1 Reproducibility Verification Script (`scripts/check_reproducibility.sh`)
-An automated shell script ensuring 100% deterministic reproducibility:
-1. Generates the clean dataset into `/tmp/run_1` using seed `20261022`.
-2. Generates the clean dataset into `/tmp/run_2` using seed `20261022`.
-3. Computes SHA-256 checksums across all generated CSV, JSON, and SQL files.
-4. Performs a bitwise `diff -r /tmp/run_1 /tmp/run_2`.
-5. Fails immediately if any file checksum mismatches.
+### 10.1 Reproducibility
+Export tests generate the same seeded data more than once, compare SHA-256 hashes, and check timezone independence. `manifest.json` provides per-file hashes for clean/dirty data and ground truth.
 
-### 10.2 Distribution Report (`src/workforce_generator/report.py`)
-A distribution reporting utility evaluates the statistical properties of the generated dataset:
-- Headcount distribution across teams and roles (verifying 65% Staff, 20% Senior, 10% Lead, 5% Manager).
-- FTE contract ratios (verifying 85% 1.0 FTE, 10% 0.8 FTE, 5% 0.5 FTE).
-- Leave request volume and approval rates by leave type.
-- Swap request volume and approval/rejection rates.
-- Attendance punch variance distributions (mean, median, standard deviation, exception frequency).
-- Generates a human-readable Markdown/terminal summary report.
+### 10.2 Stage Reports
+Stage diagnostics live in the `scripts/report_stage_*.py` scripts. The profile CLI reports generation, anomaly/recomputation, export, and total elapsed times, as well as row and anomaly counts.
 
 ---
 
@@ -474,7 +463,9 @@ workforce-schedule-synthetic-data/
 │   ├── data_dictionary.md           # Field specifications, types, constraints, ground truth schema, derived tables
 │   └── er_diagram.md                # Mermaid ER diagram, relationship cardinality, lifecycle state machines
 ├── scripts/
-│   └── check_reproducibility.sh     # Shell script to assert bit-for-bit identical outputs across runs
+│   ├── report_stage_b2.py           # Scheduler coverage and hours diagnostics
+│   ├── report_stage_c.py            # Swap and attendance diagnostics
+│   └── profile_stage_d.py           # Full-scale performance profile
 ├── src/
 │   └── workforce_generator/
 │       ├── __init__.py              # Package entry point
@@ -492,10 +483,9 @@ workforce-schedule-synthetic-data/
 │       │   ├── swaps.py             # Generates audited SwapRequests, checks eligibility, preserves assignment history
 │       │   ├── attendance.py        # Simulates AttendanceEvents (links only to ACTIVE), clock in/out variance, exceptions
 │       │   └── analytics.py         # Computes post-swap CoverageGap and WeeklyHoursSummary from ACTIVE rows
-│       ├── anomalies.py             # Injects the 5 labelled edge cases into a dirty dataset copy
+│       ├── anomalies.py             # Injects exactly five targeted anomaly types into a clean-data copy
 │       ├── pipeline.py              # Top-level orchestrator executing steps in topological order
-│       ├── export.py                # Exports DataFrames to CSV, JSON, and ANSI SQL seed files
-│       └── report.py                # Computes distribution report and summary statistics
+│       ├── export.py                # Writes stable CSV files and their SHA-256 manifest
 ├── tests/
 │   ├── __init__.py
 │   ├── test_config.py               # Tests config loading and parameter overrides
@@ -504,10 +494,9 @@ workforce-schedule-synthetic-data/
 │   ├── test_scheduler.py            # Tests 11h rest, 6-day max, and 48h overtime constraint compliance
 │   ├── test_leave_approval.py       # Tests leave approval, coverage checks, and manager team matching
 │   ├── test_stage_c.py              # Independently checks swap/attendance invariants, counterexamples, and determinism
-│   ├── test_anomalies.py            # Tests injection of all 5 synthetic anomalies
-│   └── test_pipeline_reproducibility.py # Tests deterministic output matching given the same random seed
+│   ├── test_anomalies_export.py     # Tests anomaly target resolution, reconciliation, and determinism
+│   └── test_export.py               # Tests stable CSV schemas and manifest hashes
 ├── run_generator.py                 # CLI executable script to run generation and export datasets
-├── validate.py                      # Independent audit script verifying constraints and integrity
 ├── DESIGN.md                        # Architectural design, assumptions, and validation rules
 └── README.md                        # Quickstart, setup instructions, and evaluation metrics
 ```
@@ -525,40 +514,18 @@ workforce-schedule-synthetic-data/
 | `src/workforce_generator/generators/swaps.py` | Generate shift trades, verify eligibility, log lifecycle events, and insert replacement rows with temporal bounds. | Assignments, employee skills, employees | `List[SwapRequest]`, `List[SwapRequestEvent]`, updated `ShiftAssignment` |
 | `src/workforce_generator/generators/attendance.py` | Sample real-time clock-in/out timestamps linking strictly to active assignments, flag exceptions. | Finalized active assignments, variance configs | `List[AttendanceEvent]` |
 | `src/workforce_generator/generators/analytics.py` | Compute post-swap `CoverageGap` and `WeeklyHoursSummary` roll-ups from `ACTIVE` assignments. | `CoverageRequirement`, `ShiftAssignment`, `Employee` | `List[CoverageGap]`, `List[WeeklyHoursSummary]` |
-| `src/workforce_generator/anomalies.py` | Inject the 5 labelled edge cases into a dirty copy of the dataset; emit ground truth. | Clean DataFrames | Dirty DataFrames, `ground_truth.csv`, `ground_truth.json` |
-| `src/workforce_generator/pipeline.py` | Orchestrate end-to-end execution flow in topological sequence. | `GeneratorConfig` | Clean & Dirty DataFrames, Ground Truth |
-| `src/workforce_generator/export.py` | Serialize DataFrames to CSV, JSON, and ANSI SQL seed files. | DataFrames, output directory | Files on disk |
-| `src/workforce_generator/report.py` | Generate distribution metrics and summary statistics. | DataFrames | Distribution Report (Markdown / text) |
-| `validate.py` | Standalone validator checking 10 constraint categories without ground truth. | Dataset directory (clean or dirty) | Exit code 0/1, Violation Report |
+| `src/workforce_generator/anomalies.py` | Inject five targeted anomaly types into a copy; rebuild dirty derived tables and attendance; emit ground truth. | Clean table lists, spawned RNG streams | Dirty table lists, ground truth rows |
+| `src/workforce_generator/pipeline.py` | Orchestrate clean data generation in topological sequence. | `GeneratorConfig` | Clean table lists |
+| `src/workforce_generator/export.py` | Write stable UTF-8 CSV files and manifest checksums. | Clean/dirty table lists and ground truth | Files on disk |
+| `run_generator.py` | Generate a selected profile, inject anomalies into a clean-data copy, and export both datasets. | Profile, output path, optional anomaly count | CSV files, ground truth, manifest, runtime/count diagnostics |
 
 ---
 
 ## 12. Validation & Acceptance Criteria
 
-The system guarantees mathematical correctness, relational integrity, and diagnostic precision through rigorous acceptance criteria:
+This stage includes generation, anomaly injection, CSV export, and tests; an independent clean/dirty dataset validator is not included.
 
-1. **Clean Baseline Dataset Acceptance**:
-   - When `validate.py` executes against the clean baseline dataset:
-     ```bash
-     python validate.py --data-dir output/clean
-     ```
-   - **Result**: The validator reports **exactly zero (0) hard-rule violations** across all integrity categories and exits with code `0`.
-   - All PK/FK checks pass, all working hours adhere to statutory caps ($\le 48.0$ hours/week, $\ge 11.0$ hours rest, $\le 6$ consecutive days), every unfilled minimum slot has a brute-force finding explaining why it could not be filled, and all request statuses match their latest event logs. Diagnostic minimum coverage gaps may remain where the audit finds a genuine skill pinch or other binding constraint.
-
-2. **Dirty Dataset Acceptance & Anomaly Reconciliation**:
-   - When `validate.py` executes against the dirty dataset:
-     ```bash
-     python validate.py --data-dir output/dirty
-     ```
-   - **Result**: The validator reports **strictly and exactly the injected anomalies** and exits with code `1`.
-   - The detected violation set from `validate.py` must reconcile 1:1 with `ground_truth.csv` / `ground_truth.json`:
-     $$\text{DetectedViolations}(\text{DirtyDataset}) \equiv \text{GroundTruthInjections}$$
-   - No uninjected spurious violations (0 false positives).
-   - No injected anomalies missed (0 false negatives).
-
-3. **Reproducibility Acceptance**:
-   - Executing `scripts/check_reproducibility.sh` generates identical datasets across independent runs:
-     ```bash
-     bash scripts/check_reproducibility.sh
-     ```
-   - All SHA-256 hashes must match bit-for-bit with `0` diffs.
+1. **Clean baseline**: The generated baseline remains free of hard-rule violations, and coverage gaps are independently recomputed from active assignments.
+2. **Dirty copy**: Exactly the requested count of each of the five anomaly types is injected; the clean data remains unchanged; dirty attendance and derived analytics reconcile to dirty assignments.
+3. **Export**: All table files use stable schemas, primary-key ordering, UTF-8 and LF line endings. Manifest hashes and deterministic/timezone-independent tests pass.
+4. **Ground truth isolation**: Ground truth is emitted for evaluation only and must not be used by a future validator to discover or classify violations.

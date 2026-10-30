@@ -24,7 +24,8 @@ This document details the schema specifications for all entities within the synt
    - [3.1 CoverageGap](#31-coveragegap)
    - [3.2 WeeklyHoursSummary](#32-weeklyhourssummary)
 4. [Ground Truth Anomaly Metadata Specification](#4-ground-truth-anomaly-metadata-specification)
-5. [Integrity & Cross-Table Validation Rules](#5-integrity--cross-table-validation-rules)
+5. [CSV Export Contract](#5-csv-export-contract)
+6. [Integrity & Cross-Table Validation Rules](#6-integrity--cross-table-validation-rules)
 
 ---
 
@@ -404,33 +405,37 @@ Computed by aggregating active `ShiftAssignment` records across each ISO calenda
 
 ## 4. Ground Truth Anomaly Metadata Specification
 
-The ground truth dataset is stored in **`ground_truth.csv`** and **`ground_truth.json`**.
+The ground truth dataset is stored under `<out>/<profile>/ground_truth/ground_truth.csv` and `ground_truth.json`. It is output metadata only: it is not read by generation, and any future validator must not read it.
 > [!IMPORTANT]
 > **Strict Isolation Guarantee**:
-> The ground truth file is an auxiliary evaluation artifact generated exclusively to audit and benchmark anomaly detection algorithms. It is **strictly prohibited** from ever being consumed as an input feature by the schedule generator, any training model, or the runtime validation suite (`validate.py`).
+> Ground truth must never be consumed as an input by the schedule generator, a training model, or a future runtime validator. No validator is included in this stage.
 
 | Field Name | Type | Req/Opt | Allowed Values | Description |
 | :--- | :--- | :--- | :--- | :--- |
 | `anomaly_id` | VARCHAR(16) | Required | Pattern: `^ANM-\d{4}$` | Unique identifier for the injected anomaly |
-| `anomaly_type` | VARCHAR(32) | Required | Enum (see below) | Categorical classification of the synthetic edge case |
-| `table_name` | VARCHAR(32) | Required | `ShiftAssignment`, `SwapRequest`, `LeaveRequest` | Target table where the dirty mutation occurred |
-| `record_id` | VARCHAR(24) | Required | Valid PK of target table | Primary key of the corrupted record |
-| `field_name` | VARCHAR(32) | Required | Attribute name (e.g., `assignment_status`, `current_status`) | Specific field modified to induce the anomaly |
-| `expected_value` | VARCHAR(255)| Optional | String representation | The valid value under standard business constraints |
-| `actual_value` | VARCHAR(255)| Required | String representation | The mutated corrupt value injected into the dataset |
-| `description` | VARCHAR(255)| Required | Free text narrative | Concise diagnostic explanation of the business violation |
-| `injected_at` | TIMESTAMP | Required | ISO 8601 UTC timestamp | Audit timestamp when the anomaly was synthesized |
+| `issue_type` | VARCHAR(32) | Required | `DOUBLE_BOOKED`, `LEAVE_OVERLAP`, `SKILL_ABSENT`, `OVERTIME_CAP_EXCEEDED`, `SWAP_WITHOUT_APPROVAL` | Injected anomaly classification |
+| `entity` | VARCHAR(32) | Required | `ShiftAssignment`, `SwapRequest` | Table containing the primary target row |
+| `record_id` | VARCHAR(32) | Required | Primary key of target entity | ID of the newly injected target row |
+| `related_record_ids` | JSON array | Required | IDs resolving to exported source rows | Other source rows involved in the anomaly |
+| `employee_id` | VARCHAR(16) | Required | Valid employee ID | Employee associated with the anomaly |
+| `description` | VARCHAR(255) | Required | Free text | Explanation of the injected violation |
+| `also_triggers` | JSON array | Required | Rule names, possibly empty | Additional invariant violations intentionally triggered |
 
-### Supported Anomaly Types (`anomaly_type`)
-1. **`DOUBLE_BOOKED_EMPLOYEE`**: Single employee has two active assignments on overlapping shifts on the same calendar date.
-2. **`APPROVED_LEAVE_OVERLAPPING_SHIFT`**: An employee has an `ACTIVE` shift assignment that directly overlaps with an `APPROVED` leave request date.
-3. **`REQUIRED_SKILL_ABSENT`**: An active shift assignment fails to satisfy mandatory minimum skill coverage requirements for that shift slot.
-4. **`OVERTIME_CAP_EXCEEDED`**: An employee is assigned total active shift hours exceeding 48.0 hours in a full ISO calendar week (Mon–Sun).
-5. **`SWAP_APPLIED_WITHOUT_APPROVAL`**: A shift swap is marked `APPLIED` and executed on assignments without prior manager approval (or in contradiction to a `REJECTED` state).
+`related_record_ids` and `also_triggers` are JSON arrays in the JSON file and JSON-encoded cells in CSV. Starter defaults to three anomalies of each type; full defaults to fifteen. The `--anomalies-per-type` CLI option overrides either default. `OVERTIME_CAP_EXCEEDED` also records `MAX_CONSECUTIVE_DAYS` in `also_triggers`.
 
 ---
 
-## 5. Integrity & Cross-Table Validation Rules
+## 5. CSV Export Contract
+
+Run `.\.venv\Scripts\python.exe run_generator.py --profile starter|full --out <dir>` to write clean and dirty table files under `<dir>/<profile>/clean/` and `<dir>/<profile>/dirty/`, ground truth under `<dir>/<profile>/ground_truth/`, and a `<dir>/<profile>/manifest.json`.
+
+Every one of the 15 tables is exported. CSVs use stable dataclass column order, rows sorted by the table's primary key, UTF-8 encoding, `\n` line endings on every OS, ISO-formatted date/time values, lowercase `true`/`false`, and an empty cell for null. The manifest contains the clean/dirty row counts and a SHA-256 checksum and row count for every CSV and ground-truth JSON file; the manifest does not hash itself. Repeated generation with the same profile and seed produces identical output hashes.
+
+Anomalies are injected only into a copy of the clean tables using a separate spawned RNG stream. Clean tables remain unchanged. After injection, dirty attendance, coverage gaps, and weekly summaries are recomputed from dirty assignments and the corresponding roster/leave records.
+
+---
+
+## 6. Integrity & Cross-Table Validation Rules
 
 1. **Consecutive Days Limit**:
    $$\sum_{d = t}^{t+6} \mathbb{I}(\text{ACTIVE ShiftAssignment exists for } d) \le 6 \quad \forall t$$
