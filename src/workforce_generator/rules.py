@@ -406,7 +406,11 @@ def check_swap_invariants(
                 or (previous_status == "APPROVED" and event.to_status != "APPLIED")
                 or previous_status in {"REJECTED", "APPLIED"}
             ):
-                errors.append(f"SWAP_INVALID_TRANSITION: {request.swap_request_id}")
+                if not (
+                    previous_status == "REQUESTED"
+                    and event.to_status == "APPLIED"
+                ):
+                    errors.append(f"SWAP_INVALID_TRANSITION: {request.swap_request_id}")
             is_initial_request = event.to_status == "REQUESTED" and event.from_status is None
             if is_initial_request:
                 if (
@@ -505,9 +509,16 @@ def check_swap_invariants(
                         continue
                     if (
                         replacement.employee_id != receiver_id
-                        or replacement.assignment_status != "ACTIVE"
+                        or replacement.assignment_status not in {"ACTIVE", "SWAPPED_OUT"}
                         or replacement.effective_from != applied_at
-                        or replacement.effective_to is not None
+                        or (
+                            replacement.assignment_status == "ACTIVE"
+                            and replacement.effective_to is not None
+                        )
+                        or (
+                            replacement.assignment_status == "SWAPPED_OUT"
+                            and replacement.effective_to is None
+                        )
                     ):
                         errors.append(f"SWAP_REPLACEMENT_INVALID: {request.swap_request_id}")
                     skill_id = replacement.fulfills_skill_id
@@ -668,6 +679,8 @@ def check_rest_period(
         for i in range(len(shift_list) - 1):
             cur_end = shift_list[i][1]
             next_start = shift_list[i + 1][0]
+            if next_start < cur_end:
+                continue
             rest_hours = (next_start - cur_end).total_seconds() / 3600.0
             if rest_hours < min_rest_hours - 1e-5:
                 errors.append(
@@ -775,3 +788,134 @@ def validate_all_schedule_rules(
     violations.extend(check_consecutive_working_days(assignments))
     violations.extend(check_overtime_cap(assignments, horizon_start, horizon_end))
     return violations
+
+
+def check_employee_rule_findings(
+    employee_ids: Set[str],
+    assignments: List[ShiftAssignment],
+    employees: List[Employee],
+    employee_skills: List[EmployeeSkill],
+    leave_requests: List[LeaveRequest],
+    horizon_start: date,
+    horizon_end: date,
+    swap_requests: List[SwapRequest] | None = None,
+    swap_events: List[SwapRequestEvent] | None = None,
+) -> Set[str]:
+    """Return shared rule identifiers observed for the requested employees."""
+    employee_id_set = set(employee_ids)
+    scoped_assignments = [
+        assignment
+        for assignment in assignments
+        if assignment.employee_id in employee_id_set
+    ]
+    scoped_employees = [
+        employee for employee in employees if employee.employee_id in employee_id_set
+    ]
+    scoped_skills = [
+        skill for skill in employee_skills if skill.employee_id in employee_id_set
+    ]
+    scoped_leaves = [
+        leave for leave in leave_requests if leave.employee_id in employee_id_set
+    ]
+    messages = validate_all_schedule_rules(
+        scoped_assignments,
+        scoped_employees,
+        scoped_skills,
+        scoped_leaves,
+        horizon_start,
+        horizon_end,
+    )
+    findings: Set[str] = set()
+    rule_names = {
+        "DOUBLE_BOOKED": "DOUBLE_BOOKED",
+        "LEAVE_OVERLAP": "LEAVE_OVERLAP",
+        "MANAGER_SCHEDULED": "MANAGER_SCHEDULED",
+        "BEFORE_HIRE": "ACTIVE_BOUNDS",
+        "AFTER_TERMINATION": "ACTIVE_BOUNDS",
+        "INVALID_CERTIFICATION": "SKILL_ABSENT",
+        "REST_VIOLATION": "REST_VIOLATION",
+        "CONSECUTIVE_DAYS_VIOLATION": "MAX_CONSECUTIVE_DAYS",
+        "OVERTIME_CAP_EXCEEDED": "OVERTIME_CAP_EXCEEDED",
+    }
+    for message in messages:
+        employee_id = next(
+            (candidate for candidate in employee_ids if candidate in message),
+            None,
+        )
+        if employee_id is None:
+            continue
+        prefix = message.partition(":")[0]
+        if prefix in rule_names:
+            findings.add(rule_names[prefix])
+
+    if swap_requests is not None and swap_events is not None:
+        relevant_requests = [
+            request
+            for request in swap_requests
+            if employee_id_set.intersection(
+                {request.requestor_employee_id, request.target_employee_id}
+            )
+        ]
+        relevant_request_ids = {
+            request.swap_request_id for request in relevant_requests
+        }
+        swap_employee_ids = {
+            employee_id
+            for request in relevant_requests
+            for employee_id in (
+                request.requestor_employee_id,
+                request.target_employee_id,
+            )
+        }
+        request_map = {
+            request.swap_request_id: request for request in relevant_requests
+        }
+        swap_messages = check_swap_invariants(
+            relevant_requests,
+            [
+                event
+                for event in swap_events
+                if event.swap_request_id in relevant_request_ids
+            ],
+            [
+                assignment
+                for assignment in assignments
+                if assignment.employee_id in swap_employee_ids
+            ],
+            employees,
+            [
+                skill
+                for skill in employee_skills
+                if skill.employee_id in swap_employee_ids
+            ],
+        )
+        for message in swap_messages:
+            request = next(
+                (
+                    candidate
+                    for request_id, candidate in request_map.items()
+                    if request_id in message
+                    and employee_ids.intersection(
+                        {
+                            candidate.requestor_employee_id,
+                            candidate.target_employee_id,
+                        }
+                    )
+                ),
+                None,
+            )
+            if request is None:
+                continue
+            prefix = message.partition(":")[0]
+            if prefix == "SWAP_APPLIED_WITHOUT_APPROVAL":
+                findings.add("SWAP_WITHOUT_APPROVAL")
+            elif prefix == "SWAP_UNQUALIFIED_RECEIVER":
+                findings.add("SKILL_ABSENT")
+            elif prefix not in {
+                "SWAP_INVALID_TRANSITION",
+                "SWAP_EVENT_CHAIN",
+                "SWAP_TIMESTAMP_ORDER",
+                "SWAP_STATUS_MISMATCH",
+            }:
+                findings.add(prefix)
+    return findings

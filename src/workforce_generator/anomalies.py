@@ -32,6 +32,7 @@ from workforce_generator.models.identifiers import (
     format_swap_request_id,
 )
 from workforce_generator.rules import (
+    check_employee_rule_findings,
     check_swap_eligibility,
     get_shift_datetimes,
     parse_iso_utc,
@@ -173,6 +174,7 @@ def _make_anomaly_swap(
     certifications: Mapping[tuple[str, str], Sequence[tuple[date, date | None]]],
     leave_dates: Mapping[str, set[date]],
     touched_employee_days: set[tuple[str, date]],
+    used_anomaly_employees: set[str],
     next_assignment_seq: int,
     next_request_seq: int,
     next_event_seq: int,
@@ -204,6 +206,8 @@ def _make_anomaly_swap(
                 target = group[int(order[(position + offset) % len(group)])]
                 if (
                     source.employee_id == target.employee_id
+                    or source.employee_id in used_anomaly_employees
+                    or target.employee_id in used_anomaly_employees
                     or source.shift_date == target.shift_date
                 ):
                     continue
@@ -217,7 +221,9 @@ def _make_anomaly_swap(
     for candidate_index in rng.permutation(len(candidates)):
         first, second = candidates[int(candidate_index)]
         if (
-            (first.employee_id, first.shift_date) in touched_employee_days
+            first.employee_id in used_anomaly_employees
+            or second.employee_id in used_anomaly_employees
+            or (first.employee_id, first.shift_date) in touched_employee_days
             or (second.employee_id, second.shift_date) in touched_employee_days
         ):
             continue
@@ -371,6 +377,7 @@ def generate_dirty_dataset(
         )
     leave_dates = _approved_leave_index(leave_requests)
     touched_employee_days: set[tuple[str, date]] = set()
+    used_anomaly_employees: set[str] = set()
     anomaly_rows: list[dict[str, Any]] = []
     next_assignment_seq = _next_sequence(assignments, "assignment_id")
     next_request_seq = _next_sequence(requests, "swap_request_id")
@@ -386,12 +393,16 @@ def generate_dirty_dataset(
         row
         for row in active_rows
         if (row.employee_id, row.shift_date) not in touched_employee_days
+        and row.employee_id not in used_anomaly_employees
     ]
-    for _ in range(counts_per_type):
+    injected_double_count = 0
+    while injected_double_count < counts_per_type:
         if not double_booked_candidates:
             raise ValueError("Not enough employee-day targets for DOUBLE_BOOKED anomalies")
         selected_index = int(injection_rng.integers(len(double_booked_candidates)))
         source = double_booked_candidates.pop(selected_index)
+        if source.employee_id in used_anomaly_employees:
+            continue
         employee = employees_by_id[source.employee_id]
         extra = _make_assignment(
             source,
@@ -405,6 +416,7 @@ def generate_dirty_dataset(
         next_assignment_seq += 1
         assignments.append(extra)
         touched_employee_days.add((extra.employee_id, extra.shift_date))
+        used_anomaly_employees.add(extra.employee_id)
         anomaly_rows.append(
             _ground_truth(
                 next_anomaly_index,
@@ -417,6 +429,7 @@ def generate_dirty_dataset(
             )
         )
         next_anomaly_index += 1
+        injected_double_count += 1
 
     # LEAVE_OVERLAP: create a shift on a real approved-leave date for that employee.
     team_sources: dict[str, list[ShiftAssignment]] = defaultdict(list)
@@ -430,11 +443,14 @@ def generate_dirty_dataset(
         for leave in leave_requests
         if leave.current_status == "APPROVED"
         and employees_by_id[leave.employee_id].role != "MANAGER"
+        and leave.employee_id not in used_anomaly_employees
     ]
     leave_rng_order = injection_rng.permutation(len(leave_candidates))
     leave_candidates = [leave_candidates[int(i)] for i in leave_rng_order]
     selected_leave_targets = []
     for leave in leave_candidates:
+        if leave.employee_id in used_anomaly_employees:
+            continue
         employee = employees_by_id[leave.employee_id]
         current_date = leave.start_date
         while current_date <= leave.end_date:
@@ -456,27 +472,43 @@ def generate_dirty_dataset(
                         employee.employee_id, skill_id, current_date, certifications
                     ):
                         skill_id = None
-                    selected_leave_targets.append((leave, current_date, source, skill_id))
-                    break
+                    extra = _make_assignment(
+                        source,
+                        employee,
+                        current_date,
+                        cfg,
+                        format_assignment_id(
+                            current_date.year,
+                            next_assignment_seq + len(selected_leave_targets),
+                        ),
+                        skill_id,
+                    )
+                    findings = check_employee_rule_findings(
+                        {employee.employee_id},
+                        [*assignments, extra],
+                        employees,
+                        employee_skills,
+                        leave_requests,
+                        cfg.horizon.start_date,
+                        cfg.horizon.end_date,
+                    )
+                    if findings == {"LEAVE_OVERLAP"}:
+                        selected_leave_targets.append(
+                            (leave, current_date, extra)
+                        )
+                        break
             current_date += timedelta(days=1)
         if len(selected_leave_targets) == counts_per_type:
             break
     if len(selected_leave_targets) < counts_per_type:
         raise ValueError("Not enough approved leave employee-days for LEAVE_OVERLAP anomalies")
-    for leave, shift_date, source, skill_id in selected_leave_targets:
+    for leave, shift_date, extra in selected_leave_targets:
         employee = employees_by_id[leave.employee_id]
-        extra = _make_assignment(
-            source,
-            employee,
-            shift_date,
-            cfg,
-            format_assignment_id(shift_date.year, next_assignment_seq),
-            skill_id,
-        )
         next_assignment_seq += 1
         assignments.append(extra)
         touched_employee_days.add((employee.employee_id, shift_date))
         active_days_by_employee[employee.employee_id].add(shift_date)
+        used_anomaly_employees.add(employee.employee_id)
         anomaly_rows.append(
             _ground_truth(
                 next_anomaly_index,
@@ -509,6 +541,7 @@ def generate_dirty_dataset(
             if (
                 employee.team_id == source.team_id
                 and employee.role != "MANAGER"
+                and employee.employee_id not in used_anomaly_employees
                 and employee.employee_id != source.employee_id
                 and source.shift_date not in active_days_by_employee[employee.employee_id]
                 and (employee.employee_id, source.shift_date) not in touched_employee_days
@@ -526,11 +559,14 @@ def generate_dirty_dataset(
                 )
             ):
                 skill_candidates.append((source, employee))
-    for _ in range(counts_per_type):
+    injected_skill_count = 0
+    while injected_skill_count < counts_per_type:
         if not skill_candidates:
             raise ValueError("Not enough uncertified employee-day targets for SKILL_ABSENT")
         selected_index = int(injection_rng.integers(len(skill_candidates)))
         source, employee = skill_candidates.pop(selected_index)
+        if employee.employee_id in used_anomaly_employees:
+            continue
         extra = _make_assignment(
             source,
             employee,
@@ -539,10 +575,22 @@ def generate_dirty_dataset(
             format_assignment_id(source.shift_date.year, next_assignment_seq),
             source.fulfills_skill_id,
         )
+        findings = check_employee_rule_findings(
+            {employee.employee_id},
+            [*assignments, extra],
+            employees,
+            employee_skills,
+            leave_requests,
+            cfg.horizon.start_date,
+            cfg.horizon.end_date,
+        )
+        if findings != {"SKILL_ABSENT"}:
+            continue
         next_assignment_seq += 1
         assignments.append(extra)
         touched_employee_days.add((employee.employee_id, source.shift_date))
         active_days_by_employee[employee.employee_id].add(source.shift_date)
+        used_anomaly_employees.add(employee.employee_id)
         anomaly_rows.append(
             _ground_truth(
                 next_anomaly_index,
@@ -555,6 +603,7 @@ def generate_dirty_dataset(
             )
         )
         next_anomaly_index += 1
+        injected_skill_count += 1
 
     # OVERTIME_CAP_EXCEEDED: ensure one employee has exactly seven shifts in a full week.
     complete_weeks = []
@@ -575,7 +624,10 @@ def generate_dirty_dataset(
     for iso_year, iso_week in complete_weeks:
         week_dates = [date.fromisocalendar(iso_year, iso_week, day) for day in range(1, 8)]
         for employee in employees:
-            if employee.role == "MANAGER":
+            if (
+                employee.role == "MANAGER"
+                or employee.employee_id in used_anomaly_employees
+            ):
                 continue
             existing_by_day: dict[date, list[ShiftAssignment]] = defaultdict(list)
             for row in active_by_employee.get(employee.employee_id, ()):
@@ -597,22 +649,14 @@ def generate_dirty_dataset(
                 overtime_targets.append(
                     (employee, week_dates, existing_by_day, available_days)
                 )
-    if len(overtime_targets) < counts_per_type:
-        raise ValueError("Not enough full-week employee targets for OVERTIME_CAP_EXCEEDED")
     overtime_order = injection_rng.permutation(len(overtime_targets))
-    selected_overtime_targets = []
-    used_overtime_employees: set[str] = set()
+    injected_overtime_count = 0
     for index in overtime_order:
-        target = overtime_targets[int(index)]
-        if target[0].employee_id in used_overtime_employees:
+        employee, week_dates, existing_by_day, available_days = overtime_targets[
+            int(index)
+        ]
+        if employee.employee_id in used_anomaly_employees:
             continue
-        selected_overtime_targets.append(target)
-        used_overtime_employees.add(target[0].employee_id)
-        if len(selected_overtime_targets) == counts_per_type:
-            break
-    if len(selected_overtime_targets) < counts_per_type:
-        raise ValueError("Not enough distinct employees for overtime anomaly targets")
-    for employee, week_dates, existing_by_day, available_days in selected_overtime_targets:
         selected_days = set(existing_by_day)
         needed = 7 - len(selected_days)
         day_order = injection_rng.permutation(len(available_days))
@@ -624,11 +668,14 @@ def generate_dirty_dataset(
             for day in sorted(selected_days)
             for row in existing_by_day.get(day, ())
         ]
+        new_rows = []
+        week_sources = [
+            row
+            for rows in existing_by_day.values()
+            for row in rows
+        ]
+        source = week_sources[0] if week_sources else team_sources[employee.team_id][0]
         for shift_date in sorted(selected_days.difference(existing_by_day)):
-            team_rows = team_sources.get(employee.team_id, [])
-            if not team_rows:
-                raise ValueError(f"No source assignments available for {employee.team_id}")
-            source = team_rows[0]
             extra = _make_assignment(
                 source,
                 employee,
@@ -638,9 +685,28 @@ def generate_dirty_dataset(
                 None,
             )
             next_assignment_seq += 1
-            assignments.append(extra)
-            touched_employee_days.add((employee.employee_id, shift_date))
+            new_rows.append(extra)
             week_assignment_ids.append(extra.assignment_id)
+        findings = check_employee_rule_findings(
+            {employee.employee_id},
+            [*assignments, *new_rows],
+            employees,
+            employee_skills,
+            leave_requests,
+            cfg.horizon.start_date,
+            cfg.horizon.end_date,
+        )
+        if findings != {
+            "OVERTIME_CAP_EXCEEDED",
+            "MAX_CONSECUTIVE_DAYS",
+        }:
+            next_assignment_seq -= len(new_rows)
+            continue
+        assignments.extend(new_rows)
+        touched_employee_days.update(
+            (employee.employee_id, row.shift_date) for row in new_rows
+        )
+        used_anomaly_employees.add(employee.employee_id)
         week_assignment_ids.sort()
         anomaly_rows.append(
             _ground_truth(
@@ -663,6 +729,13 @@ def generate_dirty_dataset(
             )
         )
         next_anomaly_index += 1
+        injected_overtime_count += 1
+        if injected_overtime_count == counts_per_type:
+            break
+    if injected_overtime_count < counts_per_type:
+        raise ValueError(
+            "Not enough full-week employee targets with isolated overtime findings"
+        )
 
     for _ in range(counts_per_type):
         truth, next_assignment_seq, next_request_seq, next_event_seq = _make_anomaly_swap(
@@ -678,11 +751,18 @@ def generate_dirty_dataset(
             certifications,
             leave_dates,
             touched_employee_days,
+            used_anomaly_employees,
             next_assignment_seq,
             next_request_seq,
             next_event_seq,
         )
         anomaly_rows.append(truth)
+        request = next(
+            item for item in requests if item.swap_request_id == truth["record_id"]
+        )
+        used_anomaly_employees.update(
+            {request.requestor_employee_id, request.target_employee_id}
+        )
         next_anomaly_index += 1
 
     counts = defaultdict(int)
@@ -691,6 +771,46 @@ def generate_dirty_dataset(
     expected_counts = {issue_type: counts_per_type for issue_type in ANOMALY_TYPES}
     if dict(counts) != expected_counts:
         raise AssertionError(f"Unexpected injected anomaly counts: {dict(counts)}")
+
+    expected_findings_by_type = {
+        "DOUBLE_BOOKED": {"DOUBLE_BOOKED"},
+        "LEAVE_OVERLAP": {"LEAVE_OVERLAP"},
+        "SKILL_ABSENT": {"SKILL_ABSENT"},
+        "OVERTIME_CAP_EXCEEDED": {
+            "OVERTIME_CAP_EXCEEDED",
+            "MAX_CONSECUTIVE_DAYS",
+        },
+        "SWAP_WITHOUT_APPROVAL": {"SWAP_WITHOUT_APPROVAL"},
+    }
+    for truth in anomaly_rows:
+        affected_employee_ids = {truth["employee_id"]}
+        if truth["issue_type"] == "SWAP_WITHOUT_APPROVAL":
+            request = next(
+                item for item in requests if item.swap_request_id == truth["record_id"]
+            )
+            affected_employee_ids.update(
+                {request.requestor_employee_id, request.target_employee_id}
+            )
+        findings = check_employee_rule_findings(
+            affected_employee_ids,
+            assignments,
+            employees,
+            employee_skills,
+            leave_requests,
+            cfg.horizon.start_date,
+            cfg.horizon.end_date,
+            requests,
+            events,
+        )
+        expected_findings = {
+            *expected_findings_by_type[truth["issue_type"]],
+            *truth["also_triggers"],
+        }
+        if findings != expected_findings:
+            raise AssertionError(
+                f"Anomaly {truth['anomaly_id']} ({truth['issue_type']}) produced "
+                f"rules {sorted(findings)}, expected {sorted(expected_findings)}"
+            )
 
     dirty["attendance_events"] = generate_attendance_events(
         cfg, attendance_rng, assignments, leave_requests

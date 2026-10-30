@@ -15,6 +15,7 @@ from workforce_generator.anomalies import (
     generate_dirty_dataset,
 )
 from workforce_generator.export import TABLE_PRIMARY_KEYS, write_dataset
+from workforce_generator.rules import check_employee_rule_findings
 
 
 def _snapshots(data):
@@ -175,6 +176,39 @@ def test_starter_anomalies_are_targeted_and_ground_truth_resolves(
                 if identifier in assignment_by_id
                 and identifier not in clean_primary_keys["shift_assignments"]
             )
+
+    expected_rules = {
+        "DOUBLE_BOOKED": {"DOUBLE_BOOKED"},
+        "LEAVE_OVERLAP": {"LEAVE_OVERLAP"},
+        "SKILL_ABSENT": {"SKILL_ABSENT"},
+        "OVERTIME_CAP_EXCEEDED": {
+            "OVERTIME_CAP_EXCEEDED",
+            "MAX_CONSECUTIVE_DAYS",
+        },
+        "SWAP_WITHOUT_APPROVAL": {"SWAP_WITHOUT_APPROVAL"},
+    }
+    for truth in ground_truth:
+        affected_employees = {truth["employee_id"]}
+        if truth["issue_type"] == "SWAP_WITHOUT_APPROVAL":
+            request = requests_by_id[truth["record_id"]]
+            affected_employees.update(
+                {request.requestor_employee_id, request.target_employee_id}
+            )
+        findings = check_employee_rule_findings(
+            affected_employees,
+            dirty["shift_assignments"],
+            clean_data["employees"],
+            clean_data["employee_skills"],
+            clean_data["leave_requests"],
+            clean_data["config"].horizon.start_date,
+            clean_data["config"].horizon.end_date,
+            dirty["swap_requests"],
+            dirty["swap_events"],
+        )
+        assert findings == {
+            *expected_rules[truth["issue_type"]],
+            *truth["also_triggers"],
+        }
 
     for assignment_id in anomaly_assignment_ids:
         assert assignment_id not in clean_primary_keys["shift_assignments"]
