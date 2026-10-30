@@ -10,10 +10,15 @@ from typing import Any, Dict
 import numpy as np
 
 from workforce_generator.config import GeneratorConfig, load_config
+from workforce_generator.generators.analytics import (
+    compute_coverage_gaps,
+    compute_weekly_hours_summaries,
+)
 from workforce_generator.generators.coverage import generate_coverage_requirements
 from workforce_generator.generators.holidays import generate_holidays
 from workforce_generator.generators.leave import generate_leave_requests_and_events
 from workforce_generator.generators.organization import generate_organization
+from workforce_generator.generators.scheduler import schedule_shifts
 from workforce_generator.models.entities import ShiftTemplate
 
 
@@ -35,14 +40,20 @@ def run_pipeline(cfg: GeneratorConfig | None = None, overrides: dict | None = No
           - "coverage_requirements"
           - "leave_requests"
           - "leave_events"
+          - "shift_assignments"
+          - "coverage_gaps"
+          - "weekly_hours_summaries"
           - "config"
     """
     if cfg is None:
         cfg = load_config(overrides=overrides)
 
-    # Spawn independent RNG streams for each generation stage
+    # Spawn 3 independent RNG streams for each generation stage:
+    # 0: Organization generator
+    # 1: Leave requests and lifecycle events
+    # 2: Shift scheduler
     seed_seq = np.random.SeedSequence(cfg.seed)
-    rng_org, rng_leave = [np.random.default_rng(s) for s in seed_seq.spawn(2)]
+    rng_org, rng_leave, rng_sched = [np.random.default_rng(s) for s in seed_seq.spawn(3)]
 
     # Stage A: Organization (Teams, Skills, Employees, EmployeeSkills)
     teams, skills, employees, employee_skills = generate_organization(cfg, rng_org)
@@ -73,6 +84,19 @@ def run_pipeline(cfg: GeneratorConfig | None = None, overrides: dict | None = No
         cfg, rng_leave, employees, employee_skills, coverage_reqs, holidays
     )
 
+    # Stage B2: Shift Scheduler
+    shift_assignments = schedule_shifts(
+        cfg, rng_sched, employees, employee_skills, coverage_reqs, holidays, leave_requests
+    )
+
+    # Stage B2: Derived Analytical Tables (computed strictly post-scheduling)
+    coverage_gaps = compute_coverage_gaps(
+        cfg, coverage_reqs, shift_assignments, employees, employee_skills, leave_requests
+    )
+    weekly_hours_summaries = compute_weekly_hours_summaries(
+        cfg, employees, shift_assignments
+    )
+
     return {
         "teams": teams,
         "skills": skills,
@@ -83,5 +107,8 @@ def run_pipeline(cfg: GeneratorConfig | None = None, overrides: dict | None = No
         "coverage_requirements": coverage_reqs,
         "leave_requests": leave_requests,
         "leave_events": leave_events,
+        "shift_assignments": shift_assignments,
+        "coverage_gaps": coverage_gaps,
+        "weekly_hours_summaries": weekly_hours_summaries,
         "config": cfg,
     }

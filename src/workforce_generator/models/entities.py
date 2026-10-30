@@ -133,11 +133,52 @@ class ShiftAssignment:
     swap_request_id: Optional[str] = None
     replaces_assignment_id: Optional[str] = None
     fulfills_skill_id: Optional[str] = None
+    is_holiday_premium: bool = False
 
     def to_dict(self) -> Dict[str, Any]:
         d = asdict(self)
         d["shift_date"] = self.shift_date.isoformat()
         return d
+
+
+@dataclass
+class CoverageGap:
+    gap_id: str
+    coverage_id: str
+    effective_date: date
+    team_id: str
+    shift_template_id: str
+    skill_id: str
+    required_headcount: int
+    scheduled_headcount: int
+    gap_headcount: int
+    target_shortfall: int
+    reason: str
+    is_critical: bool
+    computed_at: str
+
+    def to_dict(self) -> Dict[str, Any]:
+        d = asdict(self)
+        d["effective_date"] = self.effective_date.isoformat()
+        return d
+
+
+@dataclass
+class WeeklyHoursSummary:
+    summary_id: str
+    employee_id: str
+    iso_year: int
+    iso_week: int
+    is_partial_week: bool
+    contract_hours: float
+    scheduled_hours: float
+    regular_hours: float
+    overtime_hours: float
+    exceeds_overtime_cap: bool
+    computed_at: str
+
+    def to_dict(self) -> Dict[str, Any]:
+        return asdict(self)
 
 
 @dataclass
