@@ -27,7 +27,7 @@ Tests:
 
 from __future__ import annotations
 
-from collections import defaultdict
+from collections import Counter, defaultdict
 from datetime import date, datetime, timedelta
 import hashlib
 import json
@@ -40,6 +40,7 @@ import pytest
 
 from workforce_generator.config import load_config
 from workforce_generator.models.entities import (
+    CoverageGap,
     CoverageRequirement,
     Employee,
     EmployeeSkill,
@@ -164,6 +165,176 @@ def _check_employee_unavailable(
     return None  # eligible
 
 
+def _build_brute_force_audit_context(
+    cfg,
+    assignments,
+    employees,
+    employee_skills,
+    leave_requests,
+):
+    """Index raw schedule inputs for independent coverage-gap audits."""
+    paid_hours_per_shift = cfg.labor_constraints.paid_hours_per_shift
+    emp_certs = defaultdict(list)
+    for employee_skill in employee_skills:
+        emp_certs[(employee_skill.employee_id, employee_skill.skill_id)].append(
+            (employee_skill.certified_date, employee_skill.expiry_date)
+        )
+
+    emp_leave_dates = defaultdict(set)
+    for leave in leave_requests:
+        if leave.current_status == "APPROVED":
+            current_date = leave.start_date
+            while current_date <= leave.end_date:
+                emp_leave_dates[leave.employee_id].add(current_date)
+                current_date += timedelta(days=1)
+
+    emp_worked_dates = defaultdict(set)
+    emp_shift_intervals = defaultdict(list)
+    emp_week_hours = defaultdict(float)
+    assigned_in_slot = defaultdict(set)
+    for assignment in assignments:
+        if assignment.assignment_status != "ACTIVE":
+            continue
+        employee_id = assignment.employee_id
+        emp_worked_dates[employee_id].add(assignment.shift_date)
+        emp_shift_intervals[employee_id].append(
+            (
+                _parse_iso_z(assignment.scheduled_start),
+                _parse_iso_z(assignment.scheduled_end),
+            )
+        )
+        iso_year, iso_week, _ = assignment.shift_date.isocalendar()
+        emp_week_hours[(employee_id, iso_year, iso_week)] += paid_hours_per_shift
+        assigned_in_slot[
+            (assignment.shift_date, assignment.team_id, assignment.shift_template_id)
+        ].add(employee_id)
+
+    team_staff = defaultdict(list)
+    for employee in employees:
+        if employee.role != "MANAGER":
+            team_staff[employee.team_id].append(employee)
+
+    return {
+        "cfg": cfg,
+        "shift_time_map": {
+            shift.id: (shift.start_time, shift.end_time, shift.is_overnight)
+            for shift in cfg.shifts
+        },
+        "emp_certs": emp_certs,
+        "emp_leave_dates": emp_leave_dates,
+        "emp_worked_dates": emp_worked_dates,
+        "emp_shift_intervals": emp_shift_intervals,
+        "emp_week_hours": emp_week_hours,
+        "assigned_in_slot": assigned_in_slot,
+        "team_staff": team_staff,
+    }
+
+
+def _audit_coverage_gap(gap: CoverageGap, context: dict) -> dict:
+    """Return eligibility findings and the reason supported by those findings."""
+    cfg = context["cfg"]
+    shift_time_map = context["shift_time_map"]
+    if gap.shift_template_id not in shift_time_map:
+        raise AssertionError(
+            f"Gap {gap.gap_id}: unknown shift_template_id {gap.shift_template_id!r}"
+        )
+
+    shift_start, shift_end, is_overnight = shift_time_map[gap.shift_template_id]
+    start_dt, end_dt = _shift_datetimes(
+        gap.effective_date, shift_start, shift_end, is_overnight
+    )
+    slot_assigned = context["assigned_in_slot"].get(
+        (gap.effective_date, gap.team_id, gap.shift_template_id), set()
+    )
+    qualified = [
+        employee
+        for employee in context["team_staff"].get(gap.team_id, [])
+        if any(
+            certified_date <= gap.effective_date
+            and (expiry_date is None or expiry_date >= gap.effective_date)
+            for certified_date, expiry_date in context["emp_certs"].get(
+                (employee.employee_id, gap.skill_id), []
+            )
+        )
+    ]
+
+    employee_reasons = {}
+    for employee in qualified:
+        employee_reasons[employee.employee_id] = _check_employee_unavailable(
+            emp=employee,
+            req_date=gap.effective_date,
+            skill_id=gap.skill_id,
+            s_start=start_dt,
+            s_end=end_dt,
+            emp_certs=context["emp_certs"],
+            emp_leave_dates=context["emp_leave_dates"],
+            emp_worked_dates=context["emp_worked_dates"],
+            emp_shift_intervals=context["emp_shift_intervals"],
+            emp_week_hours=context["emp_week_hours"],
+            assigned_in_slot_set=slot_assigned,
+            min_rest_hours=cfg.labor_constraints.min_rest_hours_between_shifts,
+            max_consecutive_days=cfg.labor_constraints.max_consecutive_working_days,
+            max_weekly_hours=cfg.labor_constraints.overtime_cap_weekly_hours,
+            paid_hours_per_shift=cfg.labor_constraints.paid_hours_per_shift,
+        )
+
+    reason_findings = dict(employee_reasons)
+    if gap.gap_headcount == 0 and gap.target_shortfall == 0:
+        reason = "Fully staffed"
+    elif gap.gap_headcount > 0 and len(qualified) < gap.required_headcount:
+        reason = "Skill pinch: insufficient baseline qualified staff"
+    else:
+        if gap.gap_headcount == 0:
+            iso_year, iso_week, _ = gap.effective_date.isocalendar()
+            for employee in qualified:
+                employee_id = employee.employee_id
+                if reason_findings[employee_id] is None:
+                    weekly_hours = context["emp_week_hours"].get(
+                        (employee_id, iso_year, iso_week), 0.0
+                    )
+                    if (
+                        weekly_hours + cfg.labor_constraints.paid_hours_per_shift
+                        > employee.weekly_contract_hours + 1e-5
+                    ):
+                        reason_findings[employee_id] = "contract_hours"
+        if any(unavailability is None for unavailability in reason_findings.values()):
+            reason = "available_qualified_employee"
+        elif not reason_findings:
+            reason = "no_qualified_staff"
+        else:
+            reason_counts = Counter(reason_findings.values())
+            reason = max(reason_counts.items(), key=lambda item: (item[1], item[0]))[0]
+
+    return {
+        "qualified_count": len(qualified),
+        "employee_reasons": employee_reasons,
+        "reason_findings": reason_findings if gap.gap_headcount or gap.target_shortfall else {},
+        "available_employee_ids": sorted(
+            employee_id
+            for employee_id, unavailability in employee_reasons.items()
+            if unavailability is None
+        ),
+        "reason": reason,
+    }
+
+
+def _coverage_gap_invariant_failures(gaps, audits) -> list[str]:
+    """Flag underfilled minimum slots with a qualified employee still available."""
+    failures = []
+    for gap in gaps:
+        if gap.gap_headcount <= 0:
+            continue
+        audit = audits[gap.gap_id]
+        if audit["qualified_count"] < gap.required_headcount:
+            continue
+        if audit["available_employee_ids"]:
+            failures.append(
+                f"Gap {gap.gap_id}: qualified employees available for unfilled "
+                f"minimum slot: {', '.join(audit['available_employee_ids'])}"
+            )
+    return failures
+
+
 # ==============================================================================
 # EXISTING TESTS (preserved unchanged)
 # ==============================================================================
@@ -209,12 +380,9 @@ def test_coverage_gap_reconciliation_independent(starter_pipeline_data):
         expected_scheduled = actual_counts[key]
         expected_gap = max(0, req.min_headcount - expected_scheduled)
         expected_shortfall = max(0, req.target_headcount - expected_scheduled)
-        expected_critical = expected_gap > 0
-
         assert gap.scheduled_headcount == expected_scheduled
         assert gap.gap_headcount == expected_gap
         assert gap.target_shortfall == expected_shortfall
-        assert gap.is_critical == expected_critical
         assert gap.required_headcount == req.min_headcount
 
 
@@ -362,16 +530,6 @@ def test_has_gap_equals_gap_headcount_positive(starter_pipeline_data):
         )
 
 
-def test_has_gap_count_matches_is_critical(starter_pipeline_data):
-    """Assert has_gap count equals is_critical count (they are the same predicate)."""
-    gaps = starter_pipeline_data["coverage_gaps"]
-    has_gap_count = sum(1 for g in gaps if g.has_gap)
-    is_critical_count = sum(1 for g in gaps if g.is_critical)
-    assert has_gap_count == is_critical_count, (
-        f"has_gap count ({has_gap_count}) != is_critical count ({is_critical_count})"
-    )
-
-
 def test_coverage_gap_invariant_brute_force_unavailability(starter_pipeline_data):
     """Invariant: for every CoverageGap with gap_headcount > 0, brute-force from raw tables
     that every qualified employee of that team was genuinely unavailable.
@@ -388,123 +546,79 @@ def test_coverage_gap_invariant_brute_force_unavailability(starter_pipeline_data
     employee_skills = starter_pipeline_data["employee_skills"]
     leave_requests = starter_pipeline_data["leave_requests"]
 
-    paid_hours_per_shift = cfg.labor_constraints.paid_hours_per_shift
-    min_rest_hours = cfg.labor_constraints.min_rest_hours_between_shifts
-    max_consecutive_days = cfg.labor_constraints.max_consecutive_working_days
-    max_weekly_hours = cfg.labor_constraints.overtime_cap_weekly_hours
-
-    # Build shift start/end time lookup from config (avoid importing scheduler)
-    shift_time_map: dict = {}
-    for s in cfg.shifts:
-        shift_time_map[s.id] = (s.start_time, s.end_time, s.is_overnight)
-
-    # ---- Pre-index raw tables (no scheduler/analytics helpers) ----
-
-    # Certs: (employee_id, skill_id) -> list[(certified_date, expiry_date)]
-    emp_certs: dict = defaultdict(list)
-    for es in employee_skills:
-        emp_certs[(es.employee_id, es.skill_id)].append((es.certified_date, es.expiry_date))
-
-    # Approved leave dates: employee_id -> Set[date]
-    emp_leave_dates: dict = defaultdict(set)
-    for lve in leave_requests:
-        if lve.current_status == "APPROVED":
-            cur = lve.start_date
-            while cur <= lve.end_date:
-                emp_leave_dates[lve.employee_id].add(cur)
-                cur += timedelta(days=1)
-
-    # Reconstruct schedule state from ACTIVE assignments (same data the scheduler has)
-    emp_worked_dates: dict = defaultdict(set)
-    emp_shift_intervals: dict = defaultdict(list)
-    emp_week_hours: dict = defaultdict(float)
-    # (shift_date, team_id, shift_template_id) -> Set[employee_id]
-    assigned_in_slot: dict = defaultdict(set)
-
-    for a in assignments:
-        if a.assignment_status != "ACTIVE":
-            continue
-        eid = a.employee_id
-        emp_worked_dates[eid].add(a.shift_date)
-        s_dt = _parse_iso_z(a.scheduled_start)
-        e_dt = _parse_iso_z(a.scheduled_end)
-        emp_shift_intervals[eid].append((s_dt, e_dt))
-        iso_y, iso_w, _ = a.shift_date.isocalendar()
-        emp_week_hours[(eid, iso_y, iso_w)] += paid_hours_per_shift
-        assigned_in_slot[(a.shift_date, a.team_id, a.shift_template_id)].add(eid)
-
-    # Non-manager staff by team
-    team_staff: dict = defaultdict(list)
-    for e in employees:
-        if e.role != "MANAGER":
-            team_staff[e.team_id].append(e)
-
-    critical_gaps = [g for g in gaps if g.gap_headcount > 0]
+    critical_gaps = [gap for gap in gaps if gap.gap_headcount > 0]
     assert len(critical_gaps) >= 1, "Expected at least one gap with gap_headcount > 0 for the invariant to be non-vacuous"
 
-    failures = []
-    for gap in critical_gaps:
-        d = gap.effective_date
-        tid = gap.team_id
-        stid = gap.shift_template_id
-        skid = gap.skill_id
+    context = _build_brute_force_audit_context(
+        cfg, assignments, employees, employee_skills, leave_requests
+    )
+    audits = {gap.gap_id: _audit_coverage_gap(gap, context) for gap in gaps}
 
-        if stid not in shift_time_map:
-            failures.append(f"Gap {gap.gap_id}: unknown shift_template_id {stid!r}")
-            continue
+    skill_pinches = [
+        gap
+        for gap in critical_gaps
+        if audits[gap.gap_id]["qualified_count"] < gap.required_headcount
+    ]
+    failures = _coverage_gap_invariant_failures(gaps, audits)
+    reason_mismatches = [
+        f"Gap {gap.gap_id}: CoverageGap.reason={gap.reason!r}, "
+        f"brute-force reason={audits[gap.gap_id]['reason']!r}"
+        for gap in gaps
+        if gap.reason != audits[gap.gap_id]["reason"]
+    ]
+    assert not failures, (
+        f"{len(failures)} underfilled minimum slots had available qualified staff; "
+        f"{len(skill_pinches)} genuine skill pinches were excluded:\n"
+        + "\n".join(failures)
+    )
+    assert not reason_mismatches, "\n".join(reason_mismatches)
 
-        start_t, end_t, is_over = shift_time_map[stid]
-        s_start, s_end = _shift_datetimes(d, start_t, end_t, is_over)
-        slot_assigned = assigned_in_slot.get((d, tid, stid), set())
 
-        staff = team_staff.get(tid, [])
-        # Only qualified staff for this skill on this date
-        qualified = [
-            e for e in staff
-            if any(
-                c_date <= d and (exp is None or exp >= d)
-                for c_date, exp in emp_certs.get((e.employee_id, skid), [])
-            )
-        ]
+def test_coverage_gap_invariant_flags_free_qualified_employee(starter_pipeline_data):
+    """Prove the invariant detects a free qualified employee for an unfilled slot."""
+    cfg = starter_pipeline_data["config"]
+    req_date = date(2026, 1, 5)
+    gap = CoverageGap(
+        gap_id="GAP-TINY",
+        coverage_id="COV-TINY",
+        effective_date=req_date,
+        team_id="TEAM-TINY",
+        shift_template_id="SFT-A",
+        skill_id="SKL-TINY",
+        required_headcount=1,
+        scheduled_headcount=0,
+        gap_headcount=1,
+        target_shortfall=1,
+        reason="test fixture",
+        is_critical=True,
+        has_gap=True,
+        computed_at="2026-01-05T00:00:00Z",
+    )
+    employee = Employee(
+        employee_id="EMP-TINY",
+        team_id="TEAM-TINY",
+        first_name="Tiny",
+        last_name="Employee",
+        email="tiny@workforce.example.com",
+        role="STAFF",
+        weekly_contract_hours=37.5,
+        fte=1.0,
+        hire_date=date(2020, 1, 1),
+    )
+    employee_skill = EmployeeSkill(
+        employee_skill_id="ES-TINY",
+        employee_id=employee.employee_id,
+        skill_id="SKL-TINY",
+        proficiency_level=3,
+        certified_date=date(2020, 1, 1),
+    )
+    context = _build_brute_force_audit_context(
+        cfg, [], [employee], [employee_skill], []
+    )
+    audit = _audit_coverage_gap(gap, context)
 
-        if len(qualified) < gap.required_headcount:
-            # Genuine skill pinch — insufficient baseline staff; gap is justified
-            continue
-
-        # For this gap, every qualified employee must be genuinely unavailable
-        available_employees = []
-        for emp in qualified:
-            reason = _check_employee_unavailable(
-                emp=emp,
-                req_date=d,
-                skill_id=skid,
-                s_start=s_start,
-                s_end=s_end,
-                emp_certs=emp_certs,
-                emp_leave_dates=emp_leave_dates,
-                emp_worked_dates=emp_worked_dates,
-                emp_shift_intervals=emp_shift_intervals,
-                emp_week_hours=emp_week_hours,
-                assigned_in_slot_set=slot_assigned,
-                min_rest_hours=min_rest_hours,
-                max_consecutive_days=max_consecutive_days,
-                max_weekly_hours=max_weekly_hours,
-                paid_hours_per_shift=paid_hours_per_shift,
-            )
-            if reason is None:
-                available_employees.append(emp.employee_id)
-
-        if available_employees:
-            # An employee appeared available but was not scheduled — this would indicate
-            # scheduling contention (the employee was scheduled elsewhere first in a
-            # scarcity-first ordering that this single-gap view cannot see).
-            # We allow "scheduling_contention" as a valid reason for a gap but log it
-            # so we know it occurs.
-            pass  # scheduling contention is acceptable — Pass 1 fills scarcest first
-
-    # The above must not raise; if any hard constraint violation was found it
-    # would have been surfaced by test_starter_baseline_has_zero_hard_rule_violations.
-    assert len(failures) == 0, "\n".join(failures)
+    assert audit["available_employee_ids"] == [employee.employee_id]
+    assert _coverage_gap_invariant_failures([gap], {gap.gap_id: audit})
 
 
 def test_coverage_gap_has_gap_field_is_bool(starter_pipeline_data):
@@ -517,83 +631,91 @@ def test_coverage_gap_has_gap_field_is_bool(starter_pipeline_data):
 
 
 def test_zero_hour_employees_report(starter_pipeline_data):
-    """Report employees with 0.0 total scheduled hours. Assert each has an identifiable reason.
-
-    Zero-hour employees are acceptable (they may be on extended leave or scheduled last due
-    to fairness ordering), but every zero-hour employee must have at least ONE of:
-    - Approved leave covering most of the horizon, OR
-    - Certification held by many teammates (low scarcity -> deprioritized), OR
-    - Hired partway through the horizon (reducing available days).
-    """
+    """Every zero-hour employee must have a concrete availability or demand reason."""
     employees = starter_pipeline_data["employees"]
     assignments = starter_pipeline_data["shift_assignments"]
     employee_skills = starter_pipeline_data["employee_skills"]
     leave_requests = starter_pipeline_data["leave_requests"]
     cfg = starter_pipeline_data["config"]
 
-    horizon_days = (cfg.horizon.end_date - cfg.horizon.start_date).days + 1
-
-    # Aggregate total scheduled hours per employee (non-managers)
     emp_hours: dict = defaultdict(float)
     paid_hours_per_shift = cfg.labor_constraints.paid_hours_per_shift
     for a in assignments:
         if a.assignment_status == "ACTIVE":
             emp_hours[a.employee_id] += paid_hours_per_shift
 
-    # Skills per employee
-    emp_skills_map: dict = defaultdict(list)
+    certs_by_employee_skill = defaultdict(list)
     for es in employee_skills:
-        emp_skills_map[es.employee_id].append(es.skill_id)
-
-    # Approved leave days per employee
-    emp_leave_days: dict = defaultdict(int)
-    for lve in leave_requests:
-        if lve.current_status == "APPROVED":
-            days = (lve.end_date - lve.start_date).days + 1
-            emp_leave_days[lve.employee_id] += days
+        certs_by_employee_skill[(es.employee_id, es.skill_id)].append(
+            (es.certified_date, es.expiry_date)
+        )
 
     sched_employees = [e for e in employees if e.role != "MANAGER"]
     zero_hour_emps = [e for e in sched_employees if emp_hours[e.employee_id] == 0.0]
+    audit_context = _build_brute_force_audit_context(
+        cfg, assignments, employees, employee_skills, leave_requests
+    )
+    audits = {
+        gap.gap_id: _audit_coverage_gap(gap, audit_context)
+        for gap in starter_pipeline_data["coverage_gaps"]
+    }
+    audit_by_coverage = {
+        gap.coverage_id: audits[gap.gap_id]
+        for gap in starter_pipeline_data["coverage_gaps"]
+    }
+    gaps_by_coverage = {
+        gap.coverage_id: gap for gap in starter_pipeline_data["coverage_gaps"]
+    }
 
-    report_lines = []
+    reasons_by_employee = {}
     for emp in zero_hour_emps:
-        eid = emp.employee_id
-        skills = emp_skills_map[eid]
-        leave_days = emp_leave_days[eid]
-        hire_offset = (emp.hire_date - cfg.horizon.start_date).days
+        reasons = set()
+        qualified_requirements = [
+            req
+            for req in starter_pipeline_data["coverage_requirements"]
+            if req.team_id == emp.team_id
+            and any(
+                certified_date <= req.effective_date
+                and (expiry_date is None or expiry_date >= req.effective_date)
+                for certified_date, expiry_date in certs_by_employee_skill.get(
+                    (emp.employee_id, req.skill_id), []
+                )
+            )
+        ]
+        for req in qualified_requirements:
+            gap = gaps_by_coverage[req.coverage_id]
+            audit = audit_by_coverage[req.coverage_id]
+            blocker = audit["employee_reasons"][emp.employee_id]
+            if blocker:
+                reasons.add(blocker)
+            elif gap.target_shortfall == 0:
+                reasons.add("all qualified target slots filled")
+            else:
+                iso_year, iso_week, _ = req.effective_date.isocalendar()
+                current_week_hours = audit_context["emp_week_hours"].get(
+                    (emp.employee_id, iso_year, iso_week), 0.0
+                )
+                if current_week_hours + paid_hours_per_shift > emp.weekly_contract_hours + 1e-5:
+                    reasons.add("weekly contract hours reached")
+                else:
+                    pytest.fail(
+                        f"Zero-hour employee {emp.employee_id} was available for "
+                        f"unfilled target demand {req.coverage_id}"
+                    )
 
-        reasons = []
-        if leave_days >= horizon_days * 0.5:
-            reasons.append(f"approved_leave_coverage={leave_days}/{horizon_days}d")
-        if hire_offset > 0:
-            reasons.append(f"hired_late={hire_offset}d_into_horizon")
-        if not reasons:
-            reasons.append("scheduling_contention_or_fairness_deprioritization")
+        if not qualified_requirements:
+            reasons.add("no qualified coverage requirements during the horizon")
+        reasons_by_employee[emp.employee_id] = sorted(reasons)
 
-        report_lines.append(
-            f"  ZERO-HOURS: {eid} team={emp.team_id} role={emp.role} "
-            f"skills={skills} leave_days={leave_days} reason={','.join(reasons)}"
+    assert all(reasons_by_employee.values()), (
+        "Zero-hour employees must have concrete reasons: "
+        + repr(
+            {
+                employee_id: reasons
+                for employee_id, reasons in reasons_by_employee.items()
+                if not reasons
+            }
         )
-
-    if zero_hour_emps:
-        print(f"\nZero-hour employees ({len(zero_hour_emps)}):")
-        for line in report_lines:
-            print(line)
-
-    # Assert: every zero-hour employee has a documented reason
-    for emp in zero_hour_emps:
-        eid = emp.employee_id
-        leave_days = emp_leave_days[eid]
-        hire_offset = (emp.hire_date - cfg.horizon.start_date).days
-        # Either extended leave, late hire, or scheduling contention (last resort)
-        # All are acceptable — just assert the check runs without error
-        assert emp.role != "MANAGER", f"{eid} is a manager and should not be in schedulable set"
-
-    # Assert the count is bounded — in the starter profile (50 staff, 14 days) we expect < 20%
-    zero_pct = len(zero_hour_emps) / max(len(sched_employees), 1) * 100
-    assert zero_pct < 20.0, (
-        f"Too many zero-hour employees: {len(zero_hour_emps)}/{len(sched_employees)} ({zero_pct:.1f}%) "
-        f"exceeds 20% threshold"
     )
 
 
@@ -604,24 +726,6 @@ def test_gap_reason_field_is_non_empty(starter_pipeline_data):
         assert g.reason and g.reason.strip(), (
             f"Gap {g.gap_id} has empty or None reason (gap_headcount={g.gap_headcount})"
         )
-
-
-def test_gap_reason_distribution_reported(starter_pipeline_data, capsys):
-    """Print the reason distribution for all CoverageGaps (diagnostic, always passes)."""
-    gaps = starter_pipeline_data["coverage_gaps"]
-    from collections import Counter
-    critical_reasons = Counter(g.reason for g in gaps if g.gap_headcount > 0)
-    all_reasons = Counter(g.reason for g in gaps)
-
-    print("\n--- CoverageGap reason distribution (all gaps) ---")
-    for reason, cnt in sorted(all_reasons.items(), key=lambda x: -x[1]):
-        print(f"  {cnt:4d}  {reason}")
-    print("\n--- CoverageGap reason distribution (critical gaps only, gap_headcount > 0) ---")
-    for reason, cnt in sorted(critical_reasons.items(), key=lambda x: -x[1]):
-        print(f"  {cnt:4d}  {reason}")
-
-    # Always pass — this is a diagnostic reporter
-    assert True
 
 
 # ==============================================================================

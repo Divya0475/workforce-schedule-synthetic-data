@@ -6,7 +6,7 @@ CoverageRequirement, Employee, EmployeeSkill, LeaveRequest) post-scheduling.
 
 from __future__ import annotations
 
-from collections import defaultdict
+from collections import Counter, defaultdict
 from datetime import date, datetime, timedelta
 from typing import Dict, List, Optional, Set, Tuple
 
@@ -80,14 +80,11 @@ def compute_coverage_gaps(
 
     # Pre-index approved leave dates per employee
     emp_leaves: Dict[str, Set[date]] = defaultdict(set)
-    emp_sick_leaves: Dict[str, Set[date]] = defaultdict(set)
     for lve in leave_requests:
         if lve.current_status == "APPROVED":
             cur = lve.start_date
             while cur <= lve.end_date:
                 emp_leaves[lve.employee_id].add(cur)
-                if lve.leave_type == "SICK":
-                    emp_sick_leaves[lve.employee_id].add(cur)
                 cur += timedelta(days=1)
 
     # Pre-index employee skills with valid dates: employee_id -> Dict[skill_id, List[(certified_date, expiry_date)]]
@@ -112,15 +109,11 @@ def compute_coverage_gaps(
         is_critical = gap_headcount > 0
         has_gap = gap_headcount > 0
 
-        # Diagnose reason
+        # Diagnose the reason from each qualified employee's first blocking constraint.
         if gap_headcount == 0 and target_shortfall == 0:
             reason = "Fully staffed"
-        elif gap_headcount == 0 and target_shortfall > 0:
-            reason = "Target buffer omitted to prevent contractual overtime"
         else:
-            # gap_headcount > 0: Perform exhaustive unavailability audit on all qualified team staff
             staff_list = team_staff.get(req.team_id, [])
-            # Qualified holders of this skill on the team
             qualified_staff = [
                 s for s in staff_list
                 if any(
@@ -128,32 +121,30 @@ def compute_coverage_gaps(
                     for cd, ed in emp_certs[s.employee_id].get(req.skill_id, [])
                 )
             ]
-
-            if len(qualified_staff) < req.min_headcount:
+            if gap_headcount > 0 and len(qualified_staff) < req.min_headcount:
                 reason = "Skill pinch: insufficient baseline qualified staff"
             else:
-                # Audit why qualified staff could not be scheduled
                 s_tmpl = shift_objs_map[req.shift_template_id]
                 s_start, s_end = get_shift_datetimes(req.effective_date, s_tmpl)
                 iso_y, iso_w, _ = req.effective_date.isocalendar()
-
+                slot_assigned = assigned_in_slot.get(
+                    (req.effective_date, req.team_id, req.shift_template_id), set()
+                )
                 unavailability_reasons = []
+                available_count = 0
                 for s in qualified_staff:
                     sid = s.employee_id
                     if req.effective_date < s.hire_date:
                         unavailability_reasons.append("hire_date")
                     elif s.termination_date and req.effective_date > s.termination_date:
                         unavailability_reasons.append("termination_date")
-                    elif req.effective_date in emp_sick_leaves[sid]:
-                        unavailability_reasons.append("sick_leave")
                     elif req.effective_date in emp_leaves[sid]:
                         unavailability_reasons.append("approved_leave")
-                    elif sid in assigned_in_slot.get((req.effective_date, req.team_id, req.shift_template_id), set()):
+                    elif sid in slot_assigned:
                         unavailability_reasons.append("already_assigned_in_shift")
                     elif req.effective_date in emp_worked_dates[sid]:
-                        unavailability_reasons.append("already_working_another_shift_today")
+                        unavailability_reasons.append("already_working_today")
                     else:
-                        # Check rest
                         rest_violated = False
                         for prev_s, prev_e in emp_shift_intervals[sid]:
                             if s_start >= prev_e:
@@ -173,7 +164,6 @@ def compute_coverage_gaps(
                             unavailability_reasons.append("rest_rule")
                             continue
 
-                        # Check 6 consecutive days
                         w_dates = emp_worked_dates[sid]
                         cons_violated = False
                         for start_offset in range(max_consecutive_days + 1):
@@ -190,29 +180,30 @@ def compute_coverage_gaps(
                             unavailability_reasons.append("consecutive_days")
                             continue
 
-                        # Check 48h cap
                         cur_wh = emp_week_hours[(sid, iso_y, iso_w)]
                         if cur_wh + paid_hours_per_shift > max_weekly_hours + 1e-5:
                             unavailability_reasons.append("overtime_cap")
                             continue
 
-                        unavailability_reasons.append("scheduling_contention")
+                        if (
+                            gap_headcount == 0
+                            and cur_wh + paid_hours_per_shift
+                            > s.weekly_contract_hours + 1e-5
+                        ):
+                            unavailability_reasons.append("contract_hours")
+                            continue
 
-                # Synthesize dominant reason
-                if "sick_leave" in unavailability_reasons:
-                    reason = "Unscheduled sick leave absence"
-                elif "approved_leave" in unavailability_reasons:
-                    reason = "Approved leave absence"
-                elif "already_assigned_in_shift" in unavailability_reasons or "already_working_another_shift_today" in unavailability_reasons:
-                    reason = "Single shift per day constraint"
-                elif "rest_rule" in unavailability_reasons:
-                    reason = "Mandatory 11h rest rule"
-                elif "consecutive_days" in unavailability_reasons:
-                    reason = "6-day consecutive working limit"
-                elif "overtime_cap" in unavailability_reasons:
-                    reason = "48h weekly overtime ceiling"
+                        available_count += 1
+
+                if available_count:
+                    reason = "available_qualified_employee"
+                elif unavailability_reasons:
+                    reason = max(
+                        Counter(unavailability_reasons).items(),
+                        key=lambda item: (item[1], item[0]),
+                    )[0]
                 else:
-                    reason = "Working hour and rest constraints"
+                    reason = "no_qualified_staff"
 
         gap_seq += 1
         gap_id = format_coverage_gap_id(req.effective_date.year, gap_seq)
