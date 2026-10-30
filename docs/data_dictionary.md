@@ -82,10 +82,31 @@ Represents an operational organizational unit responsible for coverage within sp
 ### 2.2 Skill
 Defines specialized capabilities or certifications required to satisfy shift coverage.
 
+**Skill Taxonomy & Starter Profile Distribution**:
+1. **Core Operational Skills**:
+   - `SKL-TRIAGE`: Emergency Triage & Assessment (Clinical)
+   - `SKL-ICU_CARE`: Intensive Care Operations (Clinical)
+   - `SKL-PHARMACY`: Clinical Pharmacology (Clinical)
+   - `SKL-DISPATCH`: Resource & Unit Dispatch (Logistical)
+   - `SKL-SUPPLY_CHAIN`: Medical Supply Chain (Logistical)
+   - `SKL-INTAKE`: Patient Intake & Admission (Administrative)
+2. **Specialized Clinical Oncology (`SKL-ONCOLOGY`)**:
+   - Clinical Oncology Protocols (Clinical).
+   - In the starter profile, operational demand is assigned to Inpatient Operations (`TEAM-002`) on Shift A weekdays (`min_headcount = 1`), with qualified non-manager holders assigned to the team.
+3. **Linguistic Certification (`SKL-BILINGUAL_ES`)**:
+   - Bilingual Spanish (Linguistic).
+   - **Secondary-Only Rule**: Must **NEVER** be assigned as a primary skill (`is_primary = FALSE` on 100% of rows).
+   - Distribution: Orthogonally assigned to roughly **20–25% of employees** across all departments.
+4. **Rare Specialist Skills with Zero Holders in Starter Profile**:
+   - `SKL-TOXICOLOGY`: Clinical Toxicology (Poisoning and overdose protocol)
+   - `SKL-HAZMAT`: Hazardous Material Logistics (Biohazard containment and waste dispatch)
+   - `SKL-CRISIS_COUNSEL`: Crisis Counseling (Behavioral crisis de-escalation)
+   - *Domain Modeling Note*: These 3 advanced niche certifications represent specialized enterprise catalog skills with zero operational demand and 0 assigned staff in the 50-person starter cohort. In the full 2,000-employee benchmark profile, they are staffed at low frequencies (<1%).
+
 | Field Name | Type | Req/Opt | Allowed Values | Units | Uniqueness | Foreign Key | Validation Rule |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | `skill_id` | VARCHAR(16) | Required | Pattern: `^SKL-[A-Z_]+$` | N/A | **PK** | None | Uppercase alphanumeric + underscores |
-| `code` | VARCHAR(32) | Required | `TRIAGE`, `DISPATCH`, `ICU_CARE`, `PHARMACY`, `BILINGUAL_ES` | N/A | Unique | None | Uppercase code |
+| `code` | VARCHAR(32) | Required | `TRIAGE`, `DISPATCH`, `ICU_CARE`, `PHARMACY`, `BILINGUAL_ES`, etc. | N/A | Unique | None | Uppercase code |
 | `name` | VARCHAR(64) | Required | Standard readable string | N/A | Unique | None | Min length 3 |
 | `category` | VARCHAR(32) | Required | `Clinical`, `Logistical`, `Linguistic`, `Administrative` | N/A | Non-unique | None | Standard taxonomy category |
 | `description` | VARCHAR(255)| Optional | String or `NULL` | N/A | Non-unique | None | Max length 255 |
@@ -168,6 +189,11 @@ Documents recognized public, federal, or statutory holidays.
 ### 2.7 CoverageRequirement
 Defines minimum and target qualified headcount needed for every scheduled team, shift, and skill.
 
+**Headcount Semantics & Slot Granularity**:
+- **Distinct Slot Representation**: Each row in `CoverageRequirement` represents a **distinct, individual headcount slot** demanded for a specific `(effective_date, team_id, shift_template_id, skill_id)` combination.
+- **Hard Minimum Floor (`min_headcount`)**: Represents the absolute hard statutory, safety, or clinical minimum staffing requirement. If the number of active, qualified scheduled staff falls below `min_headcount`, a critical `CoverageGap` violation record is emitted.
+- **Soft Target Buffer (`target_headcount`)**: Represents the optimal/desired operational staffing target (`target_headcount >= min_headcount`). Operating between `min_headcount` and `target_headcount` is standard operating procedure and does **NOT** constitute a violation or gap.
+
 | Field Name | Type | Req/Opt | Allowed Values | Units | Uniqueness | Foreign Key | Validation Rule |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | `coverage_id` | VARCHAR(24) | Required | Pattern: `^COV-\d{4}-\d{6}$` | N/A | **PK** | None | Year + 6-digit sequence |
@@ -175,8 +201,8 @@ Defines minimum and target qualified headcount needed for every scheduled team, 
 | `team_id` | VARCHAR(16) | Required | Valid `team_id` | N/A | Composite Unique | `Team(team_id)` | Active team reference |
 | `shift_template_id` | VARCHAR(16) | Required | Valid `shift_template_id` | N/A | Composite Unique | `ShiftTemplate(shift_template_id)` | Valid shift template |
 | `skill_id` | VARCHAR(16) | Required | Valid `skill_id` | N/A | Composite Unique | `Skill(skill_id)` | Specific skill demanded |
-| `min_headcount` | INTEGER | Required | `>= 1` (typically 1 to 4) | Staff count | Non-unique | None | `min_headcount >= 1` |
-| `target_headcount`| INTEGER | Required | `>= min_headcount` | Staff count | Non-unique | None | `target_headcount >= min_headcount` |
+| `min_headcount` | INTEGER | Required | `>= 1` (typically 1 to 4) | Staff count | Non-unique | None | Hard minimum floor (`min_headcount >= 1`) |
+| `target_headcount`| INTEGER | Required | `>= min_headcount` | Staff count | Non-unique | None | Soft optimal target (`target_headcount >= min_headcount`) |
 
 ---
 
@@ -208,6 +234,7 @@ Represents an employee's scheduled commitment to work a shift slot.
 | `effective_to` | TIMESTAMP | Optional | ISO 8601 UTC timestamp or `NULL`| UTC | Non-unique | None | `NULL` while `ACTIVE`; closed with timestamp upon `SWAPPED_OUT` |
 | `swap_request_id` | VARCHAR(24) | Optional | Valid `swap_request_id` or `NULL` | N/A | Non-unique | `SwapRequest(swap_request_id)` | `NULL` for original baseline rows; populated on swap replacement rows |
 | `replaces_assignment_id`| VARCHAR(24)| Optional| Valid `assignment_id` or `NULL` | N/A | Non-unique | `ShiftAssignment(assignment_id)` | `NULL` for baseline; points to superseded row for swap replacements |
+| `fulfills_skill_id` | VARCHAR(16) | Optional | Valid `skill_id` or `NULL` | N/A | Non-unique | `Skill(skill_id)` | Skill slot satisfied by assignment; `NULL` if filling general headcount buffer |
 
 ---
 

@@ -114,3 +114,29 @@ class CoverageRequirement:
         d["effective_date"] = self.effective_date.isoformat()
         return d
 
+
+@dataclass
+class ShiftAssignment:
+    assignment_id: str
+    shift_instance_id: str
+    employee_id: str
+    team_id: str
+    shift_template_id: str
+    shift_date: date
+    scheduled_start: str
+    scheduled_end: str
+    duration_hours: float
+    assigned_role: str
+    assignment_status: str  # ACTIVE or SWAPPED_OUT
+    effective_from: str     # ISO timestamp
+    effective_to: Optional[str] = None
+    swap_request_id: Optional[str] = None
+    replaces_assignment_id: Optional[str] = None
+    fulfills_skill_id: Optional[str] = None
+
+    def to_dict(self) -> Dict[str, Any]:
+        d = asdict(self)
+        d["shift_date"] = self.shift_date.isoformat()
+        return d
+
+

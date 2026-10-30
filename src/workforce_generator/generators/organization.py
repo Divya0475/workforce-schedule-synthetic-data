@@ -196,34 +196,46 @@ def generate_organization(
 
             # Skill assignment according to department mapping
             # Core skill guaranteed for early staff members to guarantee coverage feasibility
+            functional_core = [c for c in core_skills if c != "BILINGUAL_ES"]
+            functional_secondary = [c for c in secondary_skills if c != "BILINGUAL_ES"]
+
             if r_idx == 0:
                 # Manager has a core skill
-                primary_skill = core_skills[0] if core_skills else "TRIAGE"
-            elif r_idx <= len(core_skills):
+                primary_skill = functional_core[0] if functional_core else "TRIAGE"
+            elif r_idx <= len(functional_core):
                 # Guaranteed coverage of department core skills
-                primary_skill = core_skills[(r_idx - 1) % len(core_skills)]
+                primary_skill = functional_core[(r_idx - 1) % len(functional_core)]
             else:
-                # Drawn from core and secondary skills
-                dept_pool = core_skills + secondary_skills
+                # Drawn from functional core and secondary skills
+                dept_pool = functional_core + functional_secondary
                 primary_skill = str(rng.choice(dept_pool))
 
-            # Select total number of skills
-            num_skills = int(rng.integers(
-                config.workforce.skills_per_employee_min,
-                config.workforce.skills_per_employee_max + 1,
-            ))
+            # Secondary skills determination:
+            # 1. BILINGUAL_ES: Secondary-only certification held by roughly 20-25% of employees
+            has_bilingual = bool(rng.random() < 0.18)
 
-            # Secondary skill candidates: remaining core/secondary + 10% chance of a rare skill
-            secondary_candidates = [c for c in (core_skills + secondary_skills) if c != primary_skill]
-            if rare_skills and rng.random() < 0.10:
-                rare_chosen = str(rng.choice(rare_skills))
-                if rare_chosen not in secondary_candidates:
-                    secondary_candidates.append(rare_chosen)
+            # 2. ONCOLOGY: Specialized oncology protocol skill guaranteed on Inpatient team non-managers
+            has_oncology = bool(dept_cfg.code == "INPATIENT" and r_idx in (2, 3))
 
-            chosen_secondary = []
-            if num_skills > 1 and secondary_candidates:
-                take_k = min(num_skills - 1, len(secondary_candidates))
-                chosen_secondary = list(rng.choice(secondary_candidates, size=take_k, replace=False))
+            chosen_secondary: List[str] = []
+            if has_oncology:
+                chosen_secondary.append("ONCOLOGY")
+            if has_bilingual:
+                chosen_secondary.append("BILINGUAL_ES")
+
+            # Determine remaining capacity for secondary skills (total skills between 1 and 3)
+            functional_candidates = [c for c in (functional_core + functional_secondary) if c != primary_skill]
+            max_secondary = config.workforce.skills_per_employee_max - 1  # 3 - 1 = 2
+            available_slots = max_secondary - len(chosen_secondary)
+
+            if available_slots > 0 and functional_candidates:
+                num_func = int(rng.integers(0, available_slots + 1))
+                if num_func > 0:
+                    take_k = min(num_func, len(functional_candidates))
+                    additional = list(rng.choice(functional_candidates, size=take_k, replace=False))
+                    for sk in additional:
+                        if sk not in chosen_secondary:
+                            chosen_secondary.append(sk)
 
             emp_skill_codes = [primary_skill] + chosen_secondary
 
@@ -262,7 +274,7 @@ def generate_organization(
                     proficiency_level=prof,
                     certified_date=cert_date,
                     expiry_date=expiry_date,
-                    is_primary=(s_code == primary_skill),
+                    is_primary=(s_code == primary_skill and s_code != "BILINGUAL_ES"),
                 )
                 employee_skills.append(esk)
 

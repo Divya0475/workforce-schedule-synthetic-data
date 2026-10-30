@@ -57,15 +57,24 @@ def generate_coverage_requirements(
                         skills_to_demand = [dept_cfg.core_skills[0]]
                     else:
                         # Shift A or B on weekday: 2 skill requirements (first 2 core skills)
-                        skills_to_demand = dept_cfg.core_skills[:2]
+                        skills_to_demand = dept_cfg.core_skills[:2].copy()
                 else:
                     skills_to_demand = [sk.skill_code for sk in rule.skill_requirements]
+
+                # Specific requirement: Small min requirement for ONCOLOGY on one team (TEAM-002 on Shift A weekdays)
+                if team.team_id == "TEAM-002" and not is_weekend and not is_holiday and sft_code == "A":
+                    if "ONCOLOGY" not in skills_to_demand:
+                        skills_to_demand.append("ONCOLOGY")
 
                 for sk_code in skills_to_demand:
                     seq += 1
                     cov_id = format_coverage_id(cur_date.year, seq)
-                    min_heads = 1
-                    target_heads = 2
+                    if sk_code == "ONCOLOGY":
+                        min_heads = 1
+                        target_heads = 1
+                    else:
+                        min_heads = 1
+                        target_heads = 2
 
                     cov = CoverageRequirement(
                         coverage_id=cov_id,

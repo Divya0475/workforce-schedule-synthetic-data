@@ -134,20 +134,29 @@ For each operational team of 20 employees over a 7-day calendar week:
    - Rest period constraints (11h rest) and maximum 6-consecutive-day limits are easily accommodated because employees only need to work an average of $2.5$ shifts per week to cover demand ($50 / 20 = 2.5$).
 
 ### 3.2 Starter Profile Capacity Model (Tight Sizing with Expected Gaps)
-For testing and development, the **Starter Profile** intentionally sizes capacity so demand is feasible under overtime, but tight enough that boundary transitions (mid-horizon hires/terminations) and skill constraints produce a small, realistic number of expected coverage gaps:
+For testing and development, the **Starter Profile** intentionally sizes capacity so demand is feasible at minimum requirements, but tight against target buffers, producing a small, realistic number of expected coverage gaps:
 1. **Team Composition**: 5 teams, each 10 employees (1 Manager, 9 Schedulable Staff).
 2. **Weekly Schedulable Capacity per Team**:
-   - Average contractual paid hours: $9 \times 38.2 = 343.8\text{ paid hours/team/week}$.
+   - Contract hours per team: 7 full-time ($40.0\text{ h}$), 1 part-time ($32.0\text{ h}$), 1 half-time ($20.0\text{ h}$) $= 332.0\text{ contractual paid hours/week}$.
    - At $7.5\text{ net paid hours}$ per 8.0h shift slot (accounting for 30m unpaid break):
-     $$\text{Standard Capacity}_{\text{starter}} = \frac{343.8}{7.5} \approx 45.84\text{ shifts/week}$$
-   - At statutory overtime cap ($48.0\text{ h/week}$ per employee):
-     $$\text{Overtime Ceiling}_{\text{starter}} = \frac{9 \times 48.0}{7.5} = 57.6\text{ shifts/week}$$
-3. **Weekly Demand per Team**:
-   - 40 weekday person-shifts + 10 weekend person-shifts = **50 required person-shifts/week**.
+   - **Supply in Whole Shifts** ($\lfloor \text{contract\_hours} / 7.5 \rfloor$ per employee):
+     - Full-time (40h): $\lfloor 40.0 / 7.5 \rfloor = 5\text{ shifts/week}$ ($37.5\text{ paid hours}$).
+     - Part-time (32h): $\lfloor 32.0 / 7.5 \rfloor = 4\text{ shifts/week}$ ($30.0\text{ paid hours}$).
+     - Half-time (20h): $\lfloor 20.0 / 7.5 \rfloor = 2\text{ shifts/week}$ ($15.0\text{ paid hours}$).
+     - **Team Standard Whole Shifts Supply**:
+       $$\text{Supply}_{\text{starter}} = 7 \times 5 + 1 \times 4 + 1 \times 2 = 41\text{ whole shifts/week} \quad (307.5\text{ net paid hours/week})$$
+   - At statutory overtime cap ($48.0\text{ h/week}$ per employee, $\lfloor 48.0 / 7.5 \rfloor = 6\text{ shifts/emp}$):
+     $$\text{Overtime Ceiling}_{\text{starter}} = 9 \times 6 = 54\text{ whole shifts/week} \quad (405.0\text{ net paid hours/week})$$
+3. **Weekly Demand per Team (Granular Coverage Requirements)**:
+   - **Historical Note on Previous '50' Demand Metric**:
+     - The earlier capacity model estimated a macro nominal demand of **50 person-shifts/week** ($8\text{ heads/weekday} \times 5 = 40$, $5\text{ heads/weekend day} \times 2 = 10$).
+     - In contrast, the synthetic generator models **granular CoverageRequirement rows** representing distinct skill slots:
+       - Standard teams (001, 003, 004, 005): **30.0 person-shifts/week at `min_headcount`**, and **60.0 person-shifts/week at `target_headcount`**.
+       - Inpatient team (TEAM-002): includes `SKL-ONCOLOGY` on Shift A weekdays, requiring **34.5 person-shifts/week at `min_headcount`**, and **64.5 person-shifts/week at `target_headcount`**.
 4. **Feasibility & Expected Gaps**:
-   - Base standard capacity ($45.84$) is below demand ($50.0$).
-   - The team requires voluntary/scheduled overtime ($50 / 57.6 \approx 86.8\%$ of statutory ceiling).
-   - Because capacity utilization is $\approx 87\%$ and boundary events occur (mid-horizon hires not available initially, mid-horizon terminations losing active headcount), the starter profile naturally exhibits a small number of **expected coverage gaps** (typically 1 to 5 gaps over 14 days) during scheduling, providing ideal verification coverage.
+   - At `min_headcount` (30.0 – 34.5 shifts), standard whole shift supply ($41\text{ shifts}$) easily satisfies demand ($\approx 73\% - 84\%$ utilization).
+   - At `target_headcount` (60.0 – 64.5 shifts), demand exceeds both standard supply ($41$) and the statutory 48h overtime ceiling ($54$).
+   - This creates an ideal, realistic testbed: the baseline easily meets hard `min_headcount` floors, while soft `target_headcount` buffers and boundary transitions (mid-horizon hires/terminations) naturally produce **expected coverage gaps**, allowing complete verification of gap tracking.
 
 ### 3.3 Expected Coverage Gaps in Clean Baseline (Production Scale)
 > [!IMPORTANT]
@@ -169,16 +178,32 @@ All parameters and thresholds are externalized in [`config/default.yaml`](file:/
      - 5 shifts worked in an ISO week = $5 \times 7.5 = 37.5\text{ paid hours}$ ($\le 40.0\text{ h}$).
      - 6 shifts worked in an ISO week = $6 \times 7.5 = 45.0\text{ paid hours}$ ($\le 48.0\text{ h}$).
      - A 7th shift would total $52.5\text{ paid hours} > 48.0\text{ h}$, strictly prohibited by the generator and validator.
-2. **Rest Interval**: Minimum **11 hours** of continuous rest between the conclusion of shift $S_i$ and commencement of shift $S_{i+1}$.
-3. **Consecutive Days**: An employee may work a maximum of **6 consecutive days**. On or before the 7th day, at least one full 24-hour calendar rest day is mandatory.
-4. **Weekly Hours & Overtime**:
-   - Standard work week: 40.0 paid hours (pro-rated by FTE).
-   - Hard statutory overtime cap: **48.0 paid hours** in any full ISO calendar week (Monday through Sunday).
-   - No shift assignment or swap approval may cause an employee's weekly scheduled paid hours to exceed 48.0.
+2. **Standard Shift Supply**:
+   - Standard supply in whole shifts per employee is calculated as:
+     $$\text{Whole Shifts Supply} = \lfloor \text{weekly\_contract\_hours} / 7.5 \rfloor$$
+     - 1.0 FTE (40.0h): $\lfloor 40.0 / 7.5 \rfloor = 5\text{ shifts/week}$ (37.5h paid).
+     - 0.8 FTE (32.0h): $\lfloor 32.0 / 7.5 \rfloor = 4\text{ shifts/week}$ (30.0h paid).
+     - 0.5 FTE (20.0h): $\lfloor 20.0 / 7.5 \rfloor = 2\text{ shifts/week}$ (15.0h paid).
+3. **Overtime Rule & Statutory Ceiling**:
+   - **Overtime Definition**: Any net paid hours worked above an employee's contractual `weekly_contract_hours` within an ISO calendar week (Monday 00:00 to Sunday 23:59 UTC) constitute overtime hours.
+   - **Overtime Cap**: Hard statutory ceiling of **48.0 paid hours/week**.
+   - No shift assignment, overtime scheduling, or swap approval may cause an employee's scheduled paid hours to exceed 48.0 in a single calendar week.
+4. **Rest Interval**: Minimum **11 hours** of continuous rest between the conclusion of shift $S_i$ and commencement of shift $S_{i+1}$.
+5. **Consecutive Days**: An employee may work a maximum of **6 consecutive days**. On or before the 7th day, at least one full 24-hour calendar rest day is mandatory.
 
-### 4.2 Coverage Requirements
-- For every date, team, shift template, and skill:
-  $$\text{ScheduledActiveHeadcount}(d, T, S, K) \ge \text{CoverageRequirement.min\_headcount}(d, T, S, K)$$
+### 4.2 Coverage Requirements & Slot Semantics
+1. **Distinct Slot Granularity**:
+   - Each row in `CoverageRequirement` represents a **distinct, individual headcount slot** demanded for a specific `(effective_date, team_id, shift_template_id, skill_id)`.
+2. **Hard Minimum Floor (`min_headcount`)**:
+   - Represents the mandatory statutory and operational safety floor.
+   - Any scheduled shift where active qualified headcount falls below `min_headcount` generates a **critical `CoverageGap` violation record**.
+     $$\text{ScheduledActiveHeadcount}(d, T, S, K) \ge \text{CoverageRequirement.min\_headcount}(d, T, S, K)$$
+3. **Soft Target Buffer (`target_headcount`)**:
+   - Represents the optimal/desired operational staffing target (`target_headcount >= min_headcount`).
+   - Staffing levels between `min_headcount` and `target_headcount` are valid operating states and do **NOT** produce coverage gap violations.
+4. **Slot Fulfillment Linkage (`ShiftAssignment.fulfills_skill_id`)**:
+   - Every `ShiftAssignment` includes a nullable `fulfills_skill_id` (foreign key to `Skill(skill_id)` or `NULL`).
+   - When an assignment satisfies a required skill slot, `fulfills_skill_id` records that skill; when providing general staffing buffer above required skills, it is `NULL`.
 
 ### 4.3 Leave Request Approval Policy
 1. An employee submits a leave request for $[d_{\text{start}}, d_{\text{end}}]$.
@@ -213,6 +238,27 @@ All parameters and thresholds are externalized in [`config/default.yaml`](file:/
   - `EARLY_LEAVE`: Clock-out $> 15$ minutes before scheduled end.
   - `NO_SHOW`: Scheduled active employee fails to clock in (unexcused absence).
   - `OVERTIME`: Clock-out extension $> 15$ minutes past scheduled end.
+
+### 4.6 Skill Taxonomy, Distribution Rules & Rare Certifications
+1. **Core Operational Skills**:
+   - `SKL-TRIAGE`: Emergency Triage & Assessment (Clinical)
+   - `SKL-ICU_CARE`: Intensive Care Operations (Clinical)
+   - `SKL-PHARMACY`: Clinical Pharmacology (Clinical)
+   - `SKL-DISPATCH`: Resource & Unit Dispatch (Logistical)
+   - `SKL-SUPPLY_CHAIN`: Medical Supply Chain (Logistical)
+   - `SKL-INTAKE`: Patient Intake & Admission (Administrative)
+2. **Specialized Clinical Oncology (`SKL-ONCOLOGY`)**:
+   - Assigned a small minimum requirement (`min_headcount = 1`, `target_headcount = 1`) on the Inpatient operational team (`TEAM-002`) for Shift A on weekdays.
+   - Schedulable non-manager staff in `TEAM-002` are guaranteed qualified holders of `SKL-ONCOLOGY`.
+3. **Linguistic Certification (`SKL-BILINGUAL_ES`)**:
+   - **Secondary-Only Rule**: Must **NEVER** serve as a primary skill (`is_primary = False` on all assignments).
+   - **Distribution**: Orthogonally assigned to roughly **20–25% of employees** across all departments.
+4. **Rare Specialist Skills with Zero Holders in Starter Profile**:
+   - Three niche certifications in the enterprise catalog have **0 holders and 0 coverage demand in the 50-person starter profile**:
+     - `SKL-TOXICOLOGY`: Clinical Toxicology (Poisoning/overdose protocol)
+     - `SKL-HAZMAT`: Hazardous Material Logistics (Biohazard containment and waste dispatch)
+     - `SKL-CRISIS_COUNSEL`: Crisis Counseling (Behavioral crisis de-escalation)
+   - *Domain Modeling Rationale*: In a small 50-employee development cohort, staffing these highly specialized enterprise capabilities without operational demand would distort utilization metrics. At full scale (2,000 employees), they are staffed at low frequencies (<1%) for specialized units.
 
 ---
 

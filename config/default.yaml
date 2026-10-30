@@ -88,8 +88,8 @@ departments:
     rare_skills: ["HAZMAT"]
   - code: "CUSTOMER_SUPPORT"
     name: "Customer Support"
-    core_skills: ["BILINGUAL_ES", "INTAKE"]
-    secondary_skills: ["DISPATCH"]
+    core_skills: ["INTAKE", "DISPATCH"]
+    secondary_skills: ["BILINGUAL_ES"]
     rare_skills: ["CRISIS_COUNSEL"]
 
 shifts:
