@@ -155,6 +155,7 @@ class CoverageGap:
     target_shortfall: int
     reason: str
     is_critical: bool
+    has_gap: bool
     computed_at: str
 
     def to_dict(self) -> Dict[str, Any]:
