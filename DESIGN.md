@@ -523,9 +523,28 @@ workforce-schedule-synthetic-data/
 
 ## 12. Validation & Acceptance Criteria
 
-This stage includes generation, anomaly injection, CSV export, and tests; an independent clean/dirty dataset validator is not included.
+Stage D1b provides an independent, standalone CSV validator (`validate.py`), evaluation tooling (`scripts/evaluate_validator.py`), and test verification.
 
-1. **Clean baseline**: The generated baseline remains free of hard-rule violations, and coverage gaps are independently recomputed from active assignments.
-2. **Dirty copy**: Exactly the requested count of each of the five anomaly types is injected; the clean data remains unchanged; dirty attendance and derived analytics reconcile to dirty assignments.
-3. **Export**: All table files use stable schemas, primary-key ordering, UTF-8 and LF line endings. Manifest hashes and deterministic/timezone-independent tests pass.
-4. **Ground truth isolation**: Ground truth is emitted for evaluation only and must not be used by a future validator to discover or classify violations.
+### 12.1 Standalone Dataset Validator (`validate.py`)
+- **Zero-Dependency Core**: `validate.py` operates directly on exported CSV tables without importing `workforce_generator` or any generator modules.
+- **Rules Checked**:
+  - Primary keys and foreign key constraints across all 15 tables.
+  - Enumeration values (roles, statuses, event types, exception types).
+  - Date and timestamp sequences (`scheduled_end > scheduled_start`, `effective_to >= effective_from` for ACTIVE assignments, `leave_end >= leave_start`).
+  - Leave lifecycle integrity: initial event `to_status=SUBMITTED` by requester; valid transitions (`SUBMITTED -> APPROVED/REJECTED/CANCELLED`, `APPROVED -> CANCELLED`); actor permissions (decisions by same-team manager for staff or another team's manager for managers, never requester; self-cancellation allowed).
+  - Swap lifecycle integrity: `REQUESTED -> APPROVED -> APPLIED` sequence; valid replacement lineage and open active records.
+  - Labor standards and scheduling hard constraints: no duplicate active assignments, no manager scheduled shifts, employment date bounds, skill certification coverage, no approved leave overlaps, no double bookings, minimum 11h rest periods, maximum 6 consecutive work days, 48h weekly overtime cap.
+  - Derived tables reconciliation: coverage gap headcount matches scheduled active shifts; weekly hours summary matches scheduled hours and overtime flags.
+  - Attendance reconciliation: clock event pairing, variance checks, and status consistency.
+- **Performance**: Fully vectorized using pandas operations (`isin`, datetime parsing once per column, groupby shift operations) achieving sub-second starter validation (<0.5s) and full-scale validation under 2 minutes.
+
+### 12.2 Anomaly Injection & Collateral Control (`anomalies.py`)
+- Injects 5 targeted anomaly types: `DOUBLE_BOOKED`, `LEAVE_OVERLAP`, `SKILL_ABSENT`, `OVERTIME_CAP_EXCEEDED`, and `SWAP_WITHOUT_APPROVAL`.
+- Isolated target selection ensures injected records trigger only the intended rule; expected unavoidable collateral (e.g. 7 consecutive shifts in a week breaking both 48h cap and 6 consecutive days) is tracked explicitly in `also_triggers`.
+
+### 12.3 Precision & Recall Evaluation (`scripts/evaluate_validator.py`)
+- Independent verification script matching validator outputs against `ground_truth.csv` by issue type and record/related-record ID overlap.
+- **Acceptance Criteria**:
+  1. Clean dataset has exactly **0 violations** (exit code 0).
+  2. Dirty dataset achieves **100% recall** across all five primary anomaly types.
+  3. No unexpected false positive violations outside of documented `also_triggers`.
