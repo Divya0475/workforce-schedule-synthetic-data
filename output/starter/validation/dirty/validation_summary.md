@@ -1,7 +1,6 @@
 # Validation Summary
 
 - Total violations: 18
-- Runtime seconds: 0.6888
 
 ## Counts by rule
 

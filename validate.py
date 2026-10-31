@@ -1600,7 +1600,6 @@ def _write_outputs(
         "# Validation Summary",
         "",
         f"- Total violations: {len(violations)}",
-        f"- Runtime seconds: {elapsed_seconds:.4f}",
         "",
         "## Counts by rule",
         "",
