@@ -523,10 +523,10 @@ workforce-schedule-synthetic-data/
 
 ## 12. Validation & Acceptance Criteria
 
-Stage D1b provides an independent, standalone CSV validator (`validate.py`), evaluation tooling (`scripts/evaluate_validator.py`), and test verification.
+Stage D1b provides an independent, standalone CSV validator (`validate.py`), ground truth tracking with collateral management, evaluation tooling (`scripts/evaluate_validator.py`), and test verification.
 
 ### 12.1 Standalone Dataset Validator (`validate.py`)
-- **Zero-Dependency Core**: `validate.py` operates directly on exported CSV tables without importing `workforce_generator` or any generator modules.
+- **Zero-Dependency Core**: `validate.py` operates directly on exported CSV tables without importing `workforce_generator` or any generator modules. Verified by dedicated test.
 - **Rules Checked**:
   - Primary keys and foreign key constraints across all 15 tables.
   - Enumeration values (roles, statuses, event types, exception types).
@@ -536,15 +536,40 @@ Stage D1b provides an independent, standalone CSV validator (`validate.py`), eva
   - Labor standards and scheduling hard constraints: no duplicate active assignments, no manager scheduled shifts, employment date bounds, skill certification coverage, no approved leave overlaps, no double bookings, minimum 11h rest periods, maximum 6 consecutive work days, 48h weekly overtime cap.
   - Derived tables reconciliation: coverage gap headcount matches scheduled active shifts; weekly hours summary matches scheduled hours and overtime flags.
   - Attendance reconciliation: clock event pairing, variance checks, and status consistency.
-- **Performance**: Fully vectorized using pandas operations (`isin`, datetime parsing once per column, groupby shift operations) achieving sub-second starter validation (<0.5s) and full-scale validation under 2 minutes.
+- **Performance**: Fully vectorized using pandas operations (`isin`, datetime parsing once per column, merge instead of per-row lookups, groupby shift operations) achieving sub-second starter validation (<0.5s) and full-scale validation under 2 minutes.
 
 ### 12.2 Anomaly Injection & Collateral Control (`anomalies.py`)
 - Injects 5 targeted anomaly types: `DOUBLE_BOOKED`, `LEAVE_OVERLAP`, `SKILL_ABSENT`, `OVERTIME_CAP_EXCEEDED`, and `SWAP_WITHOUT_APPROVAL`.
-- Isolated target selection ensures injected records trigger only the intended rule; expected unavoidable collateral (e.g. 7 consecutive shifts in a week breaking both 48h cap and 6 consecutive days) is tracked explicitly in `also_triggers`.
+- **Ground Truth Schema**: `anomaly_id`, `issue_type`, `entity`, `record_id`, `related_record_ids`, `employee_id`, `description`, `also_triggers`.
+- **Collateral Control (`also_triggers`)**:
+  - `OVERTIME_CAP_EXCEEDED` injects a 7th shift into an ISO week, unavoidably creating 7 consecutive working days (`also_triggers=["MAX_CONSECUTIVE_DAYS"]`). Target selection filters skip employees with shifts on adjacent boundary days (previous Sunday or next Monday) to guarantee strictly one collateral violation.
+  - All other anomaly types (`DOUBLE_BOOKED`, `LEAVE_OVERLAP`, `SKILL_ABSENT`, `SWAP_WITHOUT_APPROVAL`) have `also_triggers=[]` and trigger only their respective rule.
 
 ### 12.3 Precision & Recall Evaluation (`scripts/evaluate_validator.py`)
-- Independent verification script matching validator outputs against `ground_truth.csv` by issue type and record/related-record ID overlap.
+- The only script that reads `ground_truth.csv`. Matches validator output to ground truth:
+  - By `issue_type` matching rule name.
+  - By overlap of `record_id` or `related_record_ids` (overtime violations report the highest assignment ID of the week; related IDs encompass the full 7-shift week).
+  - Categorizes expected collateral violations listed in `also_triggers` so they do not count as false positives.
+  - Computes precision and recall per primary type and overall, listing every unmatched violation.
 - **Acceptance Criteria**:
   1. Clean dataset has exactly **0 violations** (exit code 0).
   2. Dirty dataset achieves **100% recall** across all five primary anomaly types.
   3. No unexpected false positive violations outside of documented `also_triggers`.
+
+### 12.4 Test Suite Verification (`tests/test_validate.py`)
+- Full validation pipeline run against freshly exported clean and dirty directories.
+- Base dataset test verifying that a minimal hand-built dataset produces exactly `[]` violations.
+- Counterexample and passing twin pairs for every constraint family:
+  - `ENUM_INVALID`
+  - `LEAVE_INVALID_TRANSITION`
+  - `LEAVE_INVALID_MANAGER_ACTOR`
+  - `DOUBLE_BOOKED`
+  - `LEAVE_OVERLAP`
+  - `SKILL_ABSENT`
+  - `DUPLICATE_ACTIVE_ASSIGNMENT`
+  - `REST_VIOLATION`
+  - `MAX_CONSECUTIVE_DAYS`
+  - `OVERTIME_CAP_EXCEEDED`
+  - `SWAP_WITHOUT_APPROVAL`
+- Determinism assertion ensuring identical sorted violations across repeated runs.
+- Import boundary test guaranteeing `validate.py` does not import `workforce_generator`.
