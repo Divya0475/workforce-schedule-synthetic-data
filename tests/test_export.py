@@ -101,3 +101,26 @@ def test_export_rejects_missing_or_unknown_tables(tmp_path):
     clean["extra"] = []
     with pytest.raises(ValueError, match="Unregistered CSV tables"):
         write_dataset(tmp_path, "starter", clean, dirty, [])
+
+
+def test_identical_seed_produces_byte_identical_csvs(tmp_path):
+    from run_generator import generate_profile
+
+    dir_a = tmp_path / 'run_a'
+    dir_b = tmp_path / 'run_b'
+
+    generate_profile('starter', dir_a)
+    generate_profile('starter', dir_b)
+
+    files_a = sorted((dir_a / 'starter').rglob('*.csv'))
+    files_b = sorted((dir_b / 'starter').rglob('*.csv'))
+    assert len(files_a) > 0
+    assert len(files_a) == len(files_b)
+
+    for fa, fb in zip(files_a, files_b):
+        rel_a = fa.relative_to(dir_a / 'starter').as_posix()
+        rel_b = fb.relative_to(dir_b / 'starter').as_posix()
+        assert rel_a == rel_b
+        hash_a = hashlib.sha256(fa.read_bytes()).hexdigest()
+        hash_b = hashlib.sha256(fb.read_bytes()).hexdigest()
+        assert hash_a == hash_b, f'Hash mismatch for {rel_a}: {hash_a} != {hash_b}'
