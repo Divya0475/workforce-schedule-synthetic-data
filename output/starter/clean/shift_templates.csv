@@ -1,0 +1,4 @@
+shift_template_id,template_code,name,start_time,end_time,duration_hours,unpaid_break_minutes,is_overnight
+SFT-A,A,Morning,06:00:00,14:00:00,8.0,30,false
+SFT-B,B,Afternoon,14:00:00,22:00:00,8.0,30,false
+SFT-C,C,Night,22:00:00,06:00:00,8.0,30,true

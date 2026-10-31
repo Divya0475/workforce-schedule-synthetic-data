@@ -1,0 +1,170 @@
+{
+  "files": {
+    "clean/attendance_events.csv": {
+      "row_count": 648,
+      "sha256": "4465ac945fa46e9a61c5e64b6681a7924d91c25b1a600795d691eae3270007d7"
+    },
+    "clean/coverage_gaps.csv": {
+      "row_count": 309,
+      "sha256": "8c70e7c97db3b8a3b99af707a7a8a7abf0c927289670041eaa4a3c0eab912383"
+    },
+    "clean/coverage_requirements.csv": {
+      "row_count": 309,
+      "sha256": "a6192b3ac63f4fe4d1d148a22524864c1dc69e5cae59451561bc67692a674a01"
+    },
+    "clean/employee_skills.csv": {
+      "row_count": 102,
+      "sha256": "b1d56152e185e2775474dc5d2a2cf8a0d628c87ca2ff718a53ef9bdb131fcf2c"
+    },
+    "clean/employees.csv": {
+      "row_count": 50,
+      "sha256": "031a89f17d4a14e5ecd28d32067072c54eaa528f7d57c86d50bfc905fcadece4"
+    },
+    "clean/holidays.csv": {
+      "row_count": 1,
+      "sha256": "759b60855ba0baf0078aca5f306571ff313acd1a2fa8a565b11c90040e441a51"
+    },
+    "clean/leave_events.csv": {
+      "row_count": 201,
+      "sha256": "0c4b909f2f65fd0e6edee653ad1bea1ca96bc98855d55029d56f81dab7931fc8"
+    },
+    "clean/leave_requests.csv": {
+      "row_count": 100,
+      "sha256": "4bbf14cb5fe98b6c1378d15c08eda842658900a35f82604dabbc5c4f2d3042c7"
+    },
+    "clean/shift_assignments.csv": {
+      "row_count": 333,
+      "sha256": "1c9586ea89eebeaf285b569cb12ad75c10c09e27480e80c8587eccfdf29758de"
+    },
+    "clean/shift_templates.csv": {
+      "row_count": 3,
+      "sha256": "da9c11ad71e7e3ef2305c1ecfc9d3493398273d203b78072d37b3c3484856b2b"
+    },
+    "clean/skills.csv": {
+      "row_count": 11,
+      "sha256": "b4baed703e636445342a76459013e0c13a85814fba83cc6f5803e6d2736e851f"
+    },
+    "clean/swap_events.csv": {
+      "row_count": 13,
+      "sha256": "144d07c6703697e7f562aa7f8d364eeea6909c7638c0ff4b5964d373743e8cb6"
+    },
+    "clean/swap_requests.csv": {
+      "row_count": 6,
+      "sha256": "298a502def16efc9b3b5cc501e61c02b6280311ea941ccee986b715fbda601a0"
+    },
+    "clean/teams.csv": {
+      "row_count": 5,
+      "sha256": "6dbfae4f2e39d93052db7599f6d73b0d07d517783aea8a5510cf965f8928e0a4"
+    },
+    "clean/weekly_hours_summaries.csv": {
+      "row_count": 150,
+      "sha256": "66f5934074f7790459ba05ba60fc8bb7024fbc7af59977f5a5669bfb4b9c8cff"
+    },
+    "dirty/attendance_events.csv": {
+      "row_count": 703,
+      "sha256": "1ab23d0e6b6dccf26b612e118914f3b2aaa3a1cf2a16a38817142ace8e8e6bf5"
+    },
+    "dirty/coverage_gaps.csv": {
+      "row_count": 309,
+      "sha256": "80a725e0bce7202f4ef62bcb406ce3866898411591c625b56e540eb7a84cc84b"
+    },
+    "dirty/coverage_requirements.csv": {
+      "row_count": 309,
+      "sha256": "a6192b3ac63f4fe4d1d148a22524864c1dc69e5cae59451561bc67692a674a01"
+    },
+    "dirty/employee_skills.csv": {
+      "row_count": 102,
+      "sha256": "b1d56152e185e2775474dc5d2a2cf8a0d628c87ca2ff718a53ef9bdb131fcf2c"
+    },
+    "dirty/employees.csv": {
+      "row_count": 50,
+      "sha256": "031a89f17d4a14e5ecd28d32067072c54eaa528f7d57c86d50bfc905fcadece4"
+    },
+    "dirty/holidays.csv": {
+      "row_count": 1,
+      "sha256": "759b60855ba0baf0078aca5f306571ff313acd1a2fa8a565b11c90040e441a51"
+    },
+    "dirty/leave_events.csv": {
+      "row_count": 201,
+      "sha256": "0c4b909f2f65fd0e6edee653ad1bea1ca96bc98855d55029d56f81dab7931fc8"
+    },
+    "dirty/leave_requests.csv": {
+      "row_count": 100,
+      "sha256": "4bbf14cb5fe98b6c1378d15c08eda842658900a35f82604dabbc5c4f2d3042c7"
+    },
+    "dirty/shift_assignments.csv": {
+      "row_count": 369,
+      "sha256": "1e78ebb10f3c9f5a92296da8ded44726444ddc7b46f3ce4cf4146669d2b1b97c"
+    },
+    "dirty/shift_templates.csv": {
+      "row_count": 3,
+      "sha256": "da9c11ad71e7e3ef2305c1ecfc9d3493398273d203b78072d37b3c3484856b2b"
+    },
+    "dirty/skills.csv": {
+      "row_count": 11,
+      "sha256": "b4baed703e636445342a76459013e0c13a85814fba83cc6f5803e6d2736e851f"
+    },
+    "dirty/swap_events.csv": {
+      "row_count": 19,
+      "sha256": "83d54d34f81ead6235547104a541e0ac7e2c7f9441ee8ffde4ff449a3cb4e633"
+    },
+    "dirty/swap_requests.csv": {
+      "row_count": 9,
+      "sha256": "c453f746406b0eb5010cc8d555dca59f33b24c8c1dfe41b6461c8db8d454fc41"
+    },
+    "dirty/teams.csv": {
+      "row_count": 5,
+      "sha256": "6dbfae4f2e39d93052db7599f6d73b0d07d517783aea8a5510cf965f8928e0a4"
+    },
+    "dirty/weekly_hours_summaries.csv": {
+      "row_count": 150,
+      "sha256": "2e3484d0978284f842620bdb91b71e5170bf99a302b32d9b3c279391a759ab2e"
+    },
+    "ground_truth/ground_truth.csv": {
+      "row_count": 15,
+      "sha256": "1a60be9a969859871602d6012af60357bf3987b55332bf38c6c56596ce4716db"
+    },
+    "ground_truth/ground_truth.json": {
+      "row_count": 15,
+      "sha256": "04bb27078cb83a875db40360508aaabebbb7d061aae48cba29844eb344ee9969"
+    }
+  },
+  "profile": "starter",
+  "row_counts": {
+    "clean": {
+      "attendance_events": 648,
+      "coverage_gaps": 309,
+      "coverage_requirements": 309,
+      "employee_skills": 102,
+      "employees": 50,
+      "holidays": 1,
+      "leave_events": 201,
+      "leave_requests": 100,
+      "shift_assignments": 333,
+      "shift_templates": 3,
+      "skills": 11,
+      "swap_events": 13,
+      "swap_requests": 6,
+      "teams": 5,
+      "weekly_hours_summaries": 150
+    },
+    "dirty": {
+      "attendance_events": 703,
+      "coverage_gaps": 309,
+      "coverage_requirements": 309,
+      "employee_skills": 102,
+      "employees": 50,
+      "holidays": 1,
+      "leave_events": 201,
+      "leave_requests": 100,
+      "shift_assignments": 369,
+      "shift_templates": 3,
+      "skills": 11,
+      "swap_events": 19,
+      "swap_requests": 9,
+      "teams": 5,
+      "weekly_hours_summaries": 150
+    },
+    "ground_truth": 15
+  }
+}

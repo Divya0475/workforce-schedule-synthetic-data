@@ -1,0 +1,12 @@
+skill_id,code,name,category,description
+SKL-BILINGUAL_ES,BILINGUAL_ES,Bilingual Spanish,Linguistic,Certified fluent Spanish clinical communication
+SKL-CRISIS_COUNSEL,CRISIS_COUNSEL,Crisis Counseling,Linguistic,De-escalation and behavioral crisis intervention
+SKL-DISPATCH,DISPATCH,Resource & Unit Dispatch,Logistical,Emergency communications and unit routing
+SKL-HAZMAT,HAZMAT,Hazardous Material Logistics,Logistical,Biohazard handling and hazardous waste dispatch
+SKL-ICU_CARE,ICU_CARE,Intensive Care Operations,Clinical,Critical patient monitoring and care
+SKL-INTAKE,INTAKE,Patient Intake & Admission,Administrative,Patient registration and preliminary intake
+SKL-ONCOLOGY,ONCOLOGY,Clinical Oncology Protocols,Clinical,Specialized cancer therapy protocols
+SKL-PHARMACY,PHARMACY,Clinical Pharmacology,Clinical,Medication dispensary and verification
+SKL-SUPPLY_CHAIN,SUPPLY_CHAIN,Medical Supply Chain,Logistical,Medical inventory and supply routing
+SKL-TOXICOLOGY,TOXICOLOGY,Clinical Toxicology,Clinical,Rare poisoning and overdose interventions
+SKL-TRIAGE,TRIAGE,Emergency Triage & Assessment,Clinical,Rapid patient condition classification

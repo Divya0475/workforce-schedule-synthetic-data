@@ -1,0 +1,101 @@
+leave_request_id,employee_id,leave_type,start_date,end_date,requested_hours,current_status,submitted_at,decided_at,decision_reason
+LVE-2026-000001,EMP-000040,PARENTAL,2026-01-01,2026-01-13,72.0,APPROVED,2025-11-06T10:00:00Z,2025-11-08T10:00:00Z,Approved: Daily staffing buffer satisfied across all requested dates and skills
+LVE-2026-000002,EMP-000020,PARENTAL,2026-01-01,2026-01-12,64.0,APPROVED,2025-11-06T10:00:00Z,2025-11-09T10:00:00Z,Approved: Daily staffing buffer satisfied across all requested dates and skills
+LVE-2026-000003,EMP-000024,PARENTAL,2026-01-04,2026-01-13,56.0,APPROVED,2025-11-23T10:00:00Z,2025-11-26T10:00:00Z,Approved: Daily staffing buffer satisfied across all requested dates and skills
+LVE-2026-000004,EMP-000035,ANNUAL,2026-01-02,2026-01-05,16.0,APPROVED,2025-11-29T08:01:00Z,2025-11-30T12:01:00Z,Approved: Daily staffing buffer satisfied across all requested dates and skills
+LVE-2026-000005,EMP-000042,ANNUAL,2026-01-01,2026-01-03,8.0,APPROVED,2025-11-29T16:38:00Z,2025-12-02T22:38:00Z,Approved: Daily staffing buffer satisfied across all requested dates and skills
+LVE-2026-000006,EMP-000005,ANNUAL,2026-01-02,2026-01-03,6.4,REJECTED,2025-11-30T11:24:00Z,2025-12-02T13:24:00Z,Insufficient coverage for skill SKL-TRIAGE on 2026-01-02: remaining qualified staff (2) < required threshold (4)
+LVE-2026-000007,EMP-000025,ANNUAL,2026-01-01,2026-01-03,8.0,APPROVED,2025-11-30T15:56:00Z,2025-12-02T18:56:00Z,Approved: Daily staffing buffer satisfied across all requested dates and skills
+LVE-2026-000008,EMP-000032,ANNUAL,2026-01-01,2026-01-03,8.0,APPROVED,2025-12-01T12:41:00Z,2025-12-04T18:41:00Z,Approved: Daily staffing buffer satisfied across all requested dates and skills
+LVE-2026-000009,EMP-000037,ANNUAL,2026-01-03,2026-01-04,0.0,REJECTED,2025-12-02T15:22:00Z,2025-12-04T16:22:00Z,Insufficient coverage for skill SKL-INTAKE on 2026-01-03: remaining qualified staff (3) < required threshold (4)
+LVE-2026-000010,EMP-000036,ANNUAL,2026-01-02,2026-01-03,8.0,REJECTED,2025-12-02T15:26:00Z,2025-12-04T18:26:00Z,Insufficient coverage for skill SKL-INTAKE on 2026-01-02: remaining qualified staff (3) < required threshold (4)
+LVE-2026-000011,EMP-000008,ANNUAL,2026-01-02,2026-01-05,8.0,CANCELLED,2025-12-04T16:13:00Z,2025-12-06T17:13:00Z,Approved: Daily staffing buffer satisfied across all requested dates and skills
+LVE-2026-000012,EMP-000021,ANNUAL,2026-01-03,2026-01-05,8.0,APPROVED,2025-12-05T11:40:00Z,2025-12-08T16:40:00Z,Approved: Manager administrative leave approved by supervisory authority
+LVE-2026-000013,EMP-000013,ANNUAL,2026-01-07,2026-01-08,16.0,REJECTED,2025-12-05T12:59:00Z,2025-12-08T16:59:00Z,Insufficient coverage for skill SKL-ONCOLOGY on 2026-01-07: remaining qualified staff (1) < required threshold (2)
+LVE-2026-000014,EMP-000013,ANNUAL,2026-01-02,2026-01-03,8.0,REJECTED,2025-12-05T16:29:00Z,2025-12-07T18:29:00Z,Insufficient coverage for skill SKL-ONCOLOGY on 2026-01-02: remaining qualified staff (1) < required threshold (2)
+LVE-2026-000015,EMP-000005,ANNUAL,2026-01-01,2026-01-03,6.4,REJECTED,2025-12-06T11:55:00Z,2025-12-07T17:55:00Z,Insufficient coverage for skill SKL-TRIAGE on 2026-01-01: remaining qualified staff (2) < required threshold (4)
+LVE-2026-000016,EMP-000020,ANNUAL,2026-01-03,2026-01-04,0.0,REJECTED,2025-12-06T12:23:00Z,2025-12-08T13:23:00Z,Overlapping approved leave request already exists for this employee
+LVE-2026-000017,EMP-000005,ANNUAL,2026-01-01,2026-01-04,6.4,REJECTED,2025-12-07T14:05:00Z,2025-12-08T15:05:00Z,Insufficient coverage for skill SKL-TRIAGE on 2026-01-01: remaining qualified staff (2) < required threshold (4)
+LVE-2026-000018,EMP-000039,ANNUAL,2026-01-06,2026-01-08,24.0,APPROVED,2025-12-07T16:39:00Z,2025-12-10T22:39:00Z,Approved: Daily staffing buffer satisfied across all requested dates and skills
+LVE-2026-000019,EMP-000037,ANNUAL,2026-01-06,2026-01-09,32.0,APPROVED,2025-12-08T08:34:00Z,2025-12-09T12:34:00Z,Approved: Daily staffing buffer satisfied across all requested dates and skills
+LVE-2026-000020,EMP-000016,ANNUAL,2026-01-12,2026-01-14,19.2,APPROVED,2025-12-08T12:21:00Z,2025-12-10T15:21:00Z,Approved: Daily staffing buffer satisfied across all requested dates and skills
+LVE-2026-000021,EMP-000003,ANNUAL,2026-01-03,2026-01-06,12.8,APPROVED,2025-12-10T08:16:00Z,2025-12-12T09:16:00Z,Approved: Daily staffing buffer satisfied across all requested dates and skills
+LVE-2026-000022,EMP-000015,ANNUAL,2026-01-02,2026-01-04,8.0,APPROVED,2025-12-10T08:31:00Z,2025-12-13T13:31:00Z,Approved: Daily staffing buffer satisfied across all requested dates and skills
+LVE-2026-000023,EMP-000023,ANNUAL,2026-01-02,2026-01-03,8.0,APPROVED,2025-12-10T13:15:00Z,2025-12-11T15:15:00Z,Approved: Daily staffing buffer satisfied across all requested dates and skills
+LVE-2026-000024,EMP-000045,ANNUAL,2026-01-05,2026-01-07,24.0,APPROVED,2025-12-10T13:48:00Z,2025-12-13T19:48:00Z,Approved: Daily staffing buffer satisfied across all requested dates and skills
+LVE-2026-000025,EMP-000048,ANNUAL,2026-01-02,2026-01-05,16.0,APPROVED,2025-12-11T08:02:00Z,2025-12-14T10:02:00Z,Approved: Daily staffing buffer satisfied across all requested dates and skills
+LVE-2026-000026,EMP-000008,ANNUAL,2026-01-03,2026-01-04,0.0,REJECTED,2025-12-11T13:17:00Z,2025-12-12T19:17:00Z,Overlapping approved leave request already exists for this employee
+LVE-2026-000027,EMP-000010,ANNUAL,2026-01-14,2026-01-14,8.0,REJECTED,2025-12-12T16:24:00Z,2025-12-13T17:24:00Z,Insufficient coverage for skill SKL-TRIAGE on 2026-01-14: remaining qualified staff (3) < required threshold (4)
+LVE-2026-000028,EMP-000014,ANNUAL,2026-01-05,2026-01-06,16.0,REJECTED,2025-12-13T08:02:00Z,2025-12-14T10:02:00Z,Insufficient coverage for skill SKL-ONCOLOGY on 2026-01-05: remaining qualified staff (1) < required threshold (2)
+LVE-2026-000029,EMP-000019,ANNUAL,2026-01-08,2026-01-10,16.0,APPROVED,2025-12-13T13:38:00Z,2025-12-15T14:38:00Z,Approved: Daily staffing buffer satisfied across all requested dates and skills
+LVE-2026-000030,EMP-000015,ANNUAL,2026-01-13,2026-01-14,16.0,APPROVED,2025-12-14T08:35:00Z,2025-12-15T13:35:00Z,Approved: Daily staffing buffer satisfied across all requested dates and skills
+LVE-2026-000031,EMP-000029,ANNUAL,2026-01-02,2026-01-04,8.0,APPROVED,2025-12-14T10:10:00Z,2025-12-15T15:10:00Z,Approved: Daily staffing buffer satisfied across all requested dates and skills
+LVE-2026-000032,EMP-000031,ANNUAL,2026-01-02,2026-01-05,16.0,APPROVED,2025-12-14T12:02:00Z,2025-12-15T18:02:00Z,Approved: Manager administrative leave approved by supervisory authority
+LVE-2026-000033,EMP-000015,ANNUAL,2026-01-04,2026-01-07,24.0,REJECTED,2025-12-14T15:40:00Z,2025-12-16T16:40:00Z,Overlapping approved leave request already exists for this employee
+LVE-2026-000034,EMP-000027,ANNUAL,2026-01-08,2026-01-11,16.0,APPROVED,2025-12-15T08:47:00Z,2025-12-18T15:47:00Z,Approved: Daily staffing buffer satisfied across all requested dates and skills
+LVE-2026-000035,EMP-000004,ANNUAL,2026-01-01,2026-01-02,8.0,APPROVED,2025-12-15T09:00:00Z,2025-12-17T14:00:00Z,Approved: Daily staffing buffer satisfied across all requested dates and skills
+LVE-2026-000036,EMP-000044,ANNUAL,2026-01-05,2026-01-06,16.0,APPROVED,2025-12-16T09:07:00Z,2025-12-18T12:07:00Z,Approved: Daily staffing buffer satisfied across all requested dates and skills
+LVE-2026-000037,EMP-000023,ANNUAL,2026-01-13,2026-01-14,16.0,APPROVED,2025-12-16T11:50:00Z,2025-12-19T14:50:00Z,Approved: Daily staffing buffer satisfied across all requested dates and skills
+LVE-2026-000038,EMP-000026,ANNUAL,2026-01-05,2026-01-06,16.0,APPROVED,2025-12-16T12:30:00Z,2025-12-18T16:30:00Z,Approved: Daily staffing buffer satisfied across all requested dates and skills
+LVE-2026-000039,EMP-000027,ANNUAL,2026-01-02,2026-01-04,8.0,CANCELLED,2025-12-16T13:52:00Z,2025-12-18T15:52:00Z,Approved: Daily staffing buffer satisfied across all requested dates and skills
+LVE-2026-000040,EMP-000022,ANNUAL,2026-01-01,2026-01-02,8.0,REJECTED,2025-12-16T15:45:00Z,2025-12-17T21:45:00Z,Insufficient coverage for skill SKL-DISPATCH on 2026-01-02: remaining qualified staff (3) < required threshold (4)
+LVE-2026-000041,EMP-000043,ANNUAL,2026-01-03,2026-01-05,8.0,CANCELLED,2025-12-17T11:02:00Z,,
+LVE-2026-000042,EMP-000034,ANNUAL,2026-01-13,2026-01-14,16.0,APPROVED,2025-12-17T13:57:00Z,2025-12-20T17:57:00Z,Approved: Daily staffing buffer satisfied across all requested dates and skills
+LVE-2026-000043,EMP-000024,ANNUAL,2026-01-13,2026-01-14,16.0,REJECTED,2025-12-17T14:01:00Z,2025-12-20T15:01:00Z,Overlapping approved leave request already exists for this employee
+LVE-2026-000044,EMP-000046,ANNUAL,2026-01-03,2026-01-05,6.4,APPROVED,2025-12-17T16:00:00Z,2025-12-20T22:00:00Z,Approved: Daily staffing buffer satisfied across all requested dates and skills
+LVE-2026-000045,EMP-000024,ANNUAL,2026-01-09,2026-01-12,16.0,REJECTED,2025-12-17T16:53:00Z,2025-12-19T17:53:00Z,Overlapping approved leave request already exists for this employee
+LVE-2026-000046,EMP-000027,ANNUAL,2026-01-09,2026-01-10,8.0,REJECTED,2025-12-18T10:54:00Z,2025-12-21T12:54:00Z,Overlapping approved leave request already exists for this employee
+LVE-2026-000047,EMP-000011,ANNUAL,2026-01-03,2026-01-06,16.0,APPROVED,2025-12-18T13:45:00Z,2025-12-20T14:45:00Z,Approved: Manager administrative leave approved by supervisory authority
+LVE-2026-000048,EMP-000034,ANNUAL,2026-01-03,2026-01-06,16.0,REJECTED,2025-12-19T13:10:00Z,2025-12-21T20:10:00Z,Insufficient coverage for skill SKL-INTAKE on 2026-01-03: remaining qualified staff (3) < required threshold (4)
+LVE-2026-000049,EMP-000037,ANNUAL,2026-01-14,2026-01-14,8.0,APPROVED,2025-12-20T09:49:00Z,2025-12-23T11:49:00Z,Approved: Daily staffing buffer satisfied across all requested dates and skills
+LVE-2026-000050,EMP-000029,ANNUAL,2026-01-01,2026-01-04,8.0,REJECTED,2025-12-20T10:58:00Z,2025-12-23T17:58:00Z,Overlapping approved leave request already exists for this employee
+LVE-2026-000051,EMP-000050,ANNUAL,2026-01-04,2026-01-06,16.0,CANCELLED,2025-12-20T12:20:00Z,2025-12-21T14:20:00Z,Approved: Daily staffing buffer satisfied across all requested dates and skills
+LVE-2026-000052,EMP-000022,ANNUAL,2026-01-02,2026-01-03,8.0,REJECTED,2025-12-20T13:40:00Z,2025-12-21T19:40:00Z,Insufficient coverage for skill SKL-DISPATCH on 2026-01-02: remaining qualified staff (3) < required threshold (4)
+LVE-2026-000053,EMP-000005,ANNUAL,2026-01-03,2026-01-04,0.0,REJECTED,2025-12-20T13:57:00Z,2025-12-22T18:57:00Z,Insufficient coverage for skill SKL-TRIAGE on 2026-01-03: remaining qualified staff (3) < required threshold (4)
+LVE-2026-000054,EMP-000015,ANNUAL,2026-01-13,2026-01-14,16.0,REJECTED,2025-12-21T10:23:00Z,2025-12-22T17:23:00Z,Overlapping approved leave request already exists for this employee
+LVE-2026-000055,EMP-000022,ANNUAL,2026-01-05,2026-01-06,16.0,APPROVED,2025-12-22T09:20:00Z,2025-12-24T12:20:00Z,Approved: Daily staffing buffer satisfied across all requested dates and skills
+LVE-2026-000056,EMP-000039,ANNUAL,2026-01-04,2026-01-06,16.0,REJECTED,2025-12-22T10:11:00Z,2025-12-25T12:11:00Z,Overlapping approved leave request already exists for this employee
+LVE-2026-000057,EMP-000017,ANNUAL,2026-01-01,2026-01-03,4.0,APPROVED,2025-12-22T14:13:00Z,2025-12-23T16:13:00Z,Approved: Daily staffing buffer satisfied across all requested dates and skills
+LVE-2026-000058,EMP-000039,ANNUAL,2026-01-04,2026-01-06,16.0,REJECTED,2025-12-23T08:26:00Z,2025-12-24T14:26:00Z,Overlapping approved leave request already exists for this employee
+LVE-2026-000059,EMP-000043,ANNUAL,2026-01-05,2026-01-07,24.0,REJECTED,2025-12-23T15:08:00Z,2025-12-26T21:08:00Z,Insufficient coverage for skill SKL-TRIAGE on 2026-01-05: remaining qualified staff (3) < required threshold (4)
+LVE-2026-000060,EMP-000033,ANNUAL,2026-01-11,2026-01-12,8.0,APPROVED,2025-12-24T13:06:00Z,2025-12-26T16:06:00Z,Approved: Daily staffing buffer satisfied across all requested dates and skills
+LVE-2026-000061,EMP-000048,ANNUAL,2026-01-03,2026-01-05,8.0,REJECTED,2025-12-24T14:23:00Z,2025-12-26T21:23:00Z,Overlapping approved leave request already exists for this employee
+LVE-2026-000062,EMP-000004,ANNUAL,2026-01-02,2026-01-04,8.0,REJECTED,2025-12-25T09:18:00Z,2025-12-28T11:18:00Z,Overlapping approved leave request already exists for this employee
+LVE-2026-000063,EMP-000032,UNPAID,2026-01-06,2026-01-06,8.0,APPROVED,2025-12-25T09:30:00Z,2025-12-26T09:30:00Z,Approved: Daily staffing buffer satisfied across all requested dates and skills
+LVE-2026-000064,EMP-000011,ANNUAL,2026-01-08,2026-01-11,16.0,APPROVED,2025-12-25T12:44:00Z,2025-12-27T13:44:00Z,Approved: Manager administrative leave approved by supervisory authority
+LVE-2026-000065,EMP-000037,UNPAID,2026-01-05,2026-01-07,24.0,REJECTED,2025-12-26T09:30:00Z,2025-12-28T09:30:00Z,Overlapping approved leave request already exists for this employee
+LVE-2026-000066,EMP-000013,ANNUAL,2026-01-02,2026-01-03,8.0,REJECTED,2025-12-26T09:30:00Z,2025-12-29T12:30:00Z,Insufficient coverage for skill SKL-ONCOLOGY on 2026-01-02: remaining qualified staff (1) < required threshold (2)
+LVE-2026-000067,EMP-000049,ANNUAL,2026-01-03,2026-01-05,8.0,REJECTED,2025-12-26T13:13:00Z,2025-12-27T17:13:00Z,Insufficient coverage for skill SKL-TRIAGE on 2026-01-05: remaining qualified staff (3) < required threshold (4)
+LVE-2026-000068,EMP-000048,UNPAID,2026-01-05,2026-01-05,8.0,REJECTED,2025-12-27T09:30:00Z,2025-12-28T09:30:00Z,Overlapping approved leave request already exists for this employee
+LVE-2026-000069,EMP-000014,ANNUAL,2026-01-06,2026-01-08,24.0,REJECTED,2025-12-28T14:35:00Z,2025-12-30T15:35:00Z,Insufficient coverage for skill SKL-ONCOLOGY on 2026-01-06: remaining qualified staff (1) < required threshold (2)
+LVE-2026-000070,EMP-000004,ANNUAL,2026-01-09,2026-01-10,8.0,APPROVED,2025-12-31T16:47:00Z,2026-01-02T22:47:00Z,Approved: Daily staffing buffer satisfied across all requested dates and skills
+LVE-2026-000071,EMP-000018,SICK,2026-01-01,2026-01-01,6.4,APPROVED,2025-12-31T20:54:00Z,2026-01-01T00:48:00Z,Approved: Statutory sick leave is exempt from operational coverage constraints
+LVE-2026-000072,EMP-000015,SICK,2026-01-01,2026-01-01,8.0,APPROVED,2026-01-01T07:05:00Z,2026-01-01T09:26:00Z,Approved: Statutory sick leave is exempt from operational coverage constraints
+LVE-2026-000073,EMP-000039,SICK,2026-01-01,2026-01-01,8.0,APPROVED,2026-01-01T07:20:00Z,2026-01-01T10:52:00Z,Approved: Statutory sick leave is exempt from operational coverage constraints
+LVE-2026-000074,EMP-000014,SICK,2026-01-01,2026-01-02,16.0,APPROVED,2026-01-01T08:12:00Z,2026-01-01T11:43:00Z,Approved: Statutory sick leave is exempt from operational coverage constraints
+LVE-2026-000075,EMP-000005,ANNUAL,2026-01-10,2026-01-13,12.8,REJECTED,2026-01-01T13:56:00Z,2026-01-02T20:56:00Z,Insufficient coverage for skill SKL-TRIAGE on 2026-01-10: remaining qualified staff (3) < required threshold (4)
+LVE-2026-000076,EMP-000009,SICK,2026-01-02,2026-01-02,8.0,APPROVED,2026-01-02T06:36:00Z,2026-01-02T07:45:00Z,Approved: Statutory sick leave is exempt from operational coverage constraints
+LVE-2026-000077,EMP-000013,SICK,2026-01-02,2026-01-02,8.0,APPROVED,2026-01-02T08:40:00Z,2026-01-02T12:11:00Z,Approved: Statutory sick leave is exempt from operational coverage constraints
+LVE-2026-000078,EMP-000028,ANNUAL,2026-01-10,2026-01-12,8.0,APPROVED,2026-01-02T09:58:00Z,2026-01-04T12:58:00Z,Approved: Daily staffing buffer satisfied across all requested dates and skills
+LVE-2026-000079,EMP-000020,SICK,2026-01-03,2026-01-03,0.0,REJECTED,2026-01-02T17:20:00Z,2026-01-02T20:03:00Z,Overlapping approved leave request already exists for this employee
+LVE-2026-000080,EMP-000002,ANNUAL,2026-01-09,2026-01-11,8.0,REJECTED,2026-01-03T00:00:00Z,2026-01-03T02:28:00Z,Insufficient coverage for skill SKL-TRIAGE on 2026-01-09: remaining qualified staff (3) < required threshold (4)
+LVE-2026-000081,EMP-000019,UNPAID,2026-01-10,2026-01-12,8.0,REJECTED,2026-01-04T09:30:00Z,2026-01-05T09:30:00Z,Overlapping approved leave request already exists for this employee
+LVE-2026-000082,EMP-000036,SICK,2026-01-05,2026-01-05,8.0,APPROVED,2026-01-04T16:16:00Z,2026-01-04T18:28:00Z,Approved: Statutory sick leave is exempt from operational coverage constraints
+LVE-2026-000083,EMP-000028,ANNUAL,2026-01-14,2026-01-14,8.0,APPROVED,2026-01-04T16:37:00Z,2026-01-05T23:37:00Z,Approved: Daily staffing buffer satisfied across all requested dates and skills
+LVE-2026-000084,EMP-000019,SICK,2026-01-05,2026-01-05,8.0,APPROVED,2026-01-04T20:04:00Z,2026-01-04T21:32:00Z,Approved: Statutory sick leave is exempt from operational coverage constraints
+LVE-2026-000085,EMP-000031,SICK,2026-01-05,2026-01-05,8.0,REJECTED,2026-01-05T06:51:00Z,2026-01-05T10:06:00Z,Overlapping approved leave request already exists for this employee
+LVE-2026-000086,EMP-000032,UNPAID,2026-01-08,2026-01-10,16.0,APPROVED,2026-01-05T09:30:00Z,2026-01-07T09:30:00Z,Approved: Daily staffing buffer satisfied across all requested dates and skills
+LVE-2026-000087,EMP-000008,SICK,2026-01-06,2026-01-06,4.0,APPROVED,2026-01-06T06:08:00Z,2026-01-06T08:15:00Z,Approved: Statutory sick leave is exempt from operational coverage constraints
+LVE-2026-000088,EMP-000028,SICK,2026-01-06,2026-01-06,8.0,APPROVED,2026-01-06T08:16:00Z,2026-01-06T09:44:00Z,Approved: Statutory sick leave is exempt from operational coverage constraints
+LVE-2026-000089,EMP-000003,SICK,2026-01-07,2026-01-08,12.8,APPROVED,2026-01-06T20:48:00Z,2026-01-06T22:54:00Z,Approved: Statutory sick leave is exempt from operational coverage constraints
+LVE-2026-000090,EMP-000027,SICK,2026-01-08,2026-01-08,8.0,REJECTED,2026-01-07T18:50:00Z,2026-01-07T21:58:00Z,Overlapping approved leave request already exists for this employee
+LVE-2026-000091,EMP-000004,SICK,2026-01-08,2026-01-08,8.0,APPROVED,2026-01-08T07:50:00Z,2026-01-08T09:03:00Z,Approved: Statutory sick leave is exempt from operational coverage constraints
+LVE-2026-000092,EMP-000033,UNPAID,2026-01-12,2026-01-12,8.0,REJECTED,2026-01-08T09:30:00Z,2026-01-10T09:30:00Z,Overlapping approved leave request already exists for this employee
+LVE-2026-000093,EMP-000022,SICK,2026-01-10,2026-01-10,0.0,APPROVED,2026-01-10T07:06:00Z,2026-01-10T08:33:00Z,Approved: Statutory sick leave is exempt from operational coverage constraints
+LVE-2026-000094,EMP-000015,SICK,2026-01-10,2026-01-11,0.0,APPROVED,2026-01-10T07:38:00Z,2026-01-10T10:04:00Z,Approved: Statutory sick leave is exempt from operational coverage constraints
+LVE-2026-000095,EMP-000038,SICK,2026-01-11,2026-01-12,8.0,APPROVED,2026-01-10T20:49:00Z,2026-01-11T00:12:00Z,Approved: Statutory sick leave is exempt from operational coverage constraints
+LVE-2026-000096,EMP-000035,SICK,2026-01-12,2026-01-12,8.0,APPROVED,2026-01-12T08:13:00Z,2026-01-12T10:27:00Z,Approved: Statutory sick leave is exempt from operational coverage constraints
+LVE-2026-000097,EMP-000044,SICK,2026-01-13,2026-01-13,8.0,APPROVED,2026-01-12T16:40:00Z,2026-01-12T19:56:00Z,Approved: Statutory sick leave is exempt from operational coverage constraints
+LVE-2026-000098,EMP-000024,SICK,2026-01-13,2026-01-13,8.0,CANCELLED,2026-01-12T19:42:00Z,,
+LVE-2026-000099,EMP-000014,SICK,2026-01-14,2026-01-14,8.0,SUBMITTED,2026-01-13T20:42:00Z,,
+LVE-2026-000100,EMP-000018,SICK,2026-01-14,2026-01-14,6.4,SUBMITTED,2026-01-14T07:59:00Z,,

@@ -1,0 +1,224 @@
+[
+  {
+    "also_triggers": [
+      "MAX_CONSECUTIVE_DAYS"
+    ],
+    "anomaly_id": "ANM-0001",
+    "description": "Employee has seven ACTIVE shifts in one full ISO week (52.5 paid hours).",
+    "employee_id": "EMP-000006",
+    "entity": "ShiftAssignment",
+    "issue_type": "OVERTIME_CAP_EXCEEDED",
+    "record_id": "ASN-2026-000334",
+    "related_record_ids": [
+      "ASN-2026-000334",
+      "ASN-2026-000335",
+      "ASN-2026-000336",
+      "ASN-2026-000337",
+      "ASN-2026-000338",
+      "ASN-2026-000339",
+      "ASN-2026-000340"
+    ]
+  },
+  {
+    "also_triggers": [
+      "MAX_CONSECUTIVE_DAYS"
+    ],
+    "anomaly_id": "ANM-0002",
+    "description": "Employee has seven ACTIVE shifts in one full ISO week (52.5 paid hours).",
+    "employee_id": "EMP-000007",
+    "entity": "ShiftAssignment",
+    "issue_type": "OVERTIME_CAP_EXCEEDED",
+    "record_id": "ASN-2026-000341",
+    "related_record_ids": [
+      "ASN-2026-000341",
+      "ASN-2026-000342",
+      "ASN-2026-000343",
+      "ASN-2026-000344",
+      "ASN-2026-000345",
+      "ASN-2026-000346",
+      "ASN-2026-000347"
+    ]
+  },
+  {
+    "also_triggers": [
+      "MAX_CONSECUTIVE_DAYS"
+    ],
+    "anomaly_id": "ANM-0003",
+    "description": "Employee has seven ACTIVE shifts in one full ISO week (52.5 paid hours).",
+    "employee_id": "EMP-000010",
+    "entity": "ShiftAssignment",
+    "issue_type": "OVERTIME_CAP_EXCEEDED",
+    "record_id": "ASN-2026-000348",
+    "related_record_ids": [
+      "ASN-2026-000348",
+      "ASN-2026-000349",
+      "ASN-2026-000350",
+      "ASN-2026-000351",
+      "ASN-2026-000352",
+      "ASN-2026-000353",
+      "ASN-2026-000354"
+    ]
+  },
+  {
+    "also_triggers": [],
+    "anomaly_id": "ANM-0004",
+    "description": "Injected active assignment overlaps another active assignment for the employee.",
+    "employee_id": "EMP-000044",
+    "entity": "ShiftAssignment",
+    "issue_type": "DOUBLE_BOOKED",
+    "record_id": "ASN-2026-000355",
+    "related_record_ids": [
+      "ASN-2026-000045"
+    ]
+  },
+  {
+    "also_triggers": [],
+    "anomaly_id": "ANM-0005",
+    "description": "Injected active assignment overlaps another active assignment for the employee.",
+    "employee_id": "EMP-000018",
+    "entity": "ShiftAssignment",
+    "issue_type": "DOUBLE_BOOKED",
+    "record_id": "ASN-2026-000356",
+    "related_record_ids": [
+      "ASN-2026-000256"
+    ]
+  },
+  {
+    "also_triggers": [],
+    "anomaly_id": "ANM-0006",
+    "description": "Injected active assignment overlaps another active assignment for the employee.",
+    "employee_id": "EMP-000042",
+    "entity": "ShiftAssignment",
+    "issue_type": "DOUBLE_BOOKED",
+    "record_id": "ASN-2026-000357",
+    "related_record_ids": [
+      "ASN-2026-000174"
+    ]
+  },
+  {
+    "also_triggers": [],
+    "anomaly_id": "ANM-0007",
+    "description": "Injected ACTIVE assignment falls within an APPROVED leave request.",
+    "employee_id": "EMP-000020",
+    "entity": "ShiftAssignment",
+    "issue_type": "LEAVE_OVERLAP",
+    "record_id": "ASN-2026-000358",
+    "related_record_ids": [
+      "LVE-2026-000002"
+    ]
+  },
+  {
+    "also_triggers": [],
+    "anomaly_id": "ANM-0008",
+    "description": "Injected ACTIVE assignment falls within an APPROVED leave request.",
+    "employee_id": "EMP-000028",
+    "entity": "ShiftAssignment",
+    "issue_type": "LEAVE_OVERLAP",
+    "record_id": "ASN-2026-000359",
+    "related_record_ids": [
+      "LVE-2026-000078"
+    ]
+  },
+  {
+    "also_triggers": [],
+    "anomaly_id": "ANM-0009",
+    "description": "Injected ACTIVE assignment falls within an APPROVED leave request.",
+    "employee_id": "EMP-000017",
+    "entity": "ShiftAssignment",
+    "issue_type": "LEAVE_OVERLAP",
+    "record_id": "ASN-2026-000360",
+    "related_record_ids": [
+      "LVE-2026-000057"
+    ]
+  },
+  {
+    "also_triggers": [],
+    "anomaly_id": "ANM-0010",
+    "description": "Injected assignment fulfills SKL-TRIAGE without a valid employee certification on the shift date.",
+    "employee_id": "EMP-000047",
+    "entity": "ShiftAssignment",
+    "issue_type": "SKILL_ABSENT",
+    "record_id": "ASN-2026-000361",
+    "related_record_ids": [
+      "ASN-2026-000176",
+      "SKL-TRIAGE"
+    ]
+  },
+  {
+    "also_triggers": [],
+    "anomaly_id": "ANM-0011",
+    "description": "Injected assignment fulfills SKL-ICU_CARE without a valid employee certification on the shift date.",
+    "employee_id": "EMP-000015",
+    "entity": "ShiftAssignment",
+    "issue_type": "SKILL_ABSENT",
+    "record_id": "ASN-2026-000362",
+    "related_record_ids": [
+      "ASN-2026-000104",
+      "SKL-ICU_CARE"
+    ]
+  },
+  {
+    "also_triggers": [],
+    "anomaly_id": "ANM-0012",
+    "description": "Injected assignment fulfills SKL-TRIAGE without a valid employee certification on the shift date.",
+    "employee_id": "EMP-000008",
+    "entity": "ShiftAssignment",
+    "issue_type": "SKILL_ABSENT",
+    "record_id": "ASN-2026-000363",
+    "related_record_ids": [
+      "ASN-2026-000090",
+      "SKL-TRIAGE"
+    ]
+  },
+  {
+    "also_triggers": [],
+    "anomaly_id": "ANM-0013",
+    "description": "Swap lifecycle transitions directly from REQUESTED to APPLIED without approval.",
+    "employee_id": "EMP-000049",
+    "entity": "SwapRequest",
+    "issue_type": "SWAP_WITHOUT_APPROVAL",
+    "record_id": "SWP-2026-000007",
+    "related_record_ids": [
+      "ASN-2026-000332",
+      "ASN-2026-000333",
+      "SWP-EVT-2026-000014",
+      "SWP-EVT-2026-000015",
+      "ASN-2026-000364",
+      "ASN-2026-000365"
+    ]
+  },
+  {
+    "also_triggers": [],
+    "anomaly_id": "ANM-0014",
+    "description": "Swap lifecycle transitions directly from REQUESTED to APPLIED without approval.",
+    "employee_id": "EMP-000022",
+    "entity": "SwapRequest",
+    "issue_type": "SWAP_WITHOUT_APPROVAL",
+    "record_id": "SWP-2026-000008",
+    "related_record_ids": [
+      "ASN-2026-000048",
+      "ASN-2026-000049",
+      "SWP-EVT-2026-000016",
+      "SWP-EVT-2026-000017",
+      "ASN-2026-000366",
+      "ASN-2026-000367"
+    ]
+  },
+  {
+    "also_triggers": [],
+    "anomaly_id": "ANM-0015",
+    "description": "Swap lifecycle transitions directly from REQUESTED to APPLIED without approval.",
+    "employee_id": "EMP-000038",
+    "entity": "SwapRequest",
+    "issue_type": "SWAP_WITHOUT_APPROVAL",
+    "record_id": "SWP-2026-000009",
+    "related_record_ids": [
+      "ASN-2026-000171",
+      "ASN-2026-000167",
+      "SWP-EVT-2026-000018",
+      "SWP-EVT-2026-000019",
+      "ASN-2026-000368",
+      "ASN-2026-000369"
+    ]
+  }
+]

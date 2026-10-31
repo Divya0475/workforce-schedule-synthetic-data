@@ -43,6 +43,10 @@ htmlcov/
 .DS_Store
 Thumbs.db
 
-# Output data
-output/
-
+# Output data: ignore temporary runs and large full dataset files
+output/*
+!output/starter/
+!output/full/
+output/full/*
+!output/full/SHA256SUMS
+!output/full/README.md

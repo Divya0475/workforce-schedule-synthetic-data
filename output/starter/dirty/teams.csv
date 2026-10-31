@@ -1,0 +1,6 @@
+team_id,name,department,timezone,is_active
+TEAM-001,Emergency Operations Team 001,Emergency,UTC,true
+TEAM-002,Inpatient Operations Team 002,Inpatient,UTC,true
+TEAM-003,Logistics Operations Team 003,Logistics,UTC,true
+TEAM-004,Customer Support Operations Team 004,Customer Support,UTC,true
+TEAM-005,Emergency Operations Team 005,Emergency,UTC,true
