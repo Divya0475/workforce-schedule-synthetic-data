@@ -1,0 +1,19 @@
+rule,entity,record_id,employee_id,severity,details
+DOUBLE_BOOKED,shift_assignments,ASN-2026-000355,EMP-000044,ERROR,Overlaps ACTIVE assignment ASN-2026-000045
+DOUBLE_BOOKED,shift_assignments,ASN-2026-000356,EMP-000018,ERROR,Overlaps ACTIVE assignment ASN-2026-000256
+DOUBLE_BOOKED,shift_assignments,ASN-2026-000357,EMP-000042,ERROR,Overlaps ACTIVE assignment ASN-2026-000174
+LEAVE_OVERLAP,shift_assignments,ASN-2026-000358,EMP-000020,ERROR,ACTIVE assignment overlaps approved leave LVE-2026-000002
+LEAVE_OVERLAP,shift_assignments,ASN-2026-000359,EMP-000028,ERROR,ACTIVE assignment overlaps approved leave LVE-2026-000078
+LEAVE_OVERLAP,shift_assignments,ASN-2026-000360,EMP-000017,ERROR,ACTIVE assignment overlaps approved leave LVE-2026-000057
+MAX_CONSECUTIVE_DAYS,shift_assignments,ASN-2026-000340,EMP-000006,ERROR,Worked all 7 consecutive days ending 2026-01-11
+MAX_CONSECUTIVE_DAYS,shift_assignments,ASN-2026-000347,EMP-000007,ERROR,Worked all 7 consecutive days ending 2026-01-11
+MAX_CONSECUTIVE_DAYS,shift_assignments,ASN-2026-000354,EMP-000010,ERROR,Worked all 7 consecutive days ending 2026-01-11
+OVERTIME_CAP_EXCEEDED,shift_assignments,ASN-2026-000340,EMP-000006,ERROR,"52.5 paid hours in ISO week 2026-W02; assignments=[""ASN-2026-000334"", ""ASN-2026-000335"", ""ASN-2026-000336"", ""ASN-2026-000337"", ""ASN-2026-000338"", ""ASN-2026-000339"", ""ASN-2026-000340""]"
+OVERTIME_CAP_EXCEEDED,shift_assignments,ASN-2026-000347,EMP-000007,ERROR,"52.5 paid hours in ISO week 2026-W02; assignments=[""ASN-2026-000341"", ""ASN-2026-000342"", ""ASN-2026-000343"", ""ASN-2026-000344"", ""ASN-2026-000345"", ""ASN-2026-000346"", ""ASN-2026-000347""]"
+OVERTIME_CAP_EXCEEDED,shift_assignments,ASN-2026-000354,EMP-000010,ERROR,"52.5 paid hours in ISO week 2026-W02; assignments=[""ASN-2026-000348"", ""ASN-2026-000349"", ""ASN-2026-000350"", ""ASN-2026-000351"", ""ASN-2026-000352"", ""ASN-2026-000353"", ""ASN-2026-000354""]"
+SKILL_ABSENT,shift_assignments,ASN-2026-000361,EMP-000047,ERROR,No certification valid on 2026-01-11 for SKL-TRIAGE
+SKILL_ABSENT,shift_assignments,ASN-2026-000362,EMP-000015,ERROR,No certification valid on 2026-01-05 for SKL-ICU_CARE
+SKILL_ABSENT,shift_assignments,ASN-2026-000363,EMP-000008,ERROR,No certification valid on 2026-01-10 for SKL-TRIAGE
+SWAP_WITHOUT_APPROVAL,swap_requests,SWP-2026-000007,EMP-000049,ERROR,APPLIED swap lacks an earlier APPROVED event or has a REJECTED event
+SWAP_WITHOUT_APPROVAL,swap_requests,SWP-2026-000008,EMP-000022,ERROR,APPLIED swap lacks an earlier APPROVED event or has a REJECTED event
+SWAP_WITHOUT_APPROVAL,swap_requests,SWP-2026-000009,EMP-000038,ERROR,APPLIED swap lacks an earlier APPROVED event or has a REJECTED event
