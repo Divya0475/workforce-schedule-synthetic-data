@@ -51,7 +51,7 @@ The generator exports:
 
 1. **Clone the repository:**
    ```bash
-   git clone <repo_url>
+   git clone https://github.com/Divya0475/workforce-schedule-synthetic-data.git
    cd workforce-schedule-synthetic-data
    ```
 
@@ -127,7 +127,8 @@ print(f'Mismatches: {len(mismatches)}')
 ## Validation & Evaluation
 
 ### 1. Independent Rule Validator (`validate.py`)
-Validates a directory containing workforce CSV files against 10 business logic, schedule feasibility, and labor law rules:
+Validates a directory containing workforce CSV files against 60 distinct business logic, schedule feasibility, and labor law rule codes:
+`AFTER_TERMINATION`, `ASSIGNMENT_EFFECTIVE_ORDER`, `ASSIGNMENT_TIME_ORDER`, `ATTENDANCE_DURING_APPROVED_LEAVE`, `ATTENDANCE_MISSING_EVENTS`, `ATTENDANCE_ON_SWAPPED_OUT`, `ATTENDANCE_RECONCILIATION`, `BEFORE_HIRE`, `CERTIFICATION_DATE_ORDER`, `COVERAGE_GAP_MISSING`, `COVERAGE_GAP_RECONCILIATION`, `DATE_INVALID`, `DOUBLE_BOOKED`, `DUPLICATE_ACTIVE_ASSIGNMENT`, `EMPLOYEE_DATE_ORDER`, `ENUM_INVALID`, `FOREIGN_KEY_COLUMN_MISSING`, `LEAVE_DATE_ORDER`, `LEAVE_EVENT_TIMESTAMP_ORDER`, `LEAVE_INVALID_MANAGER_ACTOR`, `LEAVE_INVALID_TRANSITION`, `LEAVE_MISSING_EVENTS`, `LEAVE_OVERLAP`, `LEAVE_REQUESTOR_ACTOR`, `LEAVE_STATUS_MISMATCH`, `LEAVE_SYSTEM_ACTOR_HAS_ID`, `MANAGER_SCHEDULED`, `MAX_CONSECUTIVE_DAYS`, `MISSING_TABLE`, `OVERTIME_CAP_EXCEEDED`, `PRIMARY_KEY_COLUMN_MISSING`, `PRIMARY_KEY_DUPLICATE`, `REST_VIOLATION`, `SKILL_ABSENT`, `SWAP_APPLIED_TIMESTAMP_MISMATCH`, `SWAP_DIFFERENT_ISO_WEEK`, `SWAP_DIFFERENT_TEAM`, `SWAP_EVENT_CHAIN`, `SWAP_EVENT_TIMESTAMP_ORDER`, `SWAP_HISTORY_INCOMPLETE`, `SWAP_INVALID_INITIAL_EVENT`, `SWAP_INVALID_MANAGER_ACTOR`, `SWAP_INVALID_TRANSITION`, `SWAP_IN_PLACE_OVERWRITE`, `SWAP_MISSING_EVENTS`, `SWAP_OLD_HISTORY_NOT_CLOSED`, `SWAP_REJECTION_WITHOUT_REASON`, `SWAP_REPLACEMENT_COUNT`, `SWAP_REPLACEMENT_INVALID`, `SWAP_REPLACEMENT_LINEAGE`, `SWAP_REQUEST_NOT_BEFORE_SHIFTS`, `SWAP_STATUS_MISMATCH`, `SWAP_STUCK_APPROVED`, `SWAP_SYSTEM_ACTOR_HAS_ID`, `SWAP_TIME_ORDER`, `SWAP_UNAPPLIED_HAS_REPLACEMENTS`, `SWAP_WITHOUT_APPROVAL`, `TIMESTAMP_INVALID`, `WEEKLY_HOURS_RECONCILIATION`, `WEEKLY_HOURS_ROW_COUNT`.
 ```powershell
 # Clean directory: exits with code 0 (zero violations)
 .\.venv\Scripts\python.exe validate.py --data-dir output/starter/clean --out output/tmp_clean_report
@@ -293,17 +294,17 @@ To run the complete test suite:
 
 ## Pipeline Runtimes
 
-Measured on a standard modern developer workstation:
+Measured on a Windows developer workstation:
 
 | Step | Starter Profile (50 emp, 14 days) | Full Profile (2,000 emp, 90 days) |
 |---|---|---|
-| **Pipeline Generation** | ~0.08 s | ~49.2 s |
-| **Anomaly Injection & Dirty Recompute** | ~0.07 s | ~74.3 s |
-| **CSV & JSON Export** | ~0.55 s | ~94.9 s |
-| **Total Generation Runtime** | **~0.74 s** | **~218.4 s (~3.6 min)** |
-| **Rule Validation (`validate.py`)** | ~0.60 s | ~35.0 s |
-| **Validator Evaluation (`evaluate_validator.py`)** | ~1.25 s | ~72.0 s |
-| **Total Test Suite (`pytest`)** | **~25.0 s** (93 tests) | N/A |
+| **Pipeline Generation** | 0.10 s | 37.32 s |
+| **Anomaly Injection & Dirty Recompute** | 0.07 s | 65.58 s |
+| **CSV & JSON Export** | 0.55 s | 114.34 s |
+| **Total Generation Runtime** | **0.73 s** | **217.26 s (~3.6 min)** |
+| **Rule Validation (`validate.py` on clean)** | 0.32 s | 26.24 s |
+| **Validator Evaluation (`evaluate_validator.py`)** | 0.66 s (clean: 0.33 s, dirty: 0.33 s) | 47.21 s (clean: 24.39 s, dirty: 22.82 s) |
+| **Total Test Suite (`pytest`)** | **19.01 s** (93 tests) | N/A |
 
 ---
 
