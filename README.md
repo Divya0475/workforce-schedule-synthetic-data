@@ -95,6 +95,14 @@ Pre-generated starter artifacts are committed directly in `output/starter/`. To 
 .\.venv\Scripts\python.exe scripts/generate_sql.py --out output/starter
 ```
 
+### Run everything in one command
+
+To run the complete end-to-end verification and regeneration workflow:
+- **Windows**: `powershell -ExecutionPolicy Bypass -File scripts\reproduce.ps1` (run and passed)
+- **POSIX**: `bash scripts/reproduce.sh` (written but not run)
+
+Note: This takes several minutes because it also generates the full dataset.
+
 ---
 
 ## Full-Scale Dataset Regeneration
@@ -138,6 +146,10 @@ Validates against 60 distinct rule codes covering business logic, schedule feasi
 # Dirty directory: exits with code 1 (violations detected)
 .\.venv\Scripts\python.exe validate.py --data-dir output/starter/dirty --out output/tmp_dirty_report
 ```
+
+**Expected output:**
+- Starter clean prints `Violations: 0` and exits `0`.
+- Starter dirty prints `Violations: 18` (3 each of `DOUBLE_BOOKED`, `LEAVE_OVERLAP`, `OVERTIME_CAP_EXCEEDED`, `SKILL_ABSENT`, `SWAP_WITHOUT_APPROVAL` plus 3 `MAX_CONSECUTIVE_DAYS`) and exits `1`.
 
 ### 2. Evaluation Suite (`scripts/evaluate_validator.py`)
 Matches detected rule violations against ground truth records by matching `issue_type` and overlapping `record_id` / `related_record_ids`. Evaluates Precision and Recall per type and overall:
@@ -185,6 +197,7 @@ workforce-schedule-synthetic-data/
 ├── scripts/
 │   ├── evaluate_validator.py  # Precision/recall benchmark script
 │   ├── generate_sql.py        # Generates schema.sql and starter_inserts.sql
+│   ├── report_fairness.py  # Descriptive fairness and Gini coefficient report
 │   ├── reproduce.ps1          # End-to-end Windows PowerShell reproducibility runner
 │   └── reproduce.sh           # End-to-end POSIX Bash reproducibility runner
 ├── src/
@@ -290,7 +303,7 @@ The project is governed by **100 automated unit, integration, and export tests**
 To run the complete test suite:
 ```powershell
 .\.venv\Scripts\python.exe -m pytest -q
-# Expected output: 100 passed in ~25s
+# Expected output: 100 passed in ~20-25s
 ```
 
 ---
@@ -308,6 +321,8 @@ Measured on a Windows developer workstation:
 | **Rule Validation (`validate.py` on clean)** | 0.32 s | 26.24 s |
 | **Validator Evaluation (`evaluate_validator.py`)** | 0.66 s (clean: 0.33 s, dirty: 0.33 s) | 47.21 s (clean: 24.39 s, dirty: 22.82 s) |
 | **Total Test Suite (`pytest`)** | **19.01 s** (100 tests) | N/A |
+
+Timings vary with machine load; full generation measured between about 116 s and 217 s on the same machine.
 
 ---
 
