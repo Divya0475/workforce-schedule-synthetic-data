@@ -144,3 +144,53 @@ def test_json_export_row_counts_match_csvs(tmp_path):
         json_data = json.loads(json_file_path.read_text(encoding="utf-8"))
         assert len(json_data) == files[cf]["row_count"], f"Row count mismatch for {jf}"
         assert files[jf]["row_count"] == files[cf]["row_count"]
+
+
+def test_sql_export_row_counts_match_csvs(tmp_path):
+    """Load schema.sql + starter_inserts.sql into sqlite3 and verify row counts match CSVs."""
+    import csv
+    import sqlite3
+    import subprocess
+    import sys
+
+    from run_generator import generate_profile
+
+    # Generate starter dataset into tmp_path
+    generate_profile("starter", tmp_path)
+    clean_dir = tmp_path / "starter" / "clean"
+
+    # Run generate_sql.py against the tmp output
+    result = subprocess.run(
+        [sys.executable, "scripts/generate_sql.py", "--out", str(tmp_path / "starter")],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stderr
+
+    schema_path = tmp_path / "starter" / "schema.sql"
+    inserts_path = tmp_path / "starter" / "starter_inserts.sql"
+    assert schema_path.exists()
+    assert inserts_path.exists()
+
+    # Load into in-memory SQLite
+    con = sqlite3.connect(":memory:")
+    con.executescript(schema_path.read_text(encoding="utf-8"))
+    con.executescript(inserts_path.read_text(encoding="utf-8"))
+
+    # Compare row counts against CSVs
+    tables = [
+        "skills", "teams", "holidays", "shift_templates", "employees",
+        "employee_skills", "coverage_requirements", "shift_assignments",
+        "leave_requests", "leave_events", "swap_requests", "swap_events",
+        "attendance_events", "coverage_gaps", "weekly_hours_summaries",
+    ]
+    for table in tables:
+        csv_path = clean_dir / f"{table}.csv"
+        if not csv_path.exists():
+            continue
+        csv_rows = list(csv.DictReader(csv_path.read_text(encoding="utf-8").splitlines()))
+        (db_count,) = con.execute(f"SELECT COUNT(*) FROM {table}").fetchone()
+        assert db_count == len(csv_rows), (
+            f"{table}: sqlite has {db_count} rows, CSV has {len(csv_rows)}"
+        )
+    con.close()
