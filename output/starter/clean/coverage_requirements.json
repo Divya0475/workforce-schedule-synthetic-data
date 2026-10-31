@@ -1,0 +1,2783 @@
+[
+  {
+    "coverage_id": "COV-2026-000001",
+    "effective_date": "2026-01-01",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000002",
+    "effective_date": "2026-01-01",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000003",
+    "effective_date": "2026-01-01",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000004",
+    "effective_date": "2026-01-01",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000005",
+    "effective_date": "2026-01-01",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000006",
+    "effective_date": "2026-01-01",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000007",
+    "effective_date": "2026-01-01",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000008",
+    "effective_date": "2026-01-01",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000009",
+    "effective_date": "2026-01-01",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000010",
+    "effective_date": "2026-01-01",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-INTAKE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000011",
+    "effective_date": "2026-01-01",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-INTAKE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000012",
+    "effective_date": "2026-01-01",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-INTAKE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000013",
+    "effective_date": "2026-01-01",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000014",
+    "effective_date": "2026-01-01",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000015",
+    "effective_date": "2026-01-01",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000016",
+    "effective_date": "2026-01-02",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000017",
+    "effective_date": "2026-01-02",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000018",
+    "effective_date": "2026-01-02",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000019",
+    "effective_date": "2026-01-02",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000020",
+    "effective_date": "2026-01-02",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000021",
+    "effective_date": "2026-01-02",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000022",
+    "effective_date": "2026-01-02",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-PHARMACY",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000023",
+    "effective_date": "2026-01-02",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-ONCOLOGY",
+    "min_headcount": 1,
+    "target_headcount": 1
+  },
+  {
+    "coverage_id": "COV-2026-000024",
+    "effective_date": "2026-01-02",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000025",
+    "effective_date": "2026-01-02",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-PHARMACY",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000026",
+    "effective_date": "2026-01-02",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000027",
+    "effective_date": "2026-01-02",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000028",
+    "effective_date": "2026-01-02",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-SUPPLY_CHAIN",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000029",
+    "effective_date": "2026-01-02",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000030",
+    "effective_date": "2026-01-02",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-SUPPLY_CHAIN",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000031",
+    "effective_date": "2026-01-02",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000032",
+    "effective_date": "2026-01-02",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-INTAKE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000033",
+    "effective_date": "2026-01-02",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000034",
+    "effective_date": "2026-01-02",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-INTAKE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000035",
+    "effective_date": "2026-01-02",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000036",
+    "effective_date": "2026-01-02",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-INTAKE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000037",
+    "effective_date": "2026-01-02",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000038",
+    "effective_date": "2026-01-02",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000039",
+    "effective_date": "2026-01-02",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000040",
+    "effective_date": "2026-01-02",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000041",
+    "effective_date": "2026-01-02",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000042",
+    "effective_date": "2026-01-03",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000043",
+    "effective_date": "2026-01-03",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000044",
+    "effective_date": "2026-01-03",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000045",
+    "effective_date": "2026-01-03",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000046",
+    "effective_date": "2026-01-03",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000047",
+    "effective_date": "2026-01-03",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000048",
+    "effective_date": "2026-01-03",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000049",
+    "effective_date": "2026-01-03",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000050",
+    "effective_date": "2026-01-03",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000051",
+    "effective_date": "2026-01-03",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-INTAKE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000052",
+    "effective_date": "2026-01-03",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-INTAKE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000053",
+    "effective_date": "2026-01-03",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-INTAKE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000054",
+    "effective_date": "2026-01-03",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000055",
+    "effective_date": "2026-01-03",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000056",
+    "effective_date": "2026-01-03",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000057",
+    "effective_date": "2026-01-04",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000058",
+    "effective_date": "2026-01-04",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000059",
+    "effective_date": "2026-01-04",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000060",
+    "effective_date": "2026-01-04",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000061",
+    "effective_date": "2026-01-04",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000062",
+    "effective_date": "2026-01-04",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000063",
+    "effective_date": "2026-01-04",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000064",
+    "effective_date": "2026-01-04",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000065",
+    "effective_date": "2026-01-04",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000066",
+    "effective_date": "2026-01-04",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-INTAKE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000067",
+    "effective_date": "2026-01-04",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-INTAKE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000068",
+    "effective_date": "2026-01-04",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-INTAKE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000069",
+    "effective_date": "2026-01-04",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000070",
+    "effective_date": "2026-01-04",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000071",
+    "effective_date": "2026-01-04",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000072",
+    "effective_date": "2026-01-05",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000073",
+    "effective_date": "2026-01-05",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000074",
+    "effective_date": "2026-01-05",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000075",
+    "effective_date": "2026-01-05",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000076",
+    "effective_date": "2026-01-05",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000077",
+    "effective_date": "2026-01-05",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000078",
+    "effective_date": "2026-01-05",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-PHARMACY",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000079",
+    "effective_date": "2026-01-05",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-ONCOLOGY",
+    "min_headcount": 1,
+    "target_headcount": 1
+  },
+  {
+    "coverage_id": "COV-2026-000080",
+    "effective_date": "2026-01-05",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000081",
+    "effective_date": "2026-01-05",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-PHARMACY",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000082",
+    "effective_date": "2026-01-05",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000083",
+    "effective_date": "2026-01-05",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000084",
+    "effective_date": "2026-01-05",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-SUPPLY_CHAIN",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000085",
+    "effective_date": "2026-01-05",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000086",
+    "effective_date": "2026-01-05",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-SUPPLY_CHAIN",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000087",
+    "effective_date": "2026-01-05",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000088",
+    "effective_date": "2026-01-05",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-INTAKE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000089",
+    "effective_date": "2026-01-05",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000090",
+    "effective_date": "2026-01-05",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-INTAKE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000091",
+    "effective_date": "2026-01-05",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000092",
+    "effective_date": "2026-01-05",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-INTAKE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000093",
+    "effective_date": "2026-01-05",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000094",
+    "effective_date": "2026-01-05",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000095",
+    "effective_date": "2026-01-05",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000096",
+    "effective_date": "2026-01-05",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000097",
+    "effective_date": "2026-01-05",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000098",
+    "effective_date": "2026-01-06",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000099",
+    "effective_date": "2026-01-06",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000100",
+    "effective_date": "2026-01-06",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000101",
+    "effective_date": "2026-01-06",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000102",
+    "effective_date": "2026-01-06",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000103",
+    "effective_date": "2026-01-06",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000104",
+    "effective_date": "2026-01-06",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-PHARMACY",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000105",
+    "effective_date": "2026-01-06",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-ONCOLOGY",
+    "min_headcount": 1,
+    "target_headcount": 1
+  },
+  {
+    "coverage_id": "COV-2026-000106",
+    "effective_date": "2026-01-06",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000107",
+    "effective_date": "2026-01-06",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-PHARMACY",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000108",
+    "effective_date": "2026-01-06",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000109",
+    "effective_date": "2026-01-06",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000110",
+    "effective_date": "2026-01-06",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-SUPPLY_CHAIN",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000111",
+    "effective_date": "2026-01-06",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000112",
+    "effective_date": "2026-01-06",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-SUPPLY_CHAIN",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000113",
+    "effective_date": "2026-01-06",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000114",
+    "effective_date": "2026-01-06",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-INTAKE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000115",
+    "effective_date": "2026-01-06",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000116",
+    "effective_date": "2026-01-06",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-INTAKE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000117",
+    "effective_date": "2026-01-06",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000118",
+    "effective_date": "2026-01-06",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-INTAKE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000119",
+    "effective_date": "2026-01-06",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000120",
+    "effective_date": "2026-01-06",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000121",
+    "effective_date": "2026-01-06",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000122",
+    "effective_date": "2026-01-06",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000123",
+    "effective_date": "2026-01-06",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000124",
+    "effective_date": "2026-01-07",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000125",
+    "effective_date": "2026-01-07",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000126",
+    "effective_date": "2026-01-07",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000127",
+    "effective_date": "2026-01-07",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000128",
+    "effective_date": "2026-01-07",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000129",
+    "effective_date": "2026-01-07",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000130",
+    "effective_date": "2026-01-07",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-PHARMACY",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000131",
+    "effective_date": "2026-01-07",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-ONCOLOGY",
+    "min_headcount": 1,
+    "target_headcount": 1
+  },
+  {
+    "coverage_id": "COV-2026-000132",
+    "effective_date": "2026-01-07",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000133",
+    "effective_date": "2026-01-07",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-PHARMACY",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000134",
+    "effective_date": "2026-01-07",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000135",
+    "effective_date": "2026-01-07",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000136",
+    "effective_date": "2026-01-07",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-SUPPLY_CHAIN",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000137",
+    "effective_date": "2026-01-07",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000138",
+    "effective_date": "2026-01-07",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-SUPPLY_CHAIN",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000139",
+    "effective_date": "2026-01-07",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000140",
+    "effective_date": "2026-01-07",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-INTAKE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000141",
+    "effective_date": "2026-01-07",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000142",
+    "effective_date": "2026-01-07",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-INTAKE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000143",
+    "effective_date": "2026-01-07",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000144",
+    "effective_date": "2026-01-07",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-INTAKE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000145",
+    "effective_date": "2026-01-07",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000146",
+    "effective_date": "2026-01-07",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000147",
+    "effective_date": "2026-01-07",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000148",
+    "effective_date": "2026-01-07",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000149",
+    "effective_date": "2026-01-07",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000150",
+    "effective_date": "2026-01-08",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000151",
+    "effective_date": "2026-01-08",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000152",
+    "effective_date": "2026-01-08",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000153",
+    "effective_date": "2026-01-08",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000154",
+    "effective_date": "2026-01-08",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000155",
+    "effective_date": "2026-01-08",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000156",
+    "effective_date": "2026-01-08",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-PHARMACY",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000157",
+    "effective_date": "2026-01-08",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-ONCOLOGY",
+    "min_headcount": 1,
+    "target_headcount": 1
+  },
+  {
+    "coverage_id": "COV-2026-000158",
+    "effective_date": "2026-01-08",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000159",
+    "effective_date": "2026-01-08",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-PHARMACY",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000160",
+    "effective_date": "2026-01-08",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000161",
+    "effective_date": "2026-01-08",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000162",
+    "effective_date": "2026-01-08",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-SUPPLY_CHAIN",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000163",
+    "effective_date": "2026-01-08",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000164",
+    "effective_date": "2026-01-08",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-SUPPLY_CHAIN",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000165",
+    "effective_date": "2026-01-08",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000166",
+    "effective_date": "2026-01-08",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-INTAKE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000167",
+    "effective_date": "2026-01-08",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000168",
+    "effective_date": "2026-01-08",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-INTAKE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000169",
+    "effective_date": "2026-01-08",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000170",
+    "effective_date": "2026-01-08",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-INTAKE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000171",
+    "effective_date": "2026-01-08",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000172",
+    "effective_date": "2026-01-08",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000173",
+    "effective_date": "2026-01-08",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000174",
+    "effective_date": "2026-01-08",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000175",
+    "effective_date": "2026-01-08",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000176",
+    "effective_date": "2026-01-09",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000177",
+    "effective_date": "2026-01-09",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000178",
+    "effective_date": "2026-01-09",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000179",
+    "effective_date": "2026-01-09",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000180",
+    "effective_date": "2026-01-09",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000181",
+    "effective_date": "2026-01-09",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000182",
+    "effective_date": "2026-01-09",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-PHARMACY",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000183",
+    "effective_date": "2026-01-09",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-ONCOLOGY",
+    "min_headcount": 1,
+    "target_headcount": 1
+  },
+  {
+    "coverage_id": "COV-2026-000184",
+    "effective_date": "2026-01-09",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000185",
+    "effective_date": "2026-01-09",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-PHARMACY",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000186",
+    "effective_date": "2026-01-09",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000187",
+    "effective_date": "2026-01-09",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000188",
+    "effective_date": "2026-01-09",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-SUPPLY_CHAIN",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000189",
+    "effective_date": "2026-01-09",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000190",
+    "effective_date": "2026-01-09",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-SUPPLY_CHAIN",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000191",
+    "effective_date": "2026-01-09",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000192",
+    "effective_date": "2026-01-09",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-INTAKE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000193",
+    "effective_date": "2026-01-09",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000194",
+    "effective_date": "2026-01-09",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-INTAKE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000195",
+    "effective_date": "2026-01-09",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000196",
+    "effective_date": "2026-01-09",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-INTAKE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000197",
+    "effective_date": "2026-01-09",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000198",
+    "effective_date": "2026-01-09",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000199",
+    "effective_date": "2026-01-09",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000200",
+    "effective_date": "2026-01-09",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000201",
+    "effective_date": "2026-01-09",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000202",
+    "effective_date": "2026-01-10",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000203",
+    "effective_date": "2026-01-10",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000204",
+    "effective_date": "2026-01-10",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000205",
+    "effective_date": "2026-01-10",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000206",
+    "effective_date": "2026-01-10",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000207",
+    "effective_date": "2026-01-10",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000208",
+    "effective_date": "2026-01-10",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000209",
+    "effective_date": "2026-01-10",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000210",
+    "effective_date": "2026-01-10",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000211",
+    "effective_date": "2026-01-10",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-INTAKE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000212",
+    "effective_date": "2026-01-10",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-INTAKE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000213",
+    "effective_date": "2026-01-10",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-INTAKE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000214",
+    "effective_date": "2026-01-10",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000215",
+    "effective_date": "2026-01-10",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000216",
+    "effective_date": "2026-01-10",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000217",
+    "effective_date": "2026-01-11",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000218",
+    "effective_date": "2026-01-11",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000219",
+    "effective_date": "2026-01-11",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000220",
+    "effective_date": "2026-01-11",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000221",
+    "effective_date": "2026-01-11",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000222",
+    "effective_date": "2026-01-11",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000223",
+    "effective_date": "2026-01-11",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000224",
+    "effective_date": "2026-01-11",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000225",
+    "effective_date": "2026-01-11",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000226",
+    "effective_date": "2026-01-11",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-INTAKE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000227",
+    "effective_date": "2026-01-11",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-INTAKE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000228",
+    "effective_date": "2026-01-11",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-INTAKE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000229",
+    "effective_date": "2026-01-11",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000230",
+    "effective_date": "2026-01-11",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000231",
+    "effective_date": "2026-01-11",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000232",
+    "effective_date": "2026-01-12",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000233",
+    "effective_date": "2026-01-12",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000234",
+    "effective_date": "2026-01-12",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000235",
+    "effective_date": "2026-01-12",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000236",
+    "effective_date": "2026-01-12",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000237",
+    "effective_date": "2026-01-12",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000238",
+    "effective_date": "2026-01-12",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-PHARMACY",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000239",
+    "effective_date": "2026-01-12",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-ONCOLOGY",
+    "min_headcount": 1,
+    "target_headcount": 1
+  },
+  {
+    "coverage_id": "COV-2026-000240",
+    "effective_date": "2026-01-12",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000241",
+    "effective_date": "2026-01-12",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-PHARMACY",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000242",
+    "effective_date": "2026-01-12",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000243",
+    "effective_date": "2026-01-12",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000244",
+    "effective_date": "2026-01-12",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-SUPPLY_CHAIN",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000245",
+    "effective_date": "2026-01-12",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000246",
+    "effective_date": "2026-01-12",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-SUPPLY_CHAIN",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000247",
+    "effective_date": "2026-01-12",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000248",
+    "effective_date": "2026-01-12",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-INTAKE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000249",
+    "effective_date": "2026-01-12",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000250",
+    "effective_date": "2026-01-12",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-INTAKE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000251",
+    "effective_date": "2026-01-12",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000252",
+    "effective_date": "2026-01-12",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-INTAKE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000253",
+    "effective_date": "2026-01-12",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000254",
+    "effective_date": "2026-01-12",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000255",
+    "effective_date": "2026-01-12",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000256",
+    "effective_date": "2026-01-12",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000257",
+    "effective_date": "2026-01-12",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000258",
+    "effective_date": "2026-01-13",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000259",
+    "effective_date": "2026-01-13",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000260",
+    "effective_date": "2026-01-13",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000261",
+    "effective_date": "2026-01-13",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000262",
+    "effective_date": "2026-01-13",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000263",
+    "effective_date": "2026-01-13",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000264",
+    "effective_date": "2026-01-13",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-PHARMACY",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000265",
+    "effective_date": "2026-01-13",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-ONCOLOGY",
+    "min_headcount": 1,
+    "target_headcount": 1
+  },
+  {
+    "coverage_id": "COV-2026-000266",
+    "effective_date": "2026-01-13",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000267",
+    "effective_date": "2026-01-13",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-PHARMACY",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000268",
+    "effective_date": "2026-01-13",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000269",
+    "effective_date": "2026-01-13",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000270",
+    "effective_date": "2026-01-13",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-SUPPLY_CHAIN",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000271",
+    "effective_date": "2026-01-13",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000272",
+    "effective_date": "2026-01-13",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-SUPPLY_CHAIN",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000273",
+    "effective_date": "2026-01-13",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000274",
+    "effective_date": "2026-01-13",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-INTAKE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000275",
+    "effective_date": "2026-01-13",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000276",
+    "effective_date": "2026-01-13",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-INTAKE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000277",
+    "effective_date": "2026-01-13",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000278",
+    "effective_date": "2026-01-13",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-INTAKE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000279",
+    "effective_date": "2026-01-13",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000280",
+    "effective_date": "2026-01-13",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000281",
+    "effective_date": "2026-01-13",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000282",
+    "effective_date": "2026-01-13",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000283",
+    "effective_date": "2026-01-13",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000284",
+    "effective_date": "2026-01-14",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000285",
+    "effective_date": "2026-01-14",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000286",
+    "effective_date": "2026-01-14",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000287",
+    "effective_date": "2026-01-14",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000288",
+    "effective_date": "2026-01-14",
+    "team_id": "TEAM-001",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000289",
+    "effective_date": "2026-01-14",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000290",
+    "effective_date": "2026-01-14",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-PHARMACY",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000291",
+    "effective_date": "2026-01-14",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-ONCOLOGY",
+    "min_headcount": 1,
+    "target_headcount": 1
+  },
+  {
+    "coverage_id": "COV-2026-000292",
+    "effective_date": "2026-01-14",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000293",
+    "effective_date": "2026-01-14",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-PHARMACY",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000294",
+    "effective_date": "2026-01-14",
+    "team_id": "TEAM-002",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000295",
+    "effective_date": "2026-01-14",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000296",
+    "effective_date": "2026-01-14",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-SUPPLY_CHAIN",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000297",
+    "effective_date": "2026-01-14",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000298",
+    "effective_date": "2026-01-14",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-SUPPLY_CHAIN",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000299",
+    "effective_date": "2026-01-14",
+    "team_id": "TEAM-003",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000300",
+    "effective_date": "2026-01-14",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-INTAKE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000301",
+    "effective_date": "2026-01-14",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000302",
+    "effective_date": "2026-01-14",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-INTAKE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000303",
+    "effective_date": "2026-01-14",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-DISPATCH",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000304",
+    "effective_date": "2026-01-14",
+    "team_id": "TEAM-004",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-INTAKE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000305",
+    "effective_date": "2026-01-14",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000306",
+    "effective_date": "2026-01-14",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-A",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000307",
+    "effective_date": "2026-01-14",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000308",
+    "effective_date": "2026-01-14",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-B",
+    "skill_id": "SKL-ICU_CARE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  },
+  {
+    "coverage_id": "COV-2026-000309",
+    "effective_date": "2026-01-14",
+    "team_id": "TEAM-005",
+    "shift_template_id": "SFT-C",
+    "skill_id": "SKL-TRIAGE",
+    "min_headcount": 1,
+    "target_headcount": 2
+  }
+]

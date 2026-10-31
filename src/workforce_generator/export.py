@@ -100,6 +100,27 @@ def _write_csv(
     return len(records), hashlib.sha256(content).hexdigest()
 
 
+def _json_default(obj: Any) -> Any:
+    if hasattr(obj, "isoformat"):
+        return obj.isoformat()
+    return str(obj)
+
+
+def _write_json(
+    path: Path,
+    records: list[dict[str, Any]],
+    primary_key: str | None,
+) -> tuple[int, str]:
+    if primary_key is not None and records:
+        records = sorted(records, key=lambda record: str(record.get(primary_key, "")))
+    path.parent.mkdir(parents=True, exist_ok=True)
+    content = (
+        json.dumps(records, ensure_ascii=False, indent=2, default=_json_default) + "\n"
+    ).encode("utf-8")
+    path.write_bytes(content)
+    return len(records), hashlib.sha256(content).hexdigest()
+
+
 def _export_tables(
     destination: Path,
     subdirectory: str,
@@ -118,16 +139,28 @@ def _export_tables(
             columns = tuple(first.to_dict().keys()) if hasattr(first, "to_dict") else tuple(first)
         else:
             columns = _empty_table_columns(table_name)
-        relative_path = destination / subdirectory / f"{table_name}.csv"
+        csv_path = destination / subdirectory / f"{table_name}.csv"
+        pk = TABLE_PRIMARY_KEYS[table_name]
         count, digest = _write_csv(
-            relative_path,
+            csv_path,
             rows,
-            TABLE_PRIMARY_KEYS[table_name],
+            pk,
             columns,
         )
-        manifest_files[relative_path.relative_to(destination).as_posix()] = {
+        manifest_files[csv_path.relative_to(destination).as_posix()] = {
             "row_count": count,
             "sha256": digest,
+        }
+        json_path = destination / subdirectory / f"{table_name}.json"
+        records = _table_records(rows)
+        j_count, j_digest = _write_json(
+            json_path,
+            records,
+            pk,
+        )
+        manifest_files[json_path.relative_to(destination).as_posix()] = {
+            "row_count": j_count,
+            "sha256": j_digest,
         }
     return manifest_files
 

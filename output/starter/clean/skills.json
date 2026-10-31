@@ -1,0 +1,79 @@
+[
+  {
+    "skill_id": "SKL-BILINGUAL_ES",
+    "code": "BILINGUAL_ES",
+    "name": "Bilingual Spanish",
+    "category": "Linguistic",
+    "description": "Certified fluent Spanish clinical communication"
+  },
+  {
+    "skill_id": "SKL-CRISIS_COUNSEL",
+    "code": "CRISIS_COUNSEL",
+    "name": "Crisis Counseling",
+    "category": "Linguistic",
+    "description": "De-escalation and behavioral crisis intervention"
+  },
+  {
+    "skill_id": "SKL-DISPATCH",
+    "code": "DISPATCH",
+    "name": "Resource & Unit Dispatch",
+    "category": "Logistical",
+    "description": "Emergency communications and unit routing"
+  },
+  {
+    "skill_id": "SKL-HAZMAT",
+    "code": "HAZMAT",
+    "name": "Hazardous Material Logistics",
+    "category": "Logistical",
+    "description": "Biohazard handling and hazardous waste dispatch"
+  },
+  {
+    "skill_id": "SKL-ICU_CARE",
+    "code": "ICU_CARE",
+    "name": "Intensive Care Operations",
+    "category": "Clinical",
+    "description": "Critical patient monitoring and care"
+  },
+  {
+    "skill_id": "SKL-INTAKE",
+    "code": "INTAKE",
+    "name": "Patient Intake & Admission",
+    "category": "Administrative",
+    "description": "Patient registration and preliminary intake"
+  },
+  {
+    "skill_id": "SKL-ONCOLOGY",
+    "code": "ONCOLOGY",
+    "name": "Clinical Oncology Protocols",
+    "category": "Clinical",
+    "description": "Specialized cancer therapy protocols"
+  },
+  {
+    "skill_id": "SKL-PHARMACY",
+    "code": "PHARMACY",
+    "name": "Clinical Pharmacology",
+    "category": "Clinical",
+    "description": "Medication dispensary and verification"
+  },
+  {
+    "skill_id": "SKL-SUPPLY_CHAIN",
+    "code": "SUPPLY_CHAIN",
+    "name": "Medical Supply Chain",
+    "category": "Logistical",
+    "description": "Medical inventory and supply routing"
+  },
+  {
+    "skill_id": "SKL-TOXICOLOGY",
+    "code": "TOXICOLOGY",
+    "name": "Clinical Toxicology",
+    "category": "Clinical",
+    "description": "Rare poisoning and overdose interventions"
+  },
+  {
+    "skill_id": "SKL-TRIAGE",
+    "code": "TRIAGE",
+    "name": "Emergency Triage & Assessment",
+    "category": "Clinical",
+    "description": "Rapid patient condition classification"
+  }
+]

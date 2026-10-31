@@ -1,0 +1,192 @@
+[
+  {
+    "swap_event_id": "SWP-EVT-2026-000001",
+    "swap_request_id": "SWP-2026-000001",
+    "from_status": null,
+    "to_status": "REQUESTED",
+    "event_timestamp": "2025-12-31T16:39:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000003",
+    "notes": "Shift exchange requested by employee"
+  },
+  {
+    "swap_event_id": "SWP-EVT-2026-000002",
+    "swap_request_id": "SWP-2026-000002",
+    "from_status": null,
+    "to_status": "REQUESTED",
+    "event_timestamp": "2025-12-31T03:21:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000016",
+    "notes": "Shift exchange requested by employee"
+  },
+  {
+    "swap_event_id": "SWP-EVT-2026-000003",
+    "swap_request_id": "SWP-2026-000002",
+    "from_status": "REQUESTED",
+    "to_status": "REJECTED",
+    "event_timestamp": "2025-12-31T08:21:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000011",
+    "notes": "Operational coverage could not accommodate the exchange: SWAP_REST_VIOLATION: EMP-000016 would have 0.0h rest between ASN-2026-000063 and ASN-2026-000017"
+  },
+  {
+    "swap_event_id": "SWP-EVT-2026-000004",
+    "swap_request_id": "SWP-2026-000003",
+    "from_status": null,
+    "to_status": "REQUESTED",
+    "event_timestamp": "2026-01-03T22:54:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000028",
+    "notes": "Shift exchange requested by employee"
+  },
+  {
+    "swap_event_id": "SWP-EVT-2026-000005",
+    "swap_request_id": "SWP-2026-000003",
+    "from_status": "REQUESTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2026-01-04T00:54:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000021",
+    "notes": "Approved by authorized manager or SYSTEM"
+  },
+  {
+    "swap_event_id": "SWP-EVT-2026-000006",
+    "swap_request_id": "SWP-2026-000003",
+    "from_status": "APPROVED",
+    "to_status": "APPLIED",
+    "event_timestamp": "2026-01-04T00:55:00Z",
+    "actor_type": "SYSTEM",
+    "actor_id": null,
+    "notes": "Approved exchange applied non-destructively"
+  },
+  {
+    "swap_event_id": "SWP-EVT-2026-000007",
+    "swap_request_id": "SWP-2026-000004",
+    "from_status": null,
+    "to_status": "REQUESTED",
+    "event_timestamp": "2026-01-08T09:15:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000046",
+    "notes": "Shift exchange requested by employee"
+  },
+  {
+    "swap_event_id": "SWP-EVT-2026-000008",
+    "swap_request_id": "SWP-2026-000004",
+    "from_status": "REQUESTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2026-01-08T13:15:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000041",
+    "notes": "Approved by authorized manager or SYSTEM"
+  },
+  {
+    "swap_event_id": "SWP-EVT-2026-000009",
+    "swap_request_id": "SWP-2026-000004",
+    "from_status": "APPROVED",
+    "to_status": "APPLIED",
+    "event_timestamp": "2026-01-08T13:17:00Z",
+    "actor_type": "SYSTEM",
+    "actor_id": null,
+    "notes": "Approved exchange applied non-destructively"
+  },
+  {
+    "swap_event_id": "SWP-EVT-2026-000010",
+    "swap_request_id": "SWP-2026-000005",
+    "from_status": null,
+    "to_status": "REQUESTED",
+    "event_timestamp": "2026-01-04T16:35:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000048",
+    "notes": "Shift exchange requested by employee"
+  },
+  {
+    "swap_event_id": "SWP-EVT-2026-000011",
+    "swap_request_id": "SWP-2026-000006",
+    "from_status": null,
+    "to_status": "REQUESTED",
+    "event_timestamp": "2026-01-02T10:38:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000048",
+    "notes": "Shift exchange requested by employee"
+  },
+  {
+    "swap_event_id": "SWP-EVT-2026-000012",
+    "swap_request_id": "SWP-2026-000006",
+    "from_status": "REQUESTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2026-01-02T15:38:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000041",
+    "notes": "Approved by authorized manager or SYSTEM"
+  },
+  {
+    "swap_event_id": "SWP-EVT-2026-000013",
+    "swap_request_id": "SWP-2026-000006",
+    "from_status": "APPROVED",
+    "to_status": "APPLIED",
+    "event_timestamp": "2026-01-02T15:40:00Z",
+    "actor_type": "SYSTEM",
+    "actor_id": null,
+    "notes": "Approved exchange applied non-destructively"
+  },
+  {
+    "swap_event_id": "SWP-EVT-2026-000014",
+    "swap_request_id": "SWP-2026-000007",
+    "from_status": null,
+    "to_status": "REQUESTED",
+    "event_timestamp": "2026-01-06T03:00:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000049",
+    "notes": "Injected lifecycle anomaly"
+  },
+  {
+    "swap_event_id": "SWP-EVT-2026-000015",
+    "swap_request_id": "SWP-2026-000007",
+    "from_status": "REQUESTED",
+    "to_status": "APPLIED",
+    "event_timestamp": "2026-01-06T04:00:00Z",
+    "actor_type": "SYSTEM",
+    "actor_id": null,
+    "notes": "Applied without an approval transition"
+  },
+  {
+    "swap_event_id": "SWP-EVT-2026-000016",
+    "swap_request_id": "SWP-2026-000008",
+    "from_status": null,
+    "to_status": "REQUESTED",
+    "event_timestamp": "2026-01-01T19:00:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000022",
+    "notes": "Injected lifecycle anomaly"
+  },
+  {
+    "swap_event_id": "SWP-EVT-2026-000017",
+    "swap_request_id": "SWP-2026-000008",
+    "from_status": "REQUESTED",
+    "to_status": "APPLIED",
+    "event_timestamp": "2026-01-01T20:00:00Z",
+    "actor_type": "SYSTEM",
+    "actor_id": null,
+    "notes": "Applied without an approval transition"
+  },
+  {
+    "swap_event_id": "SWP-EVT-2026-000018",
+    "swap_request_id": "SWP-2026-000009",
+    "from_status": null,
+    "to_status": "REQUESTED",
+    "event_timestamp": "2026-01-09T19:00:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000038",
+    "notes": "Injected lifecycle anomaly"
+  },
+  {
+    "swap_event_id": "SWP-EVT-2026-000019",
+    "swap_request_id": "SWP-2026-000009",
+    "from_status": "REQUESTED",
+    "to_status": "APPLIED",
+    "event_timestamp": "2026-01-09T20:00:00Z",
+    "actor_type": "SYSTEM",
+    "actor_id": null,
+    "notes": "Applied without an approval transition"
+  }
+]

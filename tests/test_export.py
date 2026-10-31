@@ -124,3 +124,23 @@ def test_identical_seed_produces_byte_identical_csvs(tmp_path):
         hash_a = hashlib.sha256(fa.read_bytes()).hexdigest()
         hash_b = hashlib.sha256(fb.read_bytes()).hexdigest()
         assert hash_a == hash_b, f'Hash mismatch for {rel_a}: {hash_a} != {hash_b}'
+def test_json_export_row_counts_match_csvs(tmp_path):
+    """Each exported JSON file must match its companion CSV in row count."""
+    from run_generator import generate_profile
+
+    generate_profile("starter", tmp_path)
+    manifest_path = tmp_path / "starter" / "manifest.json"
+    assert manifest_path.exists()
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    files = manifest["files"]
+
+    csv_files = [f for f in files if f.endswith(".csv")]
+    assert len(csv_files) == 31  # 15 clean + 15 dirty + 1 ground_truth
+    for cf in csv_files:
+        jf = cf[:-4] + ".json"
+        assert jf in files, f"Manifest missing companion JSON for {cf}"
+        json_file_path = tmp_path / "starter" / jf
+        assert json_file_path.exists(), f"File does not exist: {jf}"
+        json_data = json.loads(json_file_path.read_text(encoding="utf-8"))
+        assert len(json_data) == files[cf]["row_count"], f"Row count mismatch for {jf}"
+        assert files[jf]["row_count"] == files[cf]["row_count"]

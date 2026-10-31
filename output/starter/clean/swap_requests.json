@@ -1,0 +1,80 @@
+[
+  {
+    "swap_request_id": "SWP-2026-000001",
+    "requestor_employee_id": "EMP-000003",
+    "requestor_assignment_id": "ASN-2026-000011",
+    "target_employee_id": "EMP-000008",
+    "target_assignment_id": "ASN-2026-000013",
+    "current_status": "REQUESTED",
+    "manager_employee_id": null,
+    "requested_at": "2025-12-31T16:39:00Z",
+    "decided_at": null,
+    "applied_at": null,
+    "rejection_reason": null
+  },
+  {
+    "swap_request_id": "SWP-2026-000002",
+    "requestor_employee_id": "EMP-000016",
+    "requestor_assignment_id": "ASN-2026-000009",
+    "target_employee_id": "EMP-000019",
+    "target_assignment_id": "ASN-2026-000063",
+    "current_status": "REJECTED",
+    "manager_employee_id": "EMP-000011",
+    "requested_at": "2025-12-31T03:21:00Z",
+    "decided_at": "2025-12-31T08:21:00Z",
+    "applied_at": null,
+    "rejection_reason": "Operational coverage could not accommodate the exchange: SWAP_REST_VIOLATION: EMP-000016 would have 0.0h rest between ASN-2026-000063 and ASN-2026-000017"
+  },
+  {
+    "swap_request_id": "SWP-2026-000003",
+    "requestor_employee_id": "EMP-000028",
+    "requestor_assignment_id": "ASN-2026-000191",
+    "target_employee_id": "EMP-000029",
+    "target_assignment_id": "ASN-2026-000233",
+    "current_status": "APPLIED",
+    "manager_employee_id": "EMP-000021",
+    "requested_at": "2026-01-03T22:54:00Z",
+    "decided_at": "2026-01-04T00:54:00Z",
+    "applied_at": "2026-01-04T00:55:00Z",
+    "rejection_reason": null
+  },
+  {
+    "swap_request_id": "SWP-2026-000004",
+    "requestor_employee_id": "EMP-000046",
+    "requestor_assignment_id": "ASN-2026-000168",
+    "target_employee_id": "EMP-000043",
+    "target_assignment_id": "ASN-2026-000170",
+    "current_status": "APPLIED",
+    "manager_employee_id": "EMP-000041",
+    "requested_at": "2026-01-08T09:15:00Z",
+    "decided_at": "2026-01-08T13:15:00Z",
+    "applied_at": "2026-01-08T13:17:00Z",
+    "rejection_reason": null
+  },
+  {
+    "swap_request_id": "SWP-2026-000005",
+    "requestor_employee_id": "EMP-000048",
+    "requestor_assignment_id": "ASN-2026-000227",
+    "target_employee_id": "EMP-000049",
+    "target_assignment_id": "ASN-2026-000155",
+    "current_status": "REQUESTED",
+    "manager_employee_id": null,
+    "requested_at": "2026-01-04T16:35:00Z",
+    "decided_at": null,
+    "applied_at": null,
+    "rejection_reason": null
+  },
+  {
+    "swap_request_id": "SWP-2026-000006",
+    "requestor_employee_id": "EMP-000048",
+    "requestor_assignment_id": "ASN-2026-000139",
+    "target_employee_id": "EMP-000049",
+    "target_assignment_id": "ASN-2026-000223",
+    "current_status": "APPLIED",
+    "manager_employee_id": "EMP-000041",
+    "requested_at": "2026-01-02T10:38:00Z",
+    "decided_at": "2026-01-02T15:38:00Z",
+    "applied_at": "2026-01-02T15:40:00Z",
+    "rejection_reason": null
+  }
+]

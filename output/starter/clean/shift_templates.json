@@ -1,0 +1,32 @@
+[
+  {
+    "shift_template_id": "SFT-A",
+    "template_code": "A",
+    "name": "Morning",
+    "start_time": "06:00:00",
+    "end_time": "14:00:00",
+    "duration_hours": 8.0,
+    "unpaid_break_minutes": 30,
+    "is_overnight": false
+  },
+  {
+    "shift_template_id": "SFT-B",
+    "template_code": "B",
+    "name": "Afternoon",
+    "start_time": "14:00:00",
+    "end_time": "22:00:00",
+    "duration_hours": 8.0,
+    "unpaid_break_minutes": 30,
+    "is_overnight": false
+  },
+  {
+    "shift_template_id": "SFT-C",
+    "template_code": "C",
+    "name": "Night",
+    "start_time": "22:00:00",
+    "end_time": "06:00:00",
+    "duration_hours": 8.0,
+    "unpaid_break_minutes": 30,
+    "is_overnight": true
+  }
+]

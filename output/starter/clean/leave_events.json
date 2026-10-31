@@ -1,0 +1,2012 @@
+[
+  {
+    "leave_event_id": "LVE-EVT-2026-000001",
+    "leave_request_id": "LVE-2026-000001",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-11-06T10:00:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000040",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000002",
+    "leave_request_id": "LVE-2026-000001",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2025-11-08T10:00:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000031",
+    "reason": "Approved: Daily staffing buffer satisfied across all requested dates and skills"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000003",
+    "leave_request_id": "LVE-2026-000002",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-11-06T10:00:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000020",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000004",
+    "leave_request_id": "LVE-2026-000002",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2025-11-09T10:00:00Z",
+    "actor_type": "SYSTEM",
+    "actor_id": null,
+    "reason": "Approved: Daily staffing buffer satisfied across all requested dates and skills"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000005",
+    "leave_request_id": "LVE-2026-000003",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-11-23T10:00:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000024",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000006",
+    "leave_request_id": "LVE-2026-000003",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2025-11-26T10:00:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000021",
+    "reason": "Approved: Daily staffing buffer satisfied across all requested dates and skills"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000007",
+    "leave_request_id": "LVE-2026-000004",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-11-29T08:01:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000035",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000008",
+    "leave_request_id": "LVE-2026-000004",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2025-11-30T12:01:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000031",
+    "reason": "Approved: Daily staffing buffer satisfied across all requested dates and skills"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000009",
+    "leave_request_id": "LVE-2026-000005",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-11-29T16:38:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000042",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000010",
+    "leave_request_id": "LVE-2026-000005",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2025-12-02T22:38:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000041",
+    "reason": "Approved: Daily staffing buffer satisfied across all requested dates and skills"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000011",
+    "leave_request_id": "LVE-2026-000006",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-11-30T11:24:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000005",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000012",
+    "leave_request_id": "LVE-2026-000006",
+    "from_status": "SUBMITTED",
+    "to_status": "REJECTED",
+    "event_timestamp": "2025-12-02T13:24:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000001",
+    "reason": "Insufficient coverage for skill SKL-TRIAGE on 2026-01-02: remaining qualified staff (2) < required threshold (4)"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000013",
+    "leave_request_id": "LVE-2026-000007",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-11-30T15:56:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000025",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000014",
+    "leave_request_id": "LVE-2026-000007",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2025-12-02T18:56:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000021",
+    "reason": "Approved: Daily staffing buffer satisfied across all requested dates and skills"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000015",
+    "leave_request_id": "LVE-2026-000008",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-01T12:41:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000032",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000016",
+    "leave_request_id": "LVE-2026-000008",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2025-12-04T18:41:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000031",
+    "reason": "Approved: Daily staffing buffer satisfied across all requested dates and skills"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000017",
+    "leave_request_id": "LVE-2026-000009",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-02T15:22:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000037",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000018",
+    "leave_request_id": "LVE-2026-000009",
+    "from_status": "SUBMITTED",
+    "to_status": "REJECTED",
+    "event_timestamp": "2025-12-04T16:22:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000031",
+    "reason": "Insufficient coverage for skill SKL-INTAKE on 2026-01-03: remaining qualified staff (3) < required threshold (4)"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000019",
+    "leave_request_id": "LVE-2026-000010",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-02T15:26:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000036",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000020",
+    "leave_request_id": "LVE-2026-000010",
+    "from_status": "SUBMITTED",
+    "to_status": "REJECTED",
+    "event_timestamp": "2025-12-04T18:26:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000031",
+    "reason": "Insufficient coverage for skill SKL-INTAKE on 2026-01-02: remaining qualified staff (3) < required threshold (4)"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000021",
+    "leave_request_id": "LVE-2026-000011",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-04T16:13:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000008",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000022",
+    "leave_request_id": "LVE-2026-000011",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2025-12-06T17:13:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000001",
+    "reason": "Approved: Daily staffing buffer satisfied across all requested dates and skills"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000023",
+    "leave_request_id": "LVE-2026-000012",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-05T11:40:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000021",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000024",
+    "leave_request_id": "LVE-2026-000012",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2025-12-08T16:40:00Z",
+    "actor_type": "SYSTEM",
+    "actor_id": null,
+    "reason": "Approved: Manager administrative leave approved by supervisory authority"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000025",
+    "leave_request_id": "LVE-2026-000013",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-05T12:59:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000013",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000026",
+    "leave_request_id": "LVE-2026-000013",
+    "from_status": "SUBMITTED",
+    "to_status": "REJECTED",
+    "event_timestamp": "2025-12-08T16:59:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000011",
+    "reason": "Insufficient coverage for skill SKL-ONCOLOGY on 2026-01-07: remaining qualified staff (1) < required threshold (2)"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000027",
+    "leave_request_id": "LVE-2026-000014",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-05T16:29:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000013",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000028",
+    "leave_request_id": "LVE-2026-000014",
+    "from_status": "SUBMITTED",
+    "to_status": "REJECTED",
+    "event_timestamp": "2025-12-07T18:29:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000011",
+    "reason": "Insufficient coverage for skill SKL-ONCOLOGY on 2026-01-02: remaining qualified staff (1) < required threshold (2)"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000029",
+    "leave_request_id": "LVE-2026-000015",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-06T11:55:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000005",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000030",
+    "leave_request_id": "LVE-2026-000015",
+    "from_status": "SUBMITTED",
+    "to_status": "REJECTED",
+    "event_timestamp": "2025-12-07T17:55:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000001",
+    "reason": "Insufficient coverage for skill SKL-TRIAGE on 2026-01-01: remaining qualified staff (2) < required threshold (4)"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000031",
+    "leave_request_id": "LVE-2026-000016",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-06T12:23:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000020",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000032",
+    "leave_request_id": "LVE-2026-000016",
+    "from_status": "SUBMITTED",
+    "to_status": "REJECTED",
+    "event_timestamp": "2025-12-08T13:23:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000011",
+    "reason": "Overlapping approved leave request already exists for this employee"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000033",
+    "leave_request_id": "LVE-2026-000017",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-07T14:05:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000005",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000034",
+    "leave_request_id": "LVE-2026-000017",
+    "from_status": "SUBMITTED",
+    "to_status": "REJECTED",
+    "event_timestamp": "2025-12-08T15:05:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000001",
+    "reason": "Insufficient coverage for skill SKL-TRIAGE on 2026-01-01: remaining qualified staff (2) < required threshold (4)"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000035",
+    "leave_request_id": "LVE-2026-000018",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-07T16:39:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000039",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000036",
+    "leave_request_id": "LVE-2026-000018",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2025-12-10T22:39:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000031",
+    "reason": "Approved: Daily staffing buffer satisfied across all requested dates and skills"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000037",
+    "leave_request_id": "LVE-2026-000019",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-08T08:34:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000037",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000038",
+    "leave_request_id": "LVE-2026-000019",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2025-12-09T12:34:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000031",
+    "reason": "Approved: Daily staffing buffer satisfied across all requested dates and skills"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000039",
+    "leave_request_id": "LVE-2026-000020",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-08T12:21:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000016",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000040",
+    "leave_request_id": "LVE-2026-000020",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2025-12-10T15:21:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000011",
+    "reason": "Approved: Daily staffing buffer satisfied across all requested dates and skills"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000041",
+    "leave_request_id": "LVE-2026-000021",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-10T08:16:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000003",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000042",
+    "leave_request_id": "LVE-2026-000021",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2025-12-12T09:16:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000001",
+    "reason": "Approved: Daily staffing buffer satisfied across all requested dates and skills"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000043",
+    "leave_request_id": "LVE-2026-000022",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-10T08:31:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000015",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000044",
+    "leave_request_id": "LVE-2026-000022",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2025-12-13T13:31:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000011",
+    "reason": "Approved: Daily staffing buffer satisfied across all requested dates and skills"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000045",
+    "leave_request_id": "LVE-2026-000023",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-10T13:15:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000023",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000046",
+    "leave_request_id": "LVE-2026-000023",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2025-12-11T15:15:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000021",
+    "reason": "Approved: Daily staffing buffer satisfied across all requested dates and skills"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000047",
+    "leave_request_id": "LVE-2026-000024",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-10T13:48:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000045",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000048",
+    "leave_request_id": "LVE-2026-000024",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2025-12-13T19:48:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000041",
+    "reason": "Approved: Daily staffing buffer satisfied across all requested dates and skills"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000049",
+    "leave_request_id": "LVE-2026-000025",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-11T08:02:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000048",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000050",
+    "leave_request_id": "LVE-2026-000025",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2025-12-14T10:02:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000041",
+    "reason": "Approved: Daily staffing buffer satisfied across all requested dates and skills"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000051",
+    "leave_request_id": "LVE-2026-000026",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-11T13:17:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000008",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000052",
+    "leave_request_id": "LVE-2026-000026",
+    "from_status": "SUBMITTED",
+    "to_status": "REJECTED",
+    "event_timestamp": "2025-12-12T19:17:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000001",
+    "reason": "Overlapping approved leave request already exists for this employee"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000053",
+    "leave_request_id": "LVE-2026-000027",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-12T16:24:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000010",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000054",
+    "leave_request_id": "LVE-2026-000027",
+    "from_status": "SUBMITTED",
+    "to_status": "REJECTED",
+    "event_timestamp": "2025-12-13T17:24:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000001",
+    "reason": "Insufficient coverage for skill SKL-TRIAGE on 2026-01-14: remaining qualified staff (3) < required threshold (4)"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000055",
+    "leave_request_id": "LVE-2026-000028",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-13T08:02:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000014",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000056",
+    "leave_request_id": "LVE-2026-000028",
+    "from_status": "SUBMITTED",
+    "to_status": "REJECTED",
+    "event_timestamp": "2025-12-14T10:02:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000011",
+    "reason": "Insufficient coverage for skill SKL-ONCOLOGY on 2026-01-05: remaining qualified staff (1) < required threshold (2)"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000057",
+    "leave_request_id": "LVE-2026-000029",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-13T13:38:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000019",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000058",
+    "leave_request_id": "LVE-2026-000029",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2025-12-15T14:38:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000011",
+    "reason": "Approved: Daily staffing buffer satisfied across all requested dates and skills"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000059",
+    "leave_request_id": "LVE-2026-000030",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-14T08:35:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000015",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000060",
+    "leave_request_id": "LVE-2026-000030",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2025-12-15T13:35:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000011",
+    "reason": "Approved: Daily staffing buffer satisfied across all requested dates and skills"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000061",
+    "leave_request_id": "LVE-2026-000031",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-14T10:10:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000029",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000062",
+    "leave_request_id": "LVE-2026-000031",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2025-12-15T15:10:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000021",
+    "reason": "Approved: Daily staffing buffer satisfied across all requested dates and skills"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000063",
+    "leave_request_id": "LVE-2026-000032",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-14T12:02:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000031",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000064",
+    "leave_request_id": "LVE-2026-000032",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2025-12-15T18:02:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000041",
+    "reason": "Approved: Manager administrative leave approved by supervisory authority"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000065",
+    "leave_request_id": "LVE-2026-000033",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-14T15:40:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000015",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000066",
+    "leave_request_id": "LVE-2026-000033",
+    "from_status": "SUBMITTED",
+    "to_status": "REJECTED",
+    "event_timestamp": "2025-12-16T16:40:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000011",
+    "reason": "Overlapping approved leave request already exists for this employee"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000067",
+    "leave_request_id": "LVE-2026-000034",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-15T08:47:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000027",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000068",
+    "leave_request_id": "LVE-2026-000034",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2025-12-18T15:47:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000021",
+    "reason": "Approved: Daily staffing buffer satisfied across all requested dates and skills"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000069",
+    "leave_request_id": "LVE-2026-000035",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-15T09:00:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000004",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000070",
+    "leave_request_id": "LVE-2026-000035",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2025-12-17T14:00:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000001",
+    "reason": "Approved: Daily staffing buffer satisfied across all requested dates and skills"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000071",
+    "leave_request_id": "LVE-2026-000036",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-16T09:07:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000044",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000072",
+    "leave_request_id": "LVE-2026-000036",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2025-12-18T12:07:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000041",
+    "reason": "Approved: Daily staffing buffer satisfied across all requested dates and skills"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000073",
+    "leave_request_id": "LVE-2026-000037",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-16T11:50:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000023",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000074",
+    "leave_request_id": "LVE-2026-000037",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2025-12-19T14:50:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000021",
+    "reason": "Approved: Daily staffing buffer satisfied across all requested dates and skills"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000075",
+    "leave_request_id": "LVE-2026-000038",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-16T12:30:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000026",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000076",
+    "leave_request_id": "LVE-2026-000038",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2025-12-18T16:30:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000021",
+    "reason": "Approved: Daily staffing buffer satisfied across all requested dates and skills"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000077",
+    "leave_request_id": "LVE-2026-000039",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-16T13:52:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000027",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000078",
+    "leave_request_id": "LVE-2026-000039",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2025-12-18T15:52:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000021",
+    "reason": "Approved: Daily staffing buffer satisfied across all requested dates and skills"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000079",
+    "leave_request_id": "LVE-2026-000040",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-16T15:45:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000022",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000080",
+    "leave_request_id": "LVE-2026-000040",
+    "from_status": "SUBMITTED",
+    "to_status": "REJECTED",
+    "event_timestamp": "2025-12-17T21:45:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000021",
+    "reason": "Insufficient coverage for skill SKL-DISPATCH on 2026-01-02: remaining qualified staff (3) < required threshold (4)"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000081",
+    "leave_request_id": "LVE-2026-000041",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-17T11:02:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000043",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000082",
+    "leave_request_id": "LVE-2026-000041",
+    "from_status": "SUBMITTED",
+    "to_status": "CANCELLED",
+    "event_timestamp": "2025-12-17T14:02:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000043",
+    "reason": "Cancelled by employee prior to manager decision"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000083",
+    "leave_request_id": "LVE-2026-000042",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-17T13:57:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000034",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000084",
+    "leave_request_id": "LVE-2026-000042",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2025-12-20T17:57:00Z",
+    "actor_type": "SYSTEM",
+    "actor_id": null,
+    "reason": "Approved: Daily staffing buffer satisfied across all requested dates and skills"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000085",
+    "leave_request_id": "LVE-2026-000043",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-17T14:01:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000024",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000086",
+    "leave_request_id": "LVE-2026-000043",
+    "from_status": "SUBMITTED",
+    "to_status": "REJECTED",
+    "event_timestamp": "2025-12-20T15:01:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000021",
+    "reason": "Overlapping approved leave request already exists for this employee"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000087",
+    "leave_request_id": "LVE-2026-000044",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-17T16:00:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000046",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000088",
+    "leave_request_id": "LVE-2026-000044",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2025-12-20T22:00:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000041",
+    "reason": "Approved: Daily staffing buffer satisfied across all requested dates and skills"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000089",
+    "leave_request_id": "LVE-2026-000045",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-17T16:53:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000024",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000090",
+    "leave_request_id": "LVE-2026-000045",
+    "from_status": "SUBMITTED",
+    "to_status": "REJECTED",
+    "event_timestamp": "2025-12-19T17:53:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000021",
+    "reason": "Overlapping approved leave request already exists for this employee"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000091",
+    "leave_request_id": "LVE-2026-000046",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-18T10:54:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000027",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000092",
+    "leave_request_id": "LVE-2026-000046",
+    "from_status": "SUBMITTED",
+    "to_status": "REJECTED",
+    "event_timestamp": "2025-12-21T12:54:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000021",
+    "reason": "Overlapping approved leave request already exists for this employee"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000093",
+    "leave_request_id": "LVE-2026-000047",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-18T13:45:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000011",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000094",
+    "leave_request_id": "LVE-2026-000047",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2025-12-20T14:45:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000001",
+    "reason": "Approved: Manager administrative leave approved by supervisory authority"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000095",
+    "leave_request_id": "LVE-2026-000048",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-19T13:10:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000034",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000096",
+    "leave_request_id": "LVE-2026-000048",
+    "from_status": "SUBMITTED",
+    "to_status": "REJECTED",
+    "event_timestamp": "2025-12-21T20:10:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000031",
+    "reason": "Insufficient coverage for skill SKL-INTAKE on 2026-01-03: remaining qualified staff (3) < required threshold (4)"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000097",
+    "leave_request_id": "LVE-2026-000049",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-20T09:49:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000037",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000098",
+    "leave_request_id": "LVE-2026-000049",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2025-12-23T11:49:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000031",
+    "reason": "Approved: Daily staffing buffer satisfied across all requested dates and skills"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000099",
+    "leave_request_id": "LVE-2026-000050",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-20T10:58:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000029",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000100",
+    "leave_request_id": "LVE-2026-000050",
+    "from_status": "SUBMITTED",
+    "to_status": "REJECTED",
+    "event_timestamp": "2025-12-23T17:58:00Z",
+    "actor_type": "SYSTEM",
+    "actor_id": null,
+    "reason": "Overlapping approved leave request already exists for this employee"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000101",
+    "leave_request_id": "LVE-2026-000051",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-20T12:20:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000050",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000102",
+    "leave_request_id": "LVE-2026-000051",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2025-12-21T14:20:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000041",
+    "reason": "Approved: Daily staffing buffer satisfied across all requested dates and skills"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000103",
+    "leave_request_id": "LVE-2026-000052",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-20T13:40:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000022",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000104",
+    "leave_request_id": "LVE-2026-000052",
+    "from_status": "SUBMITTED",
+    "to_status": "REJECTED",
+    "event_timestamp": "2025-12-21T19:40:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000021",
+    "reason": "Insufficient coverage for skill SKL-DISPATCH on 2026-01-02: remaining qualified staff (3) < required threshold (4)"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000105",
+    "leave_request_id": "LVE-2026-000053",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-20T13:57:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000005",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000106",
+    "leave_request_id": "LVE-2026-000053",
+    "from_status": "SUBMITTED",
+    "to_status": "REJECTED",
+    "event_timestamp": "2025-12-22T18:57:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000001",
+    "reason": "Insufficient coverage for skill SKL-TRIAGE on 2026-01-03: remaining qualified staff (3) < required threshold (4)"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000107",
+    "leave_request_id": "LVE-2026-000054",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-21T10:23:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000015",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000108",
+    "leave_request_id": "LVE-2026-000054",
+    "from_status": "SUBMITTED",
+    "to_status": "REJECTED",
+    "event_timestamp": "2025-12-22T17:23:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000011",
+    "reason": "Overlapping approved leave request already exists for this employee"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000109",
+    "leave_request_id": "LVE-2026-000055",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-22T09:20:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000022",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000110",
+    "leave_request_id": "LVE-2026-000055",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2025-12-24T12:20:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000021",
+    "reason": "Approved: Daily staffing buffer satisfied across all requested dates and skills"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000111",
+    "leave_request_id": "LVE-2026-000056",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-22T10:11:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000039",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000112",
+    "leave_request_id": "LVE-2026-000056",
+    "from_status": "SUBMITTED",
+    "to_status": "REJECTED",
+    "event_timestamp": "2025-12-25T12:11:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000031",
+    "reason": "Overlapping approved leave request already exists for this employee"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000113",
+    "leave_request_id": "LVE-2026-000057",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-22T14:13:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000017",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000114",
+    "leave_request_id": "LVE-2026-000057",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2025-12-23T16:13:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000011",
+    "reason": "Approved: Daily staffing buffer satisfied across all requested dates and skills"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000115",
+    "leave_request_id": "LVE-2026-000058",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-23T08:26:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000039",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000116",
+    "leave_request_id": "LVE-2026-000058",
+    "from_status": "SUBMITTED",
+    "to_status": "REJECTED",
+    "event_timestamp": "2025-12-24T14:26:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000031",
+    "reason": "Overlapping approved leave request already exists for this employee"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000117",
+    "leave_request_id": "LVE-2026-000059",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-23T15:08:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000043",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000118",
+    "leave_request_id": "LVE-2026-000059",
+    "from_status": "SUBMITTED",
+    "to_status": "REJECTED",
+    "event_timestamp": "2025-12-26T21:08:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000041",
+    "reason": "Insufficient coverage for skill SKL-TRIAGE on 2026-01-05: remaining qualified staff (3) < required threshold (4)"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000119",
+    "leave_request_id": "LVE-2026-000060",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-24T13:06:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000033",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000120",
+    "leave_request_id": "LVE-2026-000060",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2025-12-26T16:06:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000031",
+    "reason": "Approved: Daily staffing buffer satisfied across all requested dates and skills"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000121",
+    "leave_request_id": "LVE-2026-000061",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-24T14:23:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000048",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000122",
+    "leave_request_id": "LVE-2026-000061",
+    "from_status": "SUBMITTED",
+    "to_status": "REJECTED",
+    "event_timestamp": "2025-12-26T21:23:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000041",
+    "reason": "Overlapping approved leave request already exists for this employee"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000123",
+    "leave_request_id": "LVE-2026-000062",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-25T09:18:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000004",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000124",
+    "leave_request_id": "LVE-2026-000062",
+    "from_status": "SUBMITTED",
+    "to_status": "REJECTED",
+    "event_timestamp": "2025-12-28T11:18:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000001",
+    "reason": "Overlapping approved leave request already exists for this employee"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000125",
+    "leave_request_id": "LVE-2026-000063",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-25T09:30:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000032",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000126",
+    "leave_request_id": "LVE-2026-000063",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2025-12-26T09:30:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000031",
+    "reason": "Approved: Daily staffing buffer satisfied across all requested dates and skills"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000127",
+    "leave_request_id": "LVE-2026-000064",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-25T12:44:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000011",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000128",
+    "leave_request_id": "LVE-2026-000064",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2025-12-27T13:44:00Z",
+    "actor_type": "SYSTEM",
+    "actor_id": null,
+    "reason": "Approved: Manager administrative leave approved by supervisory authority"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000129",
+    "leave_request_id": "LVE-2026-000065",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-26T09:30:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000037",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000130",
+    "leave_request_id": "LVE-2026-000065",
+    "from_status": "SUBMITTED",
+    "to_status": "REJECTED",
+    "event_timestamp": "2025-12-28T09:30:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000031",
+    "reason": "Overlapping approved leave request already exists for this employee"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000131",
+    "leave_request_id": "LVE-2026-000066",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-26T09:30:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000013",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000132",
+    "leave_request_id": "LVE-2026-000066",
+    "from_status": "SUBMITTED",
+    "to_status": "REJECTED",
+    "event_timestamp": "2025-12-29T12:30:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000011",
+    "reason": "Insufficient coverage for skill SKL-ONCOLOGY on 2026-01-02: remaining qualified staff (1) < required threshold (2)"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000133",
+    "leave_request_id": "LVE-2026-000067",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-26T13:13:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000049",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000134",
+    "leave_request_id": "LVE-2026-000067",
+    "from_status": "SUBMITTED",
+    "to_status": "REJECTED",
+    "event_timestamp": "2025-12-27T17:13:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000041",
+    "reason": "Insufficient coverage for skill SKL-TRIAGE on 2026-01-05: remaining qualified staff (3) < required threshold (4)"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000135",
+    "leave_request_id": "LVE-2026-000068",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-27T09:30:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000048",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000136",
+    "leave_request_id": "LVE-2026-000068",
+    "from_status": "SUBMITTED",
+    "to_status": "REJECTED",
+    "event_timestamp": "2025-12-28T09:30:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000041",
+    "reason": "Overlapping approved leave request already exists for this employee"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000137",
+    "leave_request_id": "LVE-2026-000069",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-28T14:35:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000014",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000138",
+    "leave_request_id": "LVE-2026-000069",
+    "from_status": "SUBMITTED",
+    "to_status": "REJECTED",
+    "event_timestamp": "2025-12-30T15:35:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000011",
+    "reason": "Insufficient coverage for skill SKL-ONCOLOGY on 2026-01-06: remaining qualified staff (1) < required threshold (2)"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000139",
+    "leave_request_id": "LVE-2026-000070",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-31T16:47:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000004",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000140",
+    "leave_request_id": "LVE-2026-000070",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2026-01-02T22:47:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000001",
+    "reason": "Approved: Daily staffing buffer satisfied across all requested dates and skills"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000141",
+    "leave_request_id": "LVE-2026-000071",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2025-12-31T20:54:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000018",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000142",
+    "leave_request_id": "LVE-2026-000071",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2026-01-01T00:48:00Z",
+    "actor_type": "SYSTEM",
+    "actor_id": null,
+    "reason": "Approved: Statutory sick leave is exempt from operational coverage constraints"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000143",
+    "leave_request_id": "LVE-2026-000072",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2026-01-01T07:05:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000015",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000144",
+    "leave_request_id": "LVE-2026-000072",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2026-01-01T09:26:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000011",
+    "reason": "Approved: Statutory sick leave is exempt from operational coverage constraints"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000145",
+    "leave_request_id": "LVE-2026-000073",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2026-01-01T07:20:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000039",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000146",
+    "leave_request_id": "LVE-2026-000073",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2026-01-01T10:52:00Z",
+    "actor_type": "SYSTEM",
+    "actor_id": null,
+    "reason": "Approved: Statutory sick leave is exempt from operational coverage constraints"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000147",
+    "leave_request_id": "LVE-2026-000074",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2026-01-01T08:12:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000014",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000148",
+    "leave_request_id": "LVE-2026-000074",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2026-01-01T11:43:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000011",
+    "reason": "Approved: Statutory sick leave is exempt from operational coverage constraints"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000149",
+    "leave_request_id": "LVE-2026-000075",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2026-01-01T13:56:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000005",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000150",
+    "leave_request_id": "LVE-2026-000075",
+    "from_status": "SUBMITTED",
+    "to_status": "REJECTED",
+    "event_timestamp": "2026-01-02T20:56:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000001",
+    "reason": "Insufficient coverage for skill SKL-TRIAGE on 2026-01-10: remaining qualified staff (3) < required threshold (4)"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000151",
+    "leave_request_id": "LVE-2026-000076",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2026-01-02T06:36:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000009",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000152",
+    "leave_request_id": "LVE-2026-000076",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2026-01-02T07:45:00Z",
+    "actor_type": "SYSTEM",
+    "actor_id": null,
+    "reason": "Approved: Statutory sick leave is exempt from operational coverage constraints"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000153",
+    "leave_request_id": "LVE-2026-000077",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2026-01-02T08:40:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000013",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000154",
+    "leave_request_id": "LVE-2026-000077",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2026-01-02T12:11:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000011",
+    "reason": "Approved: Statutory sick leave is exempt from operational coverage constraints"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000155",
+    "leave_request_id": "LVE-2026-000078",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2026-01-02T09:58:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000028",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000156",
+    "leave_request_id": "LVE-2026-000078",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2026-01-04T12:58:00Z",
+    "actor_type": "SYSTEM",
+    "actor_id": null,
+    "reason": "Approved: Daily staffing buffer satisfied across all requested dates and skills"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000157",
+    "leave_request_id": "LVE-2026-000079",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2026-01-02T17:20:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000020",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000158",
+    "leave_request_id": "LVE-2026-000079",
+    "from_status": "SUBMITTED",
+    "to_status": "REJECTED",
+    "event_timestamp": "2026-01-02T20:03:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000011",
+    "reason": "Overlapping approved leave request already exists for this employee"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000159",
+    "leave_request_id": "LVE-2026-000080",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2026-01-03T00:00:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000002",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000160",
+    "leave_request_id": "LVE-2026-000080",
+    "from_status": "SUBMITTED",
+    "to_status": "REJECTED",
+    "event_timestamp": "2026-01-03T02:28:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000001",
+    "reason": "Insufficient coverage for skill SKL-TRIAGE on 2026-01-09: remaining qualified staff (3) < required threshold (4)"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000161",
+    "leave_request_id": "LVE-2026-000081",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2026-01-04T09:30:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000019",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000162",
+    "leave_request_id": "LVE-2026-000081",
+    "from_status": "SUBMITTED",
+    "to_status": "REJECTED",
+    "event_timestamp": "2026-01-05T09:30:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000011",
+    "reason": "Overlapping approved leave request already exists for this employee"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000163",
+    "leave_request_id": "LVE-2026-000082",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2026-01-04T16:16:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000036",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000164",
+    "leave_request_id": "LVE-2026-000082",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2026-01-04T18:28:00Z",
+    "actor_type": "SYSTEM",
+    "actor_id": null,
+    "reason": "Approved: Statutory sick leave is exempt from operational coverage constraints"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000165",
+    "leave_request_id": "LVE-2026-000083",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2026-01-04T16:37:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000028",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000166",
+    "leave_request_id": "LVE-2026-000083",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2026-01-05T23:37:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000021",
+    "reason": "Approved: Daily staffing buffer satisfied across all requested dates and skills"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000167",
+    "leave_request_id": "LVE-2026-000084",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2026-01-04T20:04:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000019",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000168",
+    "leave_request_id": "LVE-2026-000084",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2026-01-04T21:32:00Z",
+    "actor_type": "SYSTEM",
+    "actor_id": null,
+    "reason": "Approved: Statutory sick leave is exempt from operational coverage constraints"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000169",
+    "leave_request_id": "LVE-2026-000085",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2026-01-05T06:51:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000031",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000170",
+    "leave_request_id": "LVE-2026-000085",
+    "from_status": "SUBMITTED",
+    "to_status": "REJECTED",
+    "event_timestamp": "2026-01-05T10:06:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000011",
+    "reason": "Overlapping approved leave request already exists for this employee"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000171",
+    "leave_request_id": "LVE-2026-000086",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2026-01-05T09:30:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000032",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000172",
+    "leave_request_id": "LVE-2026-000086",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2026-01-07T09:30:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000031",
+    "reason": "Approved: Daily staffing buffer satisfied across all requested dates and skills"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000173",
+    "leave_request_id": "LVE-2026-000087",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2026-01-06T06:08:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000008",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000174",
+    "leave_request_id": "LVE-2026-000087",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2026-01-06T08:15:00Z",
+    "actor_type": "SYSTEM",
+    "actor_id": null,
+    "reason": "Approved: Statutory sick leave is exempt from operational coverage constraints"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000175",
+    "leave_request_id": "LVE-2026-000088",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2026-01-06T08:16:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000028",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000176",
+    "leave_request_id": "LVE-2026-000088",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2026-01-06T09:44:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000021",
+    "reason": "Approved: Statutory sick leave is exempt from operational coverage constraints"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000177",
+    "leave_request_id": "LVE-2026-000089",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2026-01-06T20:48:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000003",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000178",
+    "leave_request_id": "LVE-2026-000089",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2026-01-06T22:54:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000001",
+    "reason": "Approved: Statutory sick leave is exempt from operational coverage constraints"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000179",
+    "leave_request_id": "LVE-2026-000090",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2026-01-07T18:50:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000027",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000180",
+    "leave_request_id": "LVE-2026-000090",
+    "from_status": "SUBMITTED",
+    "to_status": "REJECTED",
+    "event_timestamp": "2026-01-07T21:58:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000021",
+    "reason": "Overlapping approved leave request already exists for this employee"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000181",
+    "leave_request_id": "LVE-2026-000091",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2026-01-08T07:50:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000004",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000182",
+    "leave_request_id": "LVE-2026-000091",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2026-01-08T09:03:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000001",
+    "reason": "Approved: Statutory sick leave is exempt from operational coverage constraints"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000183",
+    "leave_request_id": "LVE-2026-000092",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2026-01-08T09:30:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000033",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000184",
+    "leave_request_id": "LVE-2026-000092",
+    "from_status": "SUBMITTED",
+    "to_status": "REJECTED",
+    "event_timestamp": "2026-01-10T09:30:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000031",
+    "reason": "Overlapping approved leave request already exists for this employee"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000185",
+    "leave_request_id": "LVE-2026-000093",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2026-01-10T07:06:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000022",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000186",
+    "leave_request_id": "LVE-2026-000093",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2026-01-10T08:33:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000021",
+    "reason": "Approved: Statutory sick leave is exempt from operational coverage constraints"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000187",
+    "leave_request_id": "LVE-2026-000094",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2026-01-10T07:38:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000015",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000188",
+    "leave_request_id": "LVE-2026-000094",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2026-01-10T10:04:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000011",
+    "reason": "Approved: Statutory sick leave is exempt from operational coverage constraints"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000189",
+    "leave_request_id": "LVE-2026-000095",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2026-01-10T20:49:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000038",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000190",
+    "leave_request_id": "LVE-2026-000095",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2026-01-11T00:12:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000031",
+    "reason": "Approved: Statutory sick leave is exempt from operational coverage constraints"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000191",
+    "leave_request_id": "LVE-2026-000096",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2026-01-12T08:13:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000035",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000192",
+    "leave_request_id": "LVE-2026-000096",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2026-01-12T10:27:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000031",
+    "reason": "Approved: Statutory sick leave is exempt from operational coverage constraints"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000193",
+    "leave_request_id": "LVE-2026-000097",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2026-01-12T16:40:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000044",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000194",
+    "leave_request_id": "LVE-2026-000097",
+    "from_status": "SUBMITTED",
+    "to_status": "APPROVED",
+    "event_timestamp": "2026-01-12T19:56:00Z",
+    "actor_type": "SYSTEM",
+    "actor_id": null,
+    "reason": "Approved: Statutory sick leave is exempt from operational coverage constraints"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000195",
+    "leave_request_id": "LVE-2026-000098",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2026-01-12T19:42:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000024",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000196",
+    "leave_request_id": "LVE-2026-000098",
+    "from_status": "SUBMITTED",
+    "to_status": "CANCELLED",
+    "event_timestamp": "2026-01-13T07:42:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000024",
+    "reason": "Cancelled by employee prior to manager decision"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000197",
+    "leave_request_id": "LVE-2026-000099",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2026-01-13T20:42:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000014",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000198",
+    "leave_request_id": "LVE-2026-000100",
+    "from_status": null,
+    "to_status": "SUBMITTED",
+    "event_timestamp": "2026-01-14T07:59:00Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000018",
+    "reason": "Initial leave request submission"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000199",
+    "leave_request_id": "LVE-2026-000051",
+    "from_status": "APPROVED",
+    "to_status": "CANCELLED",
+    "event_timestamp": "2025-12-31T19:45:08Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000050",
+    "reason": "Cancelled by employee prior to leave conclusion"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000200",
+    "leave_request_id": "LVE-2026-000011",
+    "from_status": "APPROVED",
+    "to_status": "CANCELLED",
+    "event_timestamp": "2025-12-10T00:37:02Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000008",
+    "reason": "Cancelled by employee prior to leave conclusion"
+  },
+  {
+    "leave_event_id": "LVE-EVT-2026-000201",
+    "leave_request_id": "LVE-2026-000039",
+    "from_status": "APPROVED",
+    "to_status": "CANCELLED",
+    "event_timestamp": "2025-12-23T20:08:46Z",
+    "actor_type": "EMPLOYEE",
+    "actor_id": "EMP-000027",
+    "reason": "Cancelled by employee prior to leave conclusion"
+  }
+]

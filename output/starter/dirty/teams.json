@@ -1,0 +1,37 @@
+[
+  {
+    "team_id": "TEAM-001",
+    "name": "Emergency Operations Team 001",
+    "department": "Emergency",
+    "timezone": "UTC",
+    "is_active": true
+  },
+  {
+    "team_id": "TEAM-002",
+    "name": "Inpatient Operations Team 002",
+    "department": "Inpatient",
+    "timezone": "UTC",
+    "is_active": true
+  },
+  {
+    "team_id": "TEAM-003",
+    "name": "Logistics Operations Team 003",
+    "department": "Logistics",
+    "timezone": "UTC",
+    "is_active": true
+  },
+  {
+    "team_id": "TEAM-004",
+    "name": "Customer Support Operations Team 004",
+    "department": "Customer Support",
+    "timezone": "UTC",
+    "is_active": true
+  },
+  {
+    "team_id": "TEAM-005",
+    "name": "Emergency Operations Team 005",
+    "department": "Emergency",
+    "timezone": "UTC",
+    "is_active": true
+  }
+]
