@@ -384,6 +384,154 @@ def generate_dirty_dataset(
     next_event_seq = _next_sequence(events, "swap_event_id")
     next_anomaly_index = 1
 
+    team_sources: dict[str, list[ShiftAssignment]] = defaultdict(list)
+    for row in assignments:
+        if row.assignment_status == "ACTIVE":
+            team_sources[row.team_id].append(row)
+
+    # OVERTIME_CAP_EXCEEDED: ensure one employee has exactly seven shifts in a full week.
+    complete_weeks = []
+    current_date = cfg.horizon.start_date
+    while current_date <= cfg.horizon.end_date:
+        iso_year, iso_week, _ = current_date.isocalendar()
+        monday = date.fromisocalendar(iso_year, iso_week, 1)
+        sunday = monday + timedelta(days=6)
+        if monday >= cfg.horizon.start_date and sunday <= cfg.horizon.end_date:
+            if (iso_year, iso_week) not in complete_weeks:
+                complete_weeks.append((iso_year, iso_week))
+        current_date += timedelta(days=1)
+    if not complete_weeks:
+        raise ValueError("The configured horizon has no complete ISO week for overtime anomalies")
+
+    overtime_targets = []
+    active_by_employee, _ = _active_index(assignments)
+    for iso_year, iso_week in complete_weeks:
+        week_dates = [date.fromisocalendar(iso_year, iso_week, day) for day in range(1, 8)]
+        for employee in employees:
+            if (
+                employee.role == "MANAGER"
+                or employee.employee_id in used_anomaly_employees
+            ):
+                continue
+            # Isolation filter: skip employees who worked on the day before or after
+            # the target week, because that would create a cross-week consecutive run
+            # and produce MORE than one MAX_CONSECUTIVE_DAYS violation.
+            prev_sunday = week_dates[0] - timedelta(days=1)
+            next_monday = week_dates[-1] + timedelta(days=1)
+            emp_all_days = {
+                row.shift_date
+                for row in active_by_employee.get(employee.employee_id, ())
+            }
+            if prev_sunday in emp_all_days or next_monday in emp_all_days:
+                continue
+            existing_by_day: dict[date, list[ShiftAssignment]] = defaultdict(list)
+            for row in active_by_employee.get(employee.employee_id, ()):
+                if row.shift_date in week_dates:
+                    existing_by_day[row.shift_date].append(row)
+            if any(len(rows) > 1 for rows in existing_by_day.values()):
+                continue
+            existing_days = set(existing_by_day)
+            available_days = [
+                day
+                for day in week_dates
+                if day not in existing_days
+                and (employee.employee_id, day) not in touched_employee_days
+                and employee.hire_date <= day
+                and (employee.termination_date is None or employee.termination_date >= day)
+                and day not in leave_dates[employee.employee_id]
+            ]
+            if len(existing_days) < 7 and len(available_days) >= 7 - len(existing_days):
+                overtime_targets.append(
+                    (employee, week_dates, existing_by_day, available_days)
+                )
+    overtime_order = injection_rng.permutation(len(overtime_targets))
+    injected_overtime_count = 0
+    for index in overtime_order:
+        employee, week_dates, existing_by_day, available_days = overtime_targets[
+            int(index)
+        ]
+        if employee.employee_id in used_anomaly_employees:
+            continue
+        selected_days = set(existing_by_day)
+        needed = 7 - len(selected_days)
+        day_order = injection_rng.permutation(len(available_days))
+        selected_days.update(
+            available_days[int(index)] for index in day_order[:needed]
+        )
+        week_assignment_ids = [
+            row.assignment_id
+            for day in sorted(selected_days)
+            for row in existing_by_day.get(day, ())
+        ]
+        new_rows = []
+        week_sources = [
+            row
+            for rows in existing_by_day.values()
+            for row in rows
+        ]
+        source = week_sources[0] if week_sources else team_sources[employee.team_id][0]
+        for shift_date in sorted(selected_days.difference(existing_by_day)):
+            extra = _make_assignment(
+                source,
+                employee,
+                shift_date,
+                cfg,
+                format_assignment_id(shift_date.year, next_assignment_seq),
+                None,
+            )
+            next_assignment_seq += 1
+            new_rows.append(extra)
+            week_assignment_ids.append(extra.assignment_id)
+        findings = check_employee_rule_findings(
+            {employee.employee_id},
+            [*assignments, *new_rows],
+            employees,
+            employee_skills,
+            leave_requests,
+            cfg.horizon.start_date,
+            cfg.horizon.end_date,
+        )
+        if findings != {
+            "OVERTIME_CAP_EXCEEDED",
+            "MAX_CONSECUTIVE_DAYS",
+        }:
+            next_assignment_seq -= len(new_rows)
+            continue
+        assignments.extend(new_rows)
+        touched_employee_days.update(
+            (employee.employee_id, row.shift_date) for row in new_rows
+        )
+        used_anomaly_employees.add(employee.employee_id)
+        week_assignment_ids.sort()
+        anomaly_rows.append(
+            _ground_truth(
+                next_anomaly_index,
+                "OVERTIME_CAP_EXCEEDED",
+                "ShiftAssignment",
+                next(
+                    identifier
+                    for identifier in week_assignment_ids
+                    if identifier not in {
+                        row.assignment_id
+                        for rows in existing_by_day.values()
+                        for row in rows
+                    }
+                ),
+                week_assignment_ids,
+                employee.employee_id,
+                "Employee has seven ACTIVE shifts in one full ISO week (52.5 paid hours).",
+                ["MAX_CONSECUTIVE_DAYS"],
+            )
+        )
+        next_anomaly_index += 1
+        injected_overtime_count += 1
+        if injected_overtime_count == counts_per_type:
+            break
+    if injected_overtime_count < counts_per_type:
+        raise ValueError(
+            "Not enough full-week employee targets with isolated overtime findings"
+        )
+
     # DOUBLE_BOOKED: add a shifted copy that overlaps the source assignment.
     active_rows = sorted(
         (row for row in assignments if row.assignment_status == "ACTIVE"),
@@ -417,6 +565,18 @@ def generate_dirty_dataset(
         # (same employee + same shift_instance_id) is not triggered alongside DOUBLE_BOOKED.
         extra = replace(extra, shift_instance_id=extra.shift_instance_id + "-DUP")
         next_assignment_seq += 1
+        findings = check_employee_rule_findings(
+            {extra.employee_id},
+            [*assignments, extra],
+            employees,
+            employee_skills,
+            leave_requests,
+            cfg.horizon.start_date,
+            cfg.horizon.end_date,
+        )
+        if findings != {"DOUBLE_BOOKED"}:
+            next_assignment_seq -= 1
+            continue
         assignments.append(extra)
         touched_employee_days.add((extra.employee_id, extra.shift_date))
         used_anomaly_employees.add(extra.employee_id)
@@ -435,11 +595,9 @@ def generate_dirty_dataset(
         injected_double_count += 1
 
     # LEAVE_OVERLAP: create a shift on a real approved-leave date for that employee.
-    team_sources: dict[str, list[ShiftAssignment]] = defaultdict(list)
     active_days_by_employee: dict[str, set[date]] = defaultdict(set)
     for row in assignments:
         if row.assignment_status == "ACTIVE":
-            team_sources[row.team_id].append(row)
             active_days_by_employee[row.employee_id].add(row.shift_date)
     leave_candidates = [
         leave
@@ -607,138 +765,6 @@ def generate_dirty_dataset(
         )
         next_anomaly_index += 1
         injected_skill_count += 1
-
-    # OVERTIME_CAP_EXCEEDED: ensure one employee has exactly seven shifts in a full week.
-    complete_weeks = []
-    current_date = cfg.horizon.start_date
-    while current_date <= cfg.horizon.end_date:
-        iso_year, iso_week, _ = current_date.isocalendar()
-        monday = date.fromisocalendar(iso_year, iso_week, 1)
-        sunday = monday + timedelta(days=6)
-        if monday >= cfg.horizon.start_date and sunday <= cfg.horizon.end_date:
-            if (iso_year, iso_week) not in complete_weeks:
-                complete_weeks.append((iso_year, iso_week))
-        current_date += timedelta(days=1)
-    if not complete_weeks:
-        raise ValueError("The configured horizon has no complete ISO week for overtime anomalies")
-
-    overtime_targets = []
-    active_by_employee, _ = _active_index(assignments)
-    for iso_year, iso_week in complete_weeks:
-        week_dates = [date.fromisocalendar(iso_year, iso_week, day) for day in range(1, 8)]
-        for employee in employees:
-            if (
-                employee.role == "MANAGER"
-                or employee.employee_id in used_anomaly_employees
-            ):
-                continue
-            existing_by_day: dict[date, list[ShiftAssignment]] = defaultdict(list)
-            for row in active_by_employee.get(employee.employee_id, ()):
-                if row.shift_date in week_dates:
-                    existing_by_day[row.shift_date].append(row)
-            if any(len(rows) > 1 for rows in existing_by_day.values()):
-                continue
-            existing_days = set(existing_by_day)
-            available_days = [
-                day
-                for day in week_dates
-                if day not in existing_days
-                and (employee.employee_id, day) not in touched_employee_days
-                and employee.hire_date <= day
-                and (employee.termination_date is None or employee.termination_date >= day)
-                and day not in leave_dates[employee.employee_id]
-            ]
-            if len(existing_days) < 7 and len(available_days) >= 7 - len(existing_days):
-                overtime_targets.append(
-                    (employee, week_dates, existing_by_day, available_days)
-                )
-    overtime_order = injection_rng.permutation(len(overtime_targets))
-    injected_overtime_count = 0
-    for index in overtime_order:
-        employee, week_dates, existing_by_day, available_days = overtime_targets[
-            int(index)
-        ]
-        if employee.employee_id in used_anomaly_employees:
-            continue
-        selected_days = set(existing_by_day)
-        needed = 7 - len(selected_days)
-        day_order = injection_rng.permutation(len(available_days))
-        selected_days.update(
-            available_days[int(index)] for index in day_order[:needed]
-        )
-        week_assignment_ids = [
-            row.assignment_id
-            for day in sorted(selected_days)
-            for row in existing_by_day.get(day, ())
-        ]
-        new_rows = []
-        week_sources = [
-            row
-            for rows in existing_by_day.values()
-            for row in rows
-        ]
-        source = week_sources[0] if week_sources else team_sources[employee.team_id][0]
-        for shift_date in sorted(selected_days.difference(existing_by_day)):
-            extra = _make_assignment(
-                source,
-                employee,
-                shift_date,
-                cfg,
-                format_assignment_id(shift_date.year, next_assignment_seq),
-                None,
-            )
-            next_assignment_seq += 1
-            new_rows.append(extra)
-            week_assignment_ids.append(extra.assignment_id)
-        findings = check_employee_rule_findings(
-            {employee.employee_id},
-            [*assignments, *new_rows],
-            employees,
-            employee_skills,
-            leave_requests,
-            cfg.horizon.start_date,
-            cfg.horizon.end_date,
-        )
-        if findings != {
-            "OVERTIME_CAP_EXCEEDED",
-            "MAX_CONSECUTIVE_DAYS",
-        }:
-            next_assignment_seq -= len(new_rows)
-            continue
-        assignments.extend(new_rows)
-        touched_employee_days.update(
-            (employee.employee_id, row.shift_date) for row in new_rows
-        )
-        used_anomaly_employees.add(employee.employee_id)
-        week_assignment_ids.sort()
-        anomaly_rows.append(
-            _ground_truth(
-                next_anomaly_index,
-                "OVERTIME_CAP_EXCEEDED",
-                "ShiftAssignment",
-                next(
-                    identifier
-                    for identifier in week_assignment_ids
-                    if identifier not in {
-                        row.assignment_id
-                        for rows in existing_by_day.values()
-                        for row in rows
-                    }
-                ),
-                week_assignment_ids,
-                employee.employee_id,
-                "Employee has seven ACTIVE shifts in one full ISO week (52.5 paid hours).",
-                ["MAX_CONSECUTIVE_DAYS"],
-            )
-        )
-        next_anomaly_index += 1
-        injected_overtime_count += 1
-        if injected_overtime_count == counts_per_type:
-            break
-    if injected_overtime_count < counts_per_type:
-        raise ValueError(
-            "Not enough full-week employee targets with isolated overtime findings"
-        )
 
     for _ in range(counts_per_type):
         truth, next_assignment_seq, next_request_seq, next_event_seq = _make_anomaly_swap(
