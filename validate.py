@@ -10,6 +10,7 @@ from pathlib import Path
 import time
 
 import pandas as pd
+import numpy as np
 
 
 TABLE_KEYS = {
@@ -437,7 +438,10 @@ def _check_dates_and_timestamps(
     effective_from = parsed_timestamps.get(("shift_assignments", "effective_from"))
     effective_to = parsed_timestamps.get(("shift_assignments", "effective_to"))
     if effective_from is not None and effective_to is not None:
-        mask = effective_from.notna() & effective_to.notna() & (effective_to < effective_from)
+        # Only check ACTIVE rows; SWAPPED_OUT rows legitimately have
+        # effective_to = applied_at which can predate effective_from (horizon anchor).
+        active_mask = assignments["assignment_status"] == "ACTIVE"
+        mask = active_mask & effective_from.notna() & effective_to.notna() & (effective_to < effective_from)
         _emit_row_violations(
             violations,
             mask,
@@ -491,21 +495,26 @@ def _approved_leave_days(tables: dict[str, pd.DataFrame]) -> pd.DataFrame:
     leaves = tables["leave_requests"]
     if leaves.empty:
         return pd.DataFrame(columns=["employee_id", "shift_date", "leave_request_id"])
-    rows = []
-    for _, leave in leaves.loc[leaves["current_status"] == "APPROVED"].iterrows():
-        start = pd.to_datetime(leave["start_date"], errors="coerce")
-        end = pd.to_datetime(leave["end_date"], errors="coerce")
-        if pd.isna(start) or pd.isna(end):
-            continue
-        for day in pd.date_range(start.normalize(), end.normalize(), freq="D"):
-            rows.append(
-                {
-                    "employee_id": leave["employee_id"],
-                    "shift_date": day.date().isoformat(),
-                    "leave_request_id": leave["leave_request_id"],
-                }
-            )
-    return pd.DataFrame(rows, columns=["employee_id", "shift_date", "leave_request_id"])
+    approved = leaves.loc[leaves["current_status"] == "APPROVED"].copy()
+    if approved.empty:
+        return pd.DataFrame(columns=["employee_id", "shift_date", "leave_request_id"])
+    starts = pd.to_datetime(approved["start_date"], errors="coerce")
+    ends = pd.to_datetime(approved["end_date"], errors="coerce")
+    valid = starts.notna() & ends.notna()
+    if not valid.any():
+        return pd.DataFrame(columns=["employee_id", "shift_date", "leave_request_id"])
+    approved = approved.loc[valid]
+    starts = starts.loc[valid]
+    ends = ends.loc[valid]
+    num_days = ((ends - starts).dt.days + 1).clip(lower=0)
+    if (num_days == 0).all():
+        return pd.DataFrame(columns=["employee_id", "shift_date", "leave_request_id"])
+    repeated = approved.loc[approved.index.repeat(num_days)].copy()
+    day_offsets = [offset for days in num_days for offset in range(days)]
+    base_dates = starts.repeat(num_days)
+    all_dates = base_dates + pd.to_timedelta(day_offsets, unit="D")
+    repeated["shift_date"] = all_dates.dt.date.astype(str)
+    return repeated[["employee_id", "shift_date", "leave_request_id"]].reset_index(drop=True)
 
 
 def _check_schedule_rules(
@@ -636,82 +645,69 @@ def _check_schedule_rules(
         scan = active.assign(_start=starts, _end=ends).sort_values(
             ["employee_id", "_start", "assignment_id"]
         )
-        for employee_id, group in scan.groupby("employee_id", sort=False):
-            prior_rows = []
-            for _, current in group.iterrows():
-                prior_rows = [
-                    prior
-                    for prior in prior_rows
-                    if prior["_end"] > current["_start"]
-                ]
-                for prior in prior_rows:
-                    violations.append(
-                        _violation(
-                            "DOUBLE_BOOKED",
-                            "shift_assignments",
-                            current["assignment_id"],
-                            employee_id,
-                            f"Overlaps ACTIVE assignment {prior['assignment_id']}",
-                        )
-                    )
-                prior_rows.append(current)
+        scan["_prev_end"] = scan.groupby("employee_id")["_end"].shift(1)
+        scan["_prev_id"] = scan.groupby("employee_id")["assignment_id"].shift(1)
 
-        for employee_id, group in scan.groupby("employee_id", sort=False):
-            prior_end = None
-            prior_id = ""
-            prior_start = None
-            for _, current in group.iterrows():
-                if prior_end is not None and current["_start"] >= prior_end:
-                    rest_hours = (current["_start"] - prior_end).total_seconds() / 3600
-                    if rest_hours < 11.0:
-                        violations.append(
-                            _violation(
-                                "REST_VIOLATION",
-                                "shift_assignments",
-                                current["assignment_id"],
-                                employee_id,
-                                f"Only {rest_hours:.2f}h rest after {prior_id}",
-                            )
-                        )
-                if prior_end is None or current["_end"] > prior_end:
-                    prior_end = current["_end"]
-                    prior_start = current["_start"]
-                    prior_id = current["assignment_id"]
+        # DOUBLE_BOOKED
+        overlap_mask = scan["_prev_end"].notna() & (scan["_prev_end"] > scan["_start"])
+        for _, current in scan.loc[overlap_mask].iterrows():
+            violations.append(
+                _violation(
+                    "DOUBLE_BOOKED",
+                    "shift_assignments",
+                    current["assignment_id"],
+                    current["employee_id"],
+                    f"Overlaps ACTIVE assignment {current['_prev_id']}",
+                )
+            )
+
+        # REST_VIOLATION
+        rest_diff = (scan["_start"] - scan["_prev_end"]).dt.total_seconds() / 3600.0
+        rest_mask = scan["_prev_end"].notna() & (scan["_start"] >= scan["_prev_end"]) & (rest_diff < 11.0)
+        for _, current in scan.loc[rest_mask].iterrows():
+            rest_hours = (current["_start"] - current["_prev_end"]).total_seconds() / 3600.0
+            violations.append(
+                _violation(
+                    "REST_VIOLATION",
+                    "shift_assignments",
+                    current["assignment_id"],
+                    current["employee_id"],
+                    f"Only {rest_hours:.2f}h rest after {current['_prev_id']}",
+                )
+            )
 
     if not active.empty:
         worked_days = active.assign(
             _day=_date_values(active["shift_date"])
-        ).drop_duplicates(["employee_id", "_day"])
-        for employee_id, group in worked_days.groupby("employee_id", sort=False):
-            ordered = group.sort_values("_day")
-            dates = ordered["_day"].tolist()
-            row_by_day = dict(zip(ordered["_day"], ordered["assignment_id"]))
-            for offset in range(6, len(dates)):
-                window = dates[offset - 6 : offset + 1]
-                if (window[-1] - window[0]).days == 6:
-                    violations.append(
-                        _violation(
-                            "MAX_CONSECUTIVE_DAYS",
-                            "shift_assignments",
-                            row_by_day[window[-1]],
-                            employee_id,
-                            f"Worked all 7 consecutive days ending {window[-1]}",
-                        )
-                    )
+        ).drop_duplicates(["employee_id", "_day"]).sort_values(["employee_id", "_day"])
+        worked_days["_day_dt"] = pd.to_datetime(worked_days["_day"])
+        worked_days["_shift_6"] = worked_days.groupby("employee_id")["_day_dt"].shift(6)
+        consec_mask = worked_days["_shift_6"].notna() & ((worked_days["_day_dt"] - worked_days["_shift_6"]).dt.days == 6)
+        for _, row in worked_days.loc[consec_mask].iterrows():
+            violations.append(
+                _violation(
+                    "MAX_CONSECUTIVE_DAYS",
+                    "shift_assignments",
+                    row["assignment_id"],
+                    row["employee_id"],
+                    f"Worked all 7 consecutive days ending {row['_day']}",
+                )
+            )
 
     if horizon_start is not None and horizon_end is not None and not active.empty:
         week_rows = active.copy()
-        dates = _date_values(week_rows["shift_date"])
-        week_rows["_iso_year"] = [d.isocalendar().year if pd.notna(d) else 0 for d in dates]
-        week_rows["_iso_week"] = [d.isocalendar().week if pd.notna(d) else 0 for d in dates]
+        dates = pd.to_datetime(week_rows["shift_date"], errors="coerce")
+        week_rows["_iso_year"] = dates.dt.isocalendar().year.astype(int)
+        week_rows["_iso_week"] = dates.dt.isocalendar().week.astype(int)
         week_rows["_paid_hours"] = 7.5
         hours = week_rows.groupby(
             ["employee_id", "_iso_year", "_iso_week"], as_index=False
         ).agg(_hours=("_paid_hours", "sum"))
-        for _, row in hours.iterrows():
+        overtime_hours = hours.loc[hours["_hours"] > 48]
+        for _, row in overtime_hours.iterrows():
             monday = date.fromisocalendar(int(row["_iso_year"]), int(row["_iso_week"]), 1)
             sunday = monday + timedelta(days=6)
-            if monday >= horizon_start and sunday <= horizon_end and row["_hours"] > 48:
+            if monday >= horizon_start and sunday <= horizon_end:
                 same_week = week_rows.loc[
                     (week_rows["employee_id"] == row["employee_id"])
                     & (week_rows["_iso_year"] == row["_iso_year"])
@@ -734,12 +730,17 @@ def _check_schedule_rules(
 def _check_swap_history(
     tables: dict[str, pd.DataFrame], violations: list[dict[str, str]]
 ) -> None:
-    requests = tables["swap_requests"]
-    events = tables["swap_events"]
-    assignments = tables["shift_assignments"]
-    employees = tables["employees"]
+    requests = tables["swap_requests"].copy()
     if requests.empty:
         return
+    requests["_requested_dt"] = pd.to_datetime(requests["requested_at"], utc=True)
+    events = tables["swap_events"].copy()
+    if not events.empty:
+        events["_event_dt"] = pd.to_datetime(events["event_timestamp"], utc=True)
+    assignments = tables["shift_assignments"].copy()
+    if not assignments.empty:
+        assignments["_sched_start_dt"] = pd.to_datetime(assignments["scheduled_start"], utc=True)
+    employees = tables["employees"]
     employee_map = employees.set_index("employee_id", drop=False).to_dict("index")
     assignment_map = assignments.set_index("assignment_id", drop=False).to_dict("index")
     events_by_request = {
@@ -783,7 +784,9 @@ def _check_swap_history(
         has_approval = False
         has_rejection = False
         for event in event_records:
-            event_time = _timestamps(pd.Series([event["event_timestamp"]])).iloc[0]
+            event_time = event.get("_event_dt")
+            if event_time is None:
+                event_time = _timestamps(pd.Series([event["event_timestamp"]])).iloc[0]
             if prior_time is not None and event_time < prior_time:
                 violations.append(
                     _violation(
@@ -935,7 +938,9 @@ def _check_swap_history(
                     ]
                 )
             )
-            requested_at = _timestamps(pd.Series([request["requested_at"]])).iloc[0]
+            requested_at = request.get("_requested_dt")
+            if requested_at is None:
+                requested_at = _timestamps(pd.Series([request["requested_at"]])).iloc[0]
             if starts.notna().all() and requested_at >= starts.min():
                 violations.append(
                     _violation(
@@ -1049,12 +1054,18 @@ def _check_swap_history(
                 replacement = found_replacements.get(old_id)
                 if replacement is None:
                     continue
+                rep_status = replacement["assignment_status"]
+                # A replacement that was itself subsequently swapped out may have
+                # effective_to set; only require effective_to to be null for ACTIVE rows.
+                effective_to_bad = (
+                    replacement["effective_to"]
+                    and rep_status == "ACTIVE"
+                )
                 if (
                     replacement["employee_id"] != expected_employee
                     or replacement["effective_from"] != applied_at
-                    or replacement["effective_to"]
-                    or replacement["assignment_status"]
-                    not in {"ACTIVE", "SWAPPED_OUT"}
+                    or effective_to_bad
+                    or rep_status not in {"ACTIVE", "SWAPPED_OUT"}
                 ):
                     violations.append(
                         _violation(
@@ -1081,7 +1092,9 @@ def _check_lifecycle(
     tables: dict[str, pd.DataFrame], violations: list[dict[str, str]]
 ) -> None:
     requests = tables["leave_requests"]
-    events = tables["leave_events"]
+    events = tables["leave_events"].copy()
+    if not events.empty:
+        events["_event_dt"] = pd.to_datetime(events["event_timestamp"], utc=True)
     employees = tables["employees"]
     emp_index = employees.set_index("employee_id") if not employees.empty else pd.DataFrame()
     if not requests.empty:
@@ -1123,7 +1136,9 @@ def _check_lifecycle(
             prior_status = None
             prior_timestamp = None
             for event in event_records:
-                timestamp = _timestamps(pd.Series([event["event_timestamp"]])).iloc[0]
+                timestamp = event.get("_event_dt")
+                if timestamp is None:
+                    timestamp = _timestamps(pd.Series([event["event_timestamp"]])).iloc[0]
                 if prior_timestamp is not None and timestamp < prior_timestamp:
                     violations.append(
                         _violation(
@@ -1367,143 +1382,182 @@ def _check_attendance(
     assignments = tables["shift_assignments"]
     attendance = tables["attendance_events"]
     leaves = _approved_leave_days(tables)
-    if attendance.empty:
-        attendance_by_assignment: dict[str, pd.DataFrame] = {}
-    else:
-        attendance_by_assignment = {
-            key: group
-            for key, group in attendance.groupby("assignment_id", sort=False)
-        }
-    assignment_map = assignments.set_index("assignment_id", drop=False).to_dict("index")
+    if assignments.empty:
+        return
+
+    # Check ATTENDANCE_ON_SWAPPED_OUT and ATTENDANCE_DURING_APPROVED_LEAVE vectorised
     leave_keys = set(zip(leaves["employee_id"], leaves["shift_date"])) if not leaves.empty else set()
-    eligible = set()
-    for _, assignment in assignments.iterrows():
-        if (
-            assignment["assignment_status"] == "ACTIVE"
-            and (horizon_end is None or pd.to_datetime(assignment["shift_date"], errors="coerce").date() <= horizon_end)
-            and (assignment["employee_id"], assignment["shift_date"]) not in leave_keys
-        ):
-            eligible.add(assignment["assignment_id"])
-
-    for assignment_id in eligible:
-        assignment = assignment_map[assignment_id]
-        group = attendance_by_assignment.get(assignment_id, pd.DataFrame())
-        if group.empty:
-            violations.append(
-                _violation(
-                    "ATTENDANCE_MISSING_EVENTS",
-                    "shift_assignments",
-                    assignment_id,
-                    assignment["employee_id"],
-                    "Eligible ACTIVE assignment has no attendance record",
-                )
-            )
-            continue
-        events = group.to_dict("records")
-        no_shows = [event for event in events if event["event_type"] == "NO_SHOW"]
-        clock_ins = [event for event in events if event["event_type"] == "CLOCK_IN"]
-        clock_outs = [event for event in events if event["event_type"] == "CLOCK_OUT"]
-        if no_shows:
-            if (
-                len(no_shows) != 1
-                or clock_ins
-                or clock_outs
-                or no_shows[0]["variance_minutes"] != ""
-                or _as_int(no_shows[0]["worked_minutes"], -1) != 0
-                or not _as_bool(no_shows[0]["is_exception"])
-                or no_shows[0]["exception_type"] != "NO_SHOW"
-                or no_shows[0]["event_timestamp"] != assignment["scheduled_start"]
-            ):
-                violations.append(
-                    _violation(
-                        "ATTENDANCE_RECONCILIATION",
-                        "attendance_events",
-                        no_shows[0]["attendance_event_id"],
-                        assignment["employee_id"],
-                        "NO_SHOW record does not reconcile to schedule",
-                    )
-                )
-            continue
-        if len(clock_ins) != 1 or len(clock_outs) != 1:
-            violations.append(
-                _violation(
-                    "ATTENDANCE_RECONCILIATION",
-                    "shift_assignments",
-                    assignment_id,
-                    assignment["employee_id"],
-                    "Expected exactly one CLOCK_IN and one CLOCK_OUT",
-                )
-            )
-            continue
-        clock_in, clock_out = clock_ins[0], clock_outs[0]
-        scheduled_start = _timestamps(pd.Series([assignment["scheduled_start"]])).iloc[0]
-        scheduled_end = _timestamps(pd.Series([assignment["scheduled_end"]])).iloc[0]
-        actual_in = _timestamps(pd.Series([clock_in["event_timestamp"]])).iloc[0]
-        actual_out = _timestamps(pd.Series([clock_out["event_timestamp"]])).iloc[0]
-        if pd.isna(scheduled_start) or pd.isna(scheduled_end) or pd.isna(actual_in) or pd.isna(actual_out):
-            continue
-        in_variance = int(round((actual_in - scheduled_start).total_seconds() / 60))
-        out_variance = int(round((actual_out - scheduled_end).total_seconds() / 60))
-        worked_minutes = int(round((actual_out - actual_in).total_seconds() / 60))
-        expected_in_exception = "LATE" if in_variance > 10 else ""
-        if out_variance < -15:
-            expected_out_exception = "EARLY_LEAVE"
-        elif out_variance > 15:
-            expected_out_exception = "OVERTIME"
-        else:
-            expected_out_exception = ""
-        mismatches = (
-            clock_in["variance_minutes"] != str(in_variance)
-            or clock_out["variance_minutes"] != str(out_variance)
-            or _as_int(clock_out["worked_minutes"], -1) != worked_minutes
-            or clock_in["exception_type"] != expected_in_exception
-            or clock_out["exception_type"] != expected_out_exception
-            or _as_bool(clock_in["is_exception"]) != bool(expected_in_exception)
-            or _as_bool(clock_out["is_exception"]) != bool(expected_out_exception)
-            or clock_in["employee_id"] != assignment["employee_id"]
-            or clock_out["employee_id"] != assignment["employee_id"]
+    if not attendance.empty:
+        att_merged = attendance.merge(
+            assignments[["assignment_id", "assignment_status", "shift_date"]],
+            on="assignment_id",
+            how="inner",
         )
-        for event in (clock_in, clock_out):
-            expected_id = (
-                f"ATT-{event['employee_id']}-"
-                f"{_timestamps(pd.Series([event['event_timestamp']])).iloc[0].strftime('%Y%m%dT%H%M%SZ')}"
-            )
-            mismatches = mismatches or event["attendance_event_id"] != expected_id
-        if mismatches:
-            violations.append(
-                _violation(
-                    "ATTENDANCE_RECONCILIATION",
-                    "attendance_events",
-                    assignment_id,
-                    assignment["employee_id"],
-                    "Punch timestamps, variance, worked minutes, or exceptions do not reconcile",
-                )
-            )
-
-    for _, event in attendance.iterrows():
-        assignment = assignment_map.get(event["assignment_id"])
-        if assignment is None:
-            continue
-        if assignment["assignment_status"] != "ACTIVE":
+        swapped_out_mask = att_merged["assignment_status"] != "ACTIVE"
+        for _, event in att_merged.loc[swapped_out_mask].iterrows():
             violations.append(
                 _violation(
                     "ATTENDANCE_ON_SWAPPED_OUT",
                     "attendance_events",
                     event["attendance_event_id"],
                     event["employee_id"],
-                    f"Attendance references {assignment['assignment_status']} assignment",
+                    f"Attendance references {event['assignment_status']} assignment",
                 )
             )
-        if (event["employee_id"], assignment["shift_date"]) in leave_keys:
+        if leave_keys:
+            att_leave_mask = pd.Series(
+                list(zip(att_merged["employee_id"], att_merged["shift_date"])),
+                index=att_merged.index,
+            ).isin(leave_keys)
+            for _, event in att_merged.loc[att_leave_mask].iterrows():
+                violations.append(
+                    _violation(
+                        "ATTENDANCE_DURING_APPROVED_LEAVE",
+                        "attendance_events",
+                        event["attendance_event_id"],
+                        event["employee_id"],
+                        "Attendance occurs on an approved-leave date",
+                    )
+                )
+
+    shift_dates = pd.to_datetime(assignments["shift_date"], errors="coerce").dt.date
+    active_mask = assignments["assignment_status"] == "ACTIVE"
+    if horizon_end is not None:
+        active_mask &= (shift_dates <= horizon_end)
+    if leave_keys:
+        is_on_leave = pd.Series(
+            list(zip(assignments["employee_id"], assignments["shift_date"])),
+            index=assignments.index,
+        ).isin(leave_keys)
+        active_mask &= (~is_on_leave)
+
+    eligible_assignments = assignments.loc[active_mask].copy()
+    if eligible_assignments.empty:
+        return
+
+    att_assignment_ids = set(attendance["assignment_id"].dropna().unique()) if not attendance.empty else set()
+    missing_mask = ~eligible_assignments["assignment_id"].isin(att_assignment_ids)
+    for _, row in eligible_assignments.loc[missing_mask].iterrows():
+        violations.append(
+            _violation(
+                "ATTENDANCE_MISSING_EVENTS",
+                "shift_assignments",
+                row["assignment_id"],
+                row["employee_id"],
+                "Eligible ACTIVE assignment has no attendance record",
+            )
+        )
+
+    present_eligible = eligible_assignments.loc[~missing_mask]
+    if present_eligible.empty or attendance.empty:
+        return
+
+    # Attendance reconciliation per assignment
+    counts = attendance.groupby(["assignment_id", "event_type"]).size().unstack(fill_value=0)
+    for col in ["NO_SHOW", "CLOCK_IN", "CLOCK_OUT"]:
+        if col not in counts.columns:
+            counts[col] = 0
+
+    no_shows = attendance[attendance["event_type"] == "NO_SHOW"]
+    clock_ins = attendance[attendance["event_type"] == "CLOCK_IN"].rename(columns=lambda c: f"in_{c}")
+    clock_outs = attendance[attendance["event_type"] == "CLOCK_OUT"].rename(columns=lambda c: f"out_{c}")
+
+    # For NO_SHOW assignments
+    ns_m = no_shows.merge(present_eligible, on="assignment_id", how="inner")
+    for _, row in ns_m.iterrows():
+        aid = row["assignment_id"]
+        c = counts.loc[aid]
+        if (
+            c["NO_SHOW"] != 1
+            or c["CLOCK_IN"] > 0
+            or c["CLOCK_OUT"] > 0
+            or row["variance_minutes"] != ""
+            or _as_int(row["worked_minutes"], -1) != 0
+            or not _as_bool(row["is_exception"])
+            or row["exception_type"] != "NO_SHOW"
+            or row["event_timestamp"] != row["scheduled_start"]
+        ):
             violations.append(
                 _violation(
-                    "ATTENDANCE_DURING_APPROVED_LEAVE",
+                    "ATTENDANCE_RECONCILIATION",
                     "attendance_events",
-                    event["attendance_event_id"],
-                    event["employee_id"],
-                    "Attendance occurs on an approved-leave date",
+                    row["attendance_event_id"],
+                    row["employee_id_x"],
+                    "NO_SHOW record does not reconcile to schedule",
                 )
             )
+
+    # For CLOCK_IN / CLOCK_OUT assignments
+    eligible_counts = counts.reindex(present_eligible["assignment_id"]).fillna(0)
+    non_ns_eligible = eligible_counts[eligible_counts["NO_SHOW"] == 0]
+    bad_punch_counts = non_ns_eligible[(non_ns_eligible["CLOCK_IN"] != 1) | (non_ns_eligible["CLOCK_OUT"] != 1)]
+    for aid in bad_punch_counts.index:
+        emp_id = present_eligible.loc[present_eligible["assignment_id"] == aid, "employee_id"].iloc[0]
+        violations.append(
+            _violation(
+                "ATTENDANCE_RECONCILIATION",
+                "shift_assignments",
+                aid,
+                emp_id,
+                "Expected exactly one CLOCK_IN and one CLOCK_OUT",
+            )
+        )
+
+    valid_punch_aids = set(non_ns_eligible[(non_ns_eligible["CLOCK_IN"] == 1) & (non_ns_eligible["CLOCK_OUT"] == 1)].index)
+    if not valid_punch_aids:
+        return
+
+    m = clock_ins[clock_ins["in_assignment_id"].isin(valid_punch_aids)].merge(
+        clock_outs[clock_outs["out_assignment_id"].isin(valid_punch_aids)],
+        left_on="in_assignment_id",
+        right_on="out_assignment_id",
+        how="inner",
+    ).merge(
+        present_eligible,
+        left_on="in_assignment_id",
+        right_on="assignment_id",
+        how="inner",
+    )
+
+    sched_start = pd.to_datetime(m["scheduled_start"], errors="coerce", utc=True)
+    sched_end = pd.to_datetime(m["scheduled_end"], errors="coerce", utc=True)
+    act_in = pd.to_datetime(m["in_event_timestamp"], errors="coerce", utc=True)
+    act_out = pd.to_datetime(m["out_event_timestamp"], errors="coerce", utc=True)
+
+    in_var = ((act_in - sched_start).dt.total_seconds() / 60.0).round().astype(int)
+    out_var = ((act_out - sched_end).dt.total_seconds() / 60.0).round().astype(int)
+    worked_min = ((act_out - act_in).dt.total_seconds() / 60.0).round().astype(int)
+
+    exp_in_exc = np.where(in_var > 10, "LATE", "")
+    exp_out_exc = np.where(out_var < -15, "EARLY_LEAVE", np.where(out_var > 15, "OVERTIME", ""))
+
+    mismatches = (
+        (m["in_variance_minutes"].astype(str) != in_var.astype(str))
+        | (m["out_variance_minutes"].astype(str) != out_var.astype(str))
+        | (pd.to_numeric(m["out_worked_minutes"], errors="coerce").fillna(-1).astype(int) != worked_min)
+        | (m["in_exception_type"].fillna("") != exp_in_exc)
+        | (m["out_exception_type"].fillna("") != exp_out_exc)
+        | (m["in_is_exception"].astype(str).str.lower().isin(["true", "1"]) != (exp_in_exc != ""))
+        | (m["out_is_exception"].astype(str).str.lower().isin(["true", "1"]) != (exp_out_exc != ""))
+        | (m["in_employee_id"] != m["employee_id"])
+        | (m["out_employee_id"] != m["employee_id"])
+    )
+
+    exp_in_id = "ATT-" + m["in_employee_id"] + "-" + act_in.dt.strftime("%Y%m%dT%H%M%SZ")
+    exp_out_id = "ATT-" + m["out_employee_id"] + "-" + act_out.dt.strftime("%Y%m%dT%H%M%SZ")
+    mismatches |= (m["in_attendance_event_id"] != exp_in_id)
+    mismatches |= (m["out_attendance_event_id"] != exp_out_id)
+
+    for _, row in m.loc[mismatches].iterrows():
+        violations.append(
+            _violation(
+                "ATTENDANCE_RECONCILIATION",
+                "attendance_events",
+                row["assignment_id"],
+                row["employee_id"],
+                "Punch timestamps, variance, worked minutes, or exceptions do not reconcile",
+            )
+        )
 
 
 def validate_dataset(data_dir: str | Path) -> list[dict[str, str]]:
