@@ -1,0 +1,4 @@
+* text=auto
+*.csv -text
+*.json -text
+SHA256SUMS -text
