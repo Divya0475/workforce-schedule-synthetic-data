@@ -618,3 +618,38 @@ Stage D1b provides an independent, standalone CSV validator (`validate.py`), gro
   - `SWAP_WITHOUT_APPROVAL`
 - Determinism assertion ensuring identical sorted violations across repeated runs.
 - Import boundary test guaranteeing `validate.py` does not import `workforce_generator`.
+
+---
+
+## 13. Limitations and Trade-offs
+
+### Key Decisions and Why
+
+| Decision | Reason | Trade-off |
+|---|---|---|
+| **Standalone validator that never imports the generator** (enforced by a test) | A validator that reuses generator logic can share its bugs and pass by construction. | Some business rules (rest intervals, shift overlaps, weekly hours) exist in two codebases and must be kept consistent by tests. |
+| **Ground truth read only by `scripts/evaluate_validator.py`** | Keeps the validator completely independent and honest: it cannot "peek" at the answers or tailor logic to known IDs. | Evaluation is decoupled from validation as an external benchmark stage. |
+| **Anomalies injected only where rule engine confirms only intended rule fires** | Guarantees clean one-to-one ground truth for unambiguous benchmarking. | Some candidate target slots are skipped, so injection capacity depends on baseline schedule slack. |
+| **`also_triggers` for unavoidable collateral** | A 7-shift week mathematically breaks the 6-consecutive-day rule, so `OVERTIME_CAP_EXCEEDED` always produces `MAX_CONSECUTIVE_DAYS`. | Precision is evaluated on the five primary injected types; expected collateral violations are tracked and reported separately. |
+| **Deterministic `SeedSequence` generation** | Ensures identical seeds produce byte-identical CSV/JSON exports across independent runs (verified by test). | Output reproducibility is tied to pinned library versions and consistent numerical environments. |
+| **Full dataset regenerated, not committed** | Keeps repository size under 50 MB (full dataset is ~367 MB); `output/full/SHA256SUMS` provides cryptographic proof of identical regeneration. | Reviewers must run the generator (~3.6 minutes) to produce full-scale data locally. |
+| **Vectorised pandas validator** | Reduces validation runtime from minutes to sub-second on starter (~0.3 s) and ~19–22 s on full scale. | Vectorised dataframe logic is more complex to maintain than naive row-by-row iteration. |
+
+### How We Know It Works
+
+- **Zero Clean Violations**: Clean datasets at both starter scale (50 employees) and full scale (2,000 employees) produce exactly 0 violations under `validate.py`.
+- **100% Precision and Recall**: On dirty datasets, evaluation achieves 100% precision and recall across all five injected anomaly types (15 anomalies for starter, 75 for full), with zero unexpected false positives outside of documented `also_triggers`.
+- **Counterexample + Twin Tests**: Every validator rule has a paired hand-built unit test: a non-compliant counterexample that must trigger the specific violation code, and a twin compliant record that must pass.
+- **Freshly Exported Data Testing**: Dedicated automated tests run `validate.py` on freshly generated and exported disk datasets, ensuring any schema mismatch or runtime crash immediately fails the test suite.
+- **Byte-Identical Determinism**: Repeated generation runs with the same seed yield identical SHA-256 hashes for all exported CSV and JSON files.
+- **Fresh Clone Verification**: A clean repository clone in an isolated directory with freshly installed dependencies successfully passes all 93 pytest suite tests.
+
+### Known Limitations
+
+- **Simplified Single-Jurisdiction Labor Rules**: The system models a single labor standard (11-hour rest periods, 6 consecutive working days, 48-hour overtime cap). Real-world enterprise agreements involve multi-jurisdictional contracts and union agreements.
+- **Only Five Injected Anomaly Types**: The injector targets five specific edge-case classes (`DOUBLE_BOOKED`, `LEAVE_OVERLAP`, `SKILL_ABSENT`, `OVERTIME_CAP_EXCEEDED`, `SWAP_WITHOUT_APPROVAL`). The validator checks additional rules (e.g., manager scheduling, attendance integrity) that are verified via unit counterexamples rather than injected dataset ground truth.
+- **Recall Measured Only on Injected Anomalies**: 100% recall demonstrates detection of our specific synthetic defect models; it does not guarantee catching arbitrary real-world anomalies.
+- **`scripts/reproduce.sh` Written but Not Executed**: The POSIX bash reproducibility script was authored to mirror `scripts/reproduce.ps1` identically, but was not executed in a native Linux environment during this Windows-based workspace session.
+- **Small 50-Employee Starter Profile**: The 50-employee, 14-day starter profile is optimized for fast CI/test iteration (<1s generation), but lacks the statistical breadth of the 2,000-employee profile.
+- **Dependency Pinning Covers Packages, Not Interpreter**: `requirements.txt` strictly pins all third-party Python packages, but does not pin the underlying Python runtime environment (developed and tested on Python 3.10).
+- **Clean Injected Defects vs. Messy Real-World Data**: Dirty data contains mathematically isolated, structured rule breaches rather than arbitrary data corruption (e.g., malformed encoding, corrupted file formats, or missing mandatory headers).

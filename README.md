@@ -1,6 +1,6 @@
 # Workforce Scheduling Synthetic Data Generator
 
-A reproducible, zero-external-dependency synthetic data generator written in Python 3.10+ simulating an enterprise Workforce Management (WFM) scheduling domain. It models capacity-feasible schedules, complex labor compliance rules, leave/swap lifecycle event logs, and attendance variances. It also features a synthetic anomaly injection engine paired with an independent validation and evaluation suite.
+A reproducible synthetic data generator (depends on pandas, numpy and pyyaml) written in Python 3.10+ simulating an enterprise Workforce Management (WFM) scheduling domain. It models capacity-feasible schedules, complex labor compliance rules, leave/swap lifecycle event logs, and attendance variances. It also features a synthetic anomaly injection engine paired with an independent validation and evaluation suite.
 
 ---
 
@@ -17,6 +17,7 @@ A reproducible, zero-external-dependency synthetic data generator written in Pyt
 - [Anomaly Types & Collateral Rules (`also_triggers`)](#anomaly-types--collateral-rules-also_triggers)
 - [Testing & Test Coverage](#testing--test-coverage)
 - [Pipeline Runtimes](#pipeline-runtimes)
+- [AI Usage](#ai-usage)
 
 ---
 
@@ -279,8 +280,8 @@ The project is governed by **93 automated unit, integration, and export tests** 
   - SQLite DDL schema creation and in-memory execution verify exact row count parity with CSV datasets.
 
 ### Reproducibility Script Verification Status
-- **`scripts/reproduce.ps1` (Windows PowerShell)**: **Executed and verified** in development environment.
-- **`scripts/reproduce.sh` (POSIX Bash)**: Written and structured with identical logic, but **not executed end-to-end on native Linux in this workspace session** (which operates on Windows).
+- **`scripts/reproduce.ps1` (Windows PowerShell)**: Run end to end on Windows; passed all tests, generation, validation, and evaluation checks cleanly.
+- **`scripts/reproduce.sh` (POSIX Bash)**: Written with identical logic, but was **not run** during development (Windows environment).
 
 To run the complete test suite:
 ```powershell
@@ -303,3 +304,13 @@ Measured on a standard modern developer workstation:
 | **Rule Validation (`validate.py`)** | ~0.60 s | ~35.0 s |
 | **Validator Evaluation (`evaluate_validator.py`)** | ~1.25 s | ~72.0 s |
 | **Total Test Suite (`pytest`)** | **~25.0 s** (93 tests) | N/A |
+
+---
+
+## AI Usage
+
+This project was developed with LLM assistance:
+- **Planning & Review**: Claude (chat) was used to structure prompts, review test results, and plan incremental implementation stages.
+- **Implementation**: VS Code coding assistant implemented code, tests, schemas, and documentation under strict procedural constraints.
+- Full details on methodology, validations, and human review decisions are documented in [AI_USAGE.md](AI_USAGE.md).
+- The complete prompt history across all project stages is recorded in [PROMPTS.md](PROMPTS.md).
