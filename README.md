@@ -17,6 +17,8 @@ A reproducible synthetic data generator (depends on pandas, numpy and pyyaml) wr
 - [Anomaly Types & Collateral Rules (`also_triggers`)](#anomaly-types--collateral-rules-also_triggers)
 - [Testing & Test Coverage](#testing--test-coverage)
 - [Pipeline Runtimes](#pipeline-runtimes)
+- [Data Provenance](#data-provenance)
+- [Fairness Report](#fairness-report)
 - [AI Usage](#ai-usage)
 
 ---
@@ -173,6 +175,7 @@ workforce-schedule-synthetic-data/
 │   │   ├── clean/             # 15 CSVs + 15 JSONs (100% compliant)
 │   │   ├── dirty/             # 15 CSVs + 15 JSONs (with 15 injected anomalies)
 │   │   ├── ground_truth/      # ground_truth.csv & ground_truth.json
+│   │   ├── validation/        # Committed validation & fairness summaries (starter only)
 │   │   ├── manifest.json      # File index, row counts, and SHA-256 hashes
 │   │   ├── schema.sql         # SQLite-compatible DDL schema (CREATE TABLE + PK + FK)
 │   │   └── starter_inserts.sql# DML INSERT statements for clean starter dataset
@@ -305,6 +308,43 @@ Measured on a Windows developer workstation:
 | **Rule Validation (`validate.py` on clean)** | 0.32 s | 26.24 s |
 | **Validator Evaluation (`evaluate_validator.py`)** | 0.66 s (clean: 0.33 s, dirty: 0.33 s) | 47.21 s (clean: 24.39 s, dirty: 22.82 s) |
 | **Total Test Suite (`pytest`)** | **19.01 s** (93 tests) | N/A |
+
+---
+
+## Data Provenance
+
+- **Fully synthetic data.** No external or public datasets were used. No real personal data is present.
+- All employee names are randomly generated. Email addresses use the reserved example domain `@workforce.example.com` (RFC 2606).
+- The generator is seeded with `20261022` for reproducibility. Exact commands:
+
+```bash
+python run_generator.py --profile starter --out output   # seed 20261022
+python run_generator.py --profile full    --out output   # seed 20261022
+```
+
+- `output/starter/schema.sql` and `output/starter/starter_inserts.sql` are provided for the starter profile only; the full profile is regenerated locally (see [Full-Scale Dataset Regeneration](#full-scale-dataset-regeneration)).
+
+---
+
+## Fairness Report
+
+`scripts/report_fairness.py` generates descriptive fairness metrics for non-manager employees in a clean dataset.  
+**These are descriptive metrics and not a fairness guarantee.**
+
+```bash
+python scripts/report_fairness.py --data-dir output/starter/clean --out output/starter/validation
+```
+
+The committed report is at `output/starter/validation/fairness_summary.md`.
+
+**Measured results for starter clean (39 non-manager employees):**
+
+| Metric | Min | Max | Mean | Std | Gini |
+|---|---:|---:|---:|---:|---:|
+| Shift count | 1 | 12 | 8.38 | 2.36 | 0.1488 |
+| Paid hours | 8.00 | 96.00 | 67.08 | 18.86 | 0.1488 |
+| Night shifts | 0 | 8 | 1.59 | 2.19 | 0.6791 |
+| Weekend shifts | 0 | 4 | 1.67 | 1.53 | 0.5002 |
 
 ---
 
