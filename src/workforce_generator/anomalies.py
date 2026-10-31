@@ -413,6 +413,9 @@ def generate_dirty_dataset(
             source.fulfills_skill_id,
             start_offset_minutes=30,
         )
+        # Give the extra a unique shift_instance_id so DUPLICATE_ACTIVE_ASSIGNMENT
+        # (same employee + same shift_instance_id) is not triggered alongside DOUBLE_BOOKED.
+        extra = replace(extra, shift_instance_id=extra.shift_instance_id + "-DUP")
         next_assignment_seq += 1
         assignments.append(extra)
         touched_employee_days.add((extra.employee_id, extra.shift_date))
