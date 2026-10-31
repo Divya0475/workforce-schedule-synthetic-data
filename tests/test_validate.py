@@ -107,6 +107,8 @@ def _base_assignment() -> dict[str, str]:
 
 def _base_tables() -> dict[str, list[dict[str, str]]]:
     """Return the smallest valid dataset that passes all checks."""
+    from datetime import date, timedelta
+    week_dates = [(date(2026, 1, 5) + timedelta(days=i)).isoformat() for i in range(7)]
     return {
         "teams": [
             {"team_id": "TEAM-001", "name": "Alpha", "department": "Ops",
@@ -141,9 +143,11 @@ def _base_tables() -> dict[str, list[dict[str, str]]]:
         ],
         "holidays": [],
         "coverage_requirements": [
-            {"coverage_id": "COV-001", "effective_date": "2026-01-05",
+            {"coverage_id": f"COV-{i+1:03d}", "effective_date": d,
              "team_id": "TEAM-001", "shift_template_id": "SHF-001",
-             "skill_id": "SKL-A", "min_headcount": "1", "target_headcount": "1"},
+             "skill_id": "SKL-A", "min_headcount": "1" if i == 0 else "0",
+             "target_headcount": "1" if i == 0 else "0"}
+            for i, d in enumerate(week_dates)
         ],
         "leave_requests": [],
         "leave_events": [],
@@ -151,28 +155,35 @@ def _base_tables() -> dict[str, list[dict[str, str]]]:
         "swap_requests": [],
         "swap_events": [],
         "attendance_events": [
-            {"attendance_event_id": "ATT-001", "employee_id": "EMP-002",
+            {"attendance_event_id": "ATT-EMP-002-20260105T080000Z", "employee_id": "EMP-002",
              "assignment_id": "ASN-001", "event_type": "CLOCK_IN",
              "event_timestamp": "2026-01-05T08:00:00Z", "source": "BIOMETRIC",
-             "variance_minutes": "0", "worked_minutes": "450",
+             "variance_minutes": "0", "worked_minutes": "",
              "is_exception": "false", "exception_type": ""},
-            {"attendance_event_id": "ATT-002", "employee_id": "EMP-002",
+            {"attendance_event_id": "ATT-EMP-002-20260105T160000Z", "employee_id": "EMP-002",
              "assignment_id": "ASN-001", "event_type": "CLOCK_OUT",
              "event_timestamp": "2026-01-05T16:00:00Z", "source": "BIOMETRIC",
-             "variance_minutes": "0", "worked_minutes": "450",
+             "variance_minutes": "0", "worked_minutes": "480",
              "is_exception": "false", "exception_type": ""},
         ],
         "coverage_gaps": [
-            {"gap_id": "GAP-001", "coverage_id": "COV-001",
-             "effective_date": "2026-01-05",
+            {"gap_id": f"GAP-{i+1:03d}", "coverage_id": f"COV-{i+1:03d}",
+             "effective_date": d,
              "team_id": "TEAM-001", "shift_template_id": "SHF-001",
-             "skill_id": "SKL-A", "required_headcount": "1",
-             "scheduled_headcount": "1", "gap_headcount": "0",
+             "skill_id": "SKL-A", "required_headcount": "1" if i == 0 else "0",
+             "scheduled_headcount": "1" if i == 0 else "0", "gap_headcount": "0",
              "target_shortfall": "0", "reason": "", "is_critical": "false",
-             "has_gap": "false", "computed_at": "2026-01-01T00:00:00Z"},
+             "has_gap": "false", "computed_at": "2026-01-01T00:00:00Z"}
+            for i, d in enumerate(week_dates)
         ],
         "weekly_hours_summaries": [
-            {"summary_id": "WHS-001", "employee_id": "EMP-002",
+            {"summary_id": "WHS-001", "employee_id": "EMP-001",
+             "iso_year": "2026", "iso_week": "2", "is_partial_week": "false",
+             "contract_hours": "37.5", "scheduled_hours": "0.0",
+             "regular_hours": "0.0", "overtime_hours": "0.0",
+             "exceeds_overtime_cap": "false",
+             "computed_at": "2026-01-01T00:00:00Z"},
+            {"summary_id": "WHS-002", "employee_id": "EMP-002",
              "iso_year": "2026", "iso_week": "2", "is_partial_week": "false",
              "contract_hours": "37.5", "scheduled_hours": "7.5",
              "regular_hours": "7.5", "overtime_hours": "0.0",
@@ -250,10 +261,29 @@ def test_starter_clean_zero_violations(validate, starter_dirs):
     )
 
 
+def test_base_dataset_zero_violations(validate, tmp_path):
+    """The base hand-built dataset must produce exactly [] violations."""
+    tables = _base_tables()
+    _write_tables(tmp_path / "base", tables)
+    violations = validate.validate_dataset(str(tmp_path / "base"))
+    assert violations == [], f"Base dataset expected [], got: {violations}"
+
+
 def test_starter_dirty_has_violations(validate, starter_dirs):
-    """validate_dataset on the exported dirty starter must return >0 violations."""
+    """validate_dataset on dirty starter must have >0 violations and all 5 injected types."""
     violations = validate.validate_dataset(str(starter_dirs / "dirty"))
     assert len(violations) > 0, "Dirty dataset must have at least one violation"
+    rules_fired = set(_rules(violations))
+    expected_five = {
+        "DOUBLE_BOOKED",
+        "LEAVE_OVERLAP",
+        "SKILL_ABSENT",
+        "OVERTIME_CAP_EXCEEDED",
+        "SWAP_WITHOUT_APPROVAL",
+    }
+    assert expected_five <= rules_fired, (
+        f"Missing expected injected anomaly types in dirty: {expected_five - rules_fired}"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -481,3 +511,219 @@ def test_duplicate_active_assignment_triggers_and_twin_passes(validate, tmp_path
     assert "DUPLICATE_ACTIVE_ASSIGNMENT" not in _rules(
         validate.validate_dataset(str(tmp_path / "good_dup"))
     )
+
+
+def test_rest_violation_triggers_and_twin_passes(validate, tmp_path):
+    """REST_VIOLATION fires when rest between shifts is < 11h; twin passes with >= 11h."""
+    import copy
+    clean = _base_tables()
+
+    # Bad: second shift starts 4 hours after first shift ends (20:00 vs 16:00)
+    bad = copy.deepcopy(clean)
+    extra = copy.deepcopy(bad["shift_assignments"][0])
+    extra["assignment_id"] = "ASN-002"
+    extra["shift_instance_id"] = "SII-002"
+    extra["shift_date"] = "2026-01-05"
+    extra["scheduled_start"] = "2026-01-05T20:00:00Z"
+    extra["scheduled_end"] = "2026-01-06T04:00:00Z"
+    bad["shift_assignments"].append(extra)
+    _write_tables(tmp_path / "bad_rest", bad)
+    assert "REST_VIOLATION" in _rules(validate.validate_dataset(str(tmp_path / "bad_rest")))
+
+    # Good twin: second shift starts 16 hours after first shift ends (08:00 next day)
+    good = copy.deepcopy(clean)
+    extra_good = copy.deepcopy(good["shift_assignments"][0])
+    extra_good["assignment_id"] = "ASN-002"
+    extra_good["shift_instance_id"] = "SII-002"
+    extra_good["shift_date"] = "2026-01-06"
+    extra_good["scheduled_start"] = "2026-01-06T08:00:00Z"
+    extra_good["scheduled_end"] = "2026-01-06T16:00:00Z"
+    good["shift_assignments"].append(extra_good)
+    _write_tables(tmp_path / "good_rest", good)
+    assert "REST_VIOLATION" not in _rules(validate.validate_dataset(str(tmp_path / "good_rest")))
+
+
+def test_max_consecutive_days_triggers_and_twin_passes(validate, tmp_path):
+    """MAX_CONSECUTIVE_DAYS fires on 7 consecutive days; twin with 6 passes."""
+    import copy
+    from datetime import date, timedelta
+    clean = _base_tables()
+    base_asn = clean["shift_assignments"][0]
+
+    # Bad: 7 consecutive work days (Mon Jan 5 - Sun Jan 11)
+    bad = copy.deepcopy(clean)
+    bad["shift_assignments"] = [
+        {
+            **base_asn,
+            "assignment_id": f"ASN-{i+1:03d}",
+            "shift_instance_id": f"SII-{i+1:03d}",
+            "shift_date": (date(2026, 1, 5) + timedelta(days=i)).isoformat(),
+            "scheduled_start": f"{(date(2026, 1, 5) + timedelta(days=i)).isoformat()}T08:00:00Z",
+            "scheduled_end": f"{(date(2026, 1, 5) + timedelta(days=i)).isoformat()}T16:00:00Z",
+        }
+        for i in range(7)
+    ]
+    _write_tables(tmp_path / "bad_consec", bad)
+    assert "MAX_CONSECUTIVE_DAYS" in _rules(validate.validate_dataset(str(tmp_path / "bad_consec")))
+
+    # Good twin: 6 consecutive work days (Mon Jan 5 - Sat Jan 10)
+    good = copy.deepcopy(clean)
+    good["shift_assignments"] = [
+        {
+            **base_asn,
+            "assignment_id": f"ASN-{i+1:03d}",
+            "shift_instance_id": f"SII-{i+1:03d}",
+            "shift_date": (date(2026, 1, 5) + timedelta(days=i)).isoformat(),
+            "scheduled_start": f"{(date(2026, 1, 5) + timedelta(days=i)).isoformat()}T08:00:00Z",
+            "scheduled_end": f"{(date(2026, 1, 5) + timedelta(days=i)).isoformat()}T16:00:00Z",
+        }
+        for i in range(6)
+    ]
+    _write_tables(tmp_path / "good_consec", good)
+    assert "MAX_CONSECUTIVE_DAYS" not in _rules(validate.validate_dataset(str(tmp_path / "good_consec")))
+
+
+def test_overtime_cap_exceeded_triggers_and_twin_passes(validate, tmp_path):
+    """OVERTIME_CAP_EXCEEDED fires when weekly hours > 48; twin with <= 48 passes."""
+    import copy
+    from datetime import date, timedelta
+    clean = _base_tables()
+    base_asn = clean["shift_assignments"][0]
+
+    # Bad: 7 shifts of 7.5h = 52.5 hours > 48h in full ISO week
+    bad = copy.deepcopy(clean)
+    bad["shift_assignments"] = [
+        {
+            **base_asn,
+            "assignment_id": f"ASN-{i+1:03d}",
+            "shift_instance_id": f"SII-{i+1:03d}",
+            "shift_date": (date(2026, 1, 5) + timedelta(days=i)).isoformat(),
+            "scheduled_start": f"{(date(2026, 1, 5) + timedelta(days=i)).isoformat()}T08:00:00Z",
+            "scheduled_end": f"{(date(2026, 1, 5) + timedelta(days=i)).isoformat()}T16:00:00Z",
+        }
+        for i in range(7)
+    ]
+    _write_tables(tmp_path / "bad_ot", bad)
+    assert "OVERTIME_CAP_EXCEEDED" in _rules(validate.validate_dataset(str(tmp_path / "bad_ot")))
+
+    # Good twin: 5 shifts of 7.5h = 37.5 hours <= 48h
+    good = copy.deepcopy(clean)
+    good["shift_assignments"] = [
+        {
+            **base_asn,
+            "assignment_id": f"ASN-{i+1:03d}",
+            "shift_instance_id": f"SII-{i+1:03d}",
+            "shift_date": (date(2026, 1, 5) + timedelta(days=i)).isoformat(),
+            "scheduled_start": f"{(date(2026, 1, 5) + timedelta(days=i)).isoformat()}T08:00:00Z",
+            "scheduled_end": f"{(date(2026, 1, 5) + timedelta(days=i)).isoformat()}T16:00:00Z",
+        }
+        for i in range(5)
+    ]
+    _write_tables(tmp_path / "good_ot", good)
+    assert "OVERTIME_CAP_EXCEEDED" not in _rules(validate.validate_dataset(str(tmp_path / "good_ot")))
+
+
+def test_swap_without_approval_triggers_and_twin_passes(validate, tmp_path):
+    """SWAP_WITHOUT_APPROVAL fires when APPLIED swap lacks an APPROVED event; twin with APPROVED passes."""
+    import copy
+    clean = _base_tables()
+    # Add a second staff employee EMP-003 for the swap exchange
+    clean["employees"].append({
+        "employee_id": "EMP-003", "team_id": "TEAM-001",
+        "first_name": "Charlie", "last_name": "Brown",
+        "email": "charlie@example.com", "role": "STAFF",
+        "weekly_contract_hours": "37.5", "fte": "1.0",
+        "hire_date": "2025-01-01", "termination_date": "", "is_active": "true",
+    })
+    clean["employee_skills"].append({
+        "employee_skill_id": "ES-002", "employee_id": "EMP-003",
+        "skill_id": "SKL-A", "proficiency_level": "COMPETENT",
+        "certified_date": "2025-01-01", "expiry_date": "", "is_primary": "true",
+    })
+    # EMP-003 original shift on Jan 6
+    clean["shift_assignments"].append({
+        "assignment_id": "ASN-002", "shift_instance_id": "SII-002",
+        "employee_id": "EMP-003", "team_id": "TEAM-001",
+        "shift_template_id": "SHF-001", "shift_date": "2026-01-06",
+        "scheduled_start": "2026-01-06T08:00:00Z", "scheduled_end": "2026-01-06T16:00:00Z",
+        "duration_hours": "7.5", "assigned_role": "STAFF",
+        "assignment_status": "SWAPPED_OUT", "effective_from": "2026-01-01T00:00:00Z",
+        "effective_to": "2026-01-04T12:00:00Z", "swap_request_id": "SWP-001",
+        "replaces_assignment_id": "", "fulfills_skill_id": "SKL-A",
+        "is_holiday_premium": "false",
+    })
+    # Update ASN-001 to SWAPPED_OUT
+    clean["shift_assignments"][0]["assignment_status"] = "SWAPPED_OUT"
+    clean["shift_assignments"][0]["effective_to"] = "2026-01-04T12:00:00Z"
+    clean["shift_assignments"][0]["swap_request_id"] = "SWP-001"
+    # Replacement assignments
+    clean["shift_assignments"].extend([
+        {
+            "assignment_id": "ASN-003", "shift_instance_id": "SII-001",
+            "employee_id": "EMP-003", "team_id": "TEAM-001",
+            "shift_template_id": "SHF-001", "shift_date": "2026-01-05",
+            "scheduled_start": "2026-01-05T08:00:00Z", "scheduled_end": "2026-01-05T16:00:00Z",
+            "duration_hours": "7.5", "assigned_role": "STAFF",
+            "assignment_status": "ACTIVE", "effective_from": "2026-01-04T12:00:00Z",
+            "effective_to": "", "swap_request_id": "SWP-001",
+            "replaces_assignment_id": "ASN-001", "fulfills_skill_id": "SKL-A",
+            "is_holiday_premium": "false",
+        },
+        {
+            "assignment_id": "ASN-004", "shift_instance_id": "SII-002",
+            "employee_id": "EMP-002", "team_id": "TEAM-001",
+            "shift_template_id": "SHF-001", "shift_date": "2026-01-06",
+            "scheduled_start": "2026-01-06T08:00:00Z", "scheduled_end": "2026-01-06T16:00:00Z",
+            "duration_hours": "7.5", "assigned_role": "STAFF",
+            "assignment_status": "ACTIVE", "effective_from": "2026-01-04T12:00:00Z",
+            "effective_to": "", "swap_request_id": "SWP-001",
+            "replaces_assignment_id": "ASN-002", "fulfills_skill_id": "SKL-A",
+            "is_holiday_premium": "false",
+        },
+    ])
+    clean["swap_requests"] = [{
+        "swap_request_id": "SWP-001",
+        "requestor_employee_id": "EMP-002", "requestor_assignment_id": "ASN-001",
+        "target_employee_id": "EMP-003", "target_assignment_id": "ASN-002",
+        "current_status": "APPLIED", "manager_employee_id": "EMP-001",
+        "requested_at": "2026-01-04T10:00:00Z",
+        "decided_at": "2026-01-04T11:00:00Z",
+        "applied_at": "2026-01-04T12:00:00Z",
+        "rejection_reason": "",
+    }]
+
+    # Good twin: has APPROVED event
+    good = copy.deepcopy(clean)
+    good["swap_events"] = [
+        {"swap_event_id": "EVT-001", "swap_request_id": "SWP-001",
+         "from_status": "", "to_status": "REQUESTED",
+         "event_timestamp": "2026-01-04T10:00:00Z",
+         "actor_type": "EMPLOYEE", "actor_id": "EMP-002", "notes": ""},
+        {"swap_event_id": "EVT-002", "swap_request_id": "SWP-001",
+         "from_status": "REQUESTED", "to_status": "APPROVED",
+         "event_timestamp": "2026-01-04T11:00:00Z",
+         "actor_type": "EMPLOYEE", "actor_id": "EMP-001", "notes": ""},
+        {"swap_event_id": "EVT-003", "swap_request_id": "SWP-001",
+         "from_status": "APPROVED", "to_status": "APPLIED",
+         "event_timestamp": "2026-01-04T12:00:00Z",
+         "actor_type": "SYSTEM", "actor_id": "", "notes": ""},
+    ]
+    _write_tables(tmp_path / "good_swap", good)
+    assert "SWAP_WITHOUT_APPROVAL" not in _rules(validate.validate_dataset(str(tmp_path / "good_swap")))
+
+    # Bad: skips APPROVED (REQUESTED -> APPLIED)
+    bad = copy.deepcopy(clean)
+    bad["swap_requests"][0]["manager_employee_id"] = ""
+    bad["swap_requests"][0]["decided_at"] = ""
+    bad["swap_events"] = [
+        {"swap_event_id": "EVT-001", "swap_request_id": "SWP-001",
+         "from_status": "", "to_status": "REQUESTED",
+         "event_timestamp": "2026-01-04T10:00:00Z",
+         "actor_type": "EMPLOYEE", "actor_id": "EMP-002", "notes": ""},
+        {"swap_event_id": "EVT-003", "swap_request_id": "SWP-001",
+         "from_status": "REQUESTED", "to_status": "APPLIED",
+         "event_timestamp": "2026-01-04T12:00:00Z",
+         "actor_type": "SYSTEM", "actor_id": "", "notes": ""},
+    ]
+    _write_tables(tmp_path / "bad_swap", bad)
+    assert "SWAP_WITHOUT_APPROVAL" in _rules(validate.validate_dataset(str(tmp_path / "bad_swap")))
