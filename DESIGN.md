@@ -426,30 +426,75 @@ An independent validator is **not part of this implementation stage**. When adde
 
 ---
 
-## 9. Data Exports: CSV and Manifest
+## 9. Data Exports: Multi-Format (CSV, JSON, SQL) and Manifest
 
-`python run_generator.py --profile starter|full --out <dir>` writes all 15 tables as UTF-8 CSV with stable dataclass column order, rows sorted by primary key, lowercase `true`/`false`, empty cells for null, ISO date values, and `\n` line endings on every OS.
+`python run_generator.py --profile starter|full --out <dir>` writes all 15 operational and analytical tables in multiple synchronized formats:
+1. **UTF-8 CSV**: Stable dataclass column ordering, records sorted by primary key, lowercase `true`/`false`, empty cells for `NULL`, ISO-8601 timestamps, and POSIX `\n` line endings preserved across operating systems.
+2. **Formatted JSON**: Companion `.json` array of record objects per table (`clean/*.json` and `dirty/*.json`), formatted with 2-space indentation and identical row ordering.
+3. **Cryptographic Manifest (`manifest.json`)**: Tracks every exported file (31 CSV + 31 JSON for starter, plus ground truth files), recording exact row counts and individual SHA-256 digests.
+4. **Relational SQL DDL & DML (`scripts/generate_sql.py`)**:
+   - `output/starter/schema.sql`: Full ANSI/SQLite-compatible `CREATE TABLE` DDL defining primary keys, column types, and foreign key constraints across all 15 tables.
+   - `output/starter/starter_inserts.sql`: Transactional `INSERT INTO` statements populating the clean starter dataset into relational databases.
+   - Verified via in-memory SQLite ingestion testing with 100% row-count parity across all tables.
 
-Output layout:
+### Verified Schema & CSV Headers (15 Tables)
+
+Every table and column name exactly reflects the exported CSV headers:
+
+| Table Name (CSV / JSON) | Primary Key | Exported Columns (in exact CSV order) | Foreign Keys & Constraints |
+|:---|:---|:---|:---|
+| `attendance_events` | `attendance_event_id` | `attendance_event_id`, `employee_id`, `assignment_id`, `event_type`, `event_timestamp`, `source`, `variance_minutes`, `worked_minutes`, `is_exception`, `exception_type` | FK to `employees.employee_id`, `shift_assignments.assignment_id` |
+| `coverage_gaps` | `gap_id` | `gap_id`, `coverage_id`, `effective_date`, `team_id`, `shift_template_id`, `skill_id`, `required_headcount`, `scheduled_headcount`, `gap_headcount`, `target_shortfall`, `reason`, `is_critical`, `has_gap`, `computed_at` | FK to `coverage_requirements.coverage_id`, `teams.team_id`, `shift_templates.shift_template_id`, `skills.skill_id` |
+| `coverage_requirements` | `coverage_id` | `coverage_id`, `effective_date`, `team_id`, `shift_template_id`, `skill_id`, `min_headcount`, `target_headcount` | FK to `teams.team_id`, `shift_templates.shift_template_id`, `skills.skill_id` |
+| `employee_skills` | `employee_skill_id` | `employee_skill_id`, `employee_id`, `skill_id`, `proficiency_level`, `certified_date`, `expiry_date`, `is_primary` | FK to `employees.employee_id`, `skills.skill_id` |
+| `employees` | `employee_id` | `employee_id`, `team_id`, `first_name`, `last_name`, `email`, `role`, `weekly_contract_hours`, `fte`, `hire_date`, `termination_date`, `is_active` | FK to `teams.team_id` |
+| `holidays` | `holiday_id` | `holiday_id`, `calendar_date`, `name`, `jurisdiction`, `is_statutory` | Standalone reference |
+| `leave_events` | `leave_event_id` | `leave_event_id`, `leave_request_id`, `from_status`, `to_status`, `event_timestamp`, `actor_type`, `actor_id`, `reason` | FK to `leave_requests.leave_request_id` (`from_status` and `actor_id` nullable) |
+| `leave_requests` | `leave_request_id` | `leave_request_id`, `employee_id`, `leave_type`, `start_date`, `end_date`, `requested_hours`, `current_status`, `submitted_at`, `decided_at`, `decision_reason` | FK to `employees.employee_id` |
+| `shift_assignments` | `assignment_id` | `assignment_id`, `shift_instance_id`, `employee_id`, `team_id`, `shift_template_id`, `shift_date`, `scheduled_start`, `scheduled_end`, `duration_hours`, `assigned_role`, `assignment_status`, `effective_from`, `effective_to`, `swap_request_id`, `replaces_assignment_id`, `fulfills_skill_id`, `is_holiday_premium` | FK to `employees.employee_id`, `teams.team_id`, `shift_templates.shift_template_id` |
+| `shift_templates` | `shift_template_id` | `shift_template_id`, `template_code`, `name`, `start_time`, `end_time`, `duration_hours`, `unpaid_break_minutes`, `is_overnight` | Standalone reference |
+| `skills` | `skill_id` | `skill_id`, `code`, `name`, `category`, `description` | Standalone reference |
+| `swap_events` | `swap_event_id` | `swap_event_id`, `swap_request_id`, `from_status`, `to_status`, `event_timestamp`, `actor_type`, `actor_id`, `notes` | FK to `swap_requests.swap_request_id` (`from_status` and `actor_id` nullable) |
+| `swap_requests` | `swap_request_id` | `swap_request_id`, `requestor_employee_id`, `requestor_assignment_id`, `target_employee_id`, `target_assignment_id`, `current_status`, `manager_employee_id`, `requested_at`, `decided_at`, `applied_at`, `rejection_reason` | FK to `employees.employee_id`, `shift_assignments.assignment_id` |
+| `teams` | `team_id` | `team_id`, `name`, `department`, `timezone`, `is_active` | Standalone reference |
+| `weekly_hours_summaries` | `summary_id` | `summary_id`, `employee_id`, `iso_year`, `iso_week`, `is_partial_week`, `contract_hours`, `scheduled_hours`, `regular_hours`, `overtime_hours`, `exceeds_overtime_cap`, `computed_at` | FK to `employees.employee_id` |
+
+### Export Directory Layout
 ```text
-<out>/<profile>/
-├── clean/*.csv
-├── dirty/*.csv
-├── ground_truth/ground_truth.csv
-├── ground_truth/ground_truth.json
-└── manifest.json
+output/
+├── starter/
+│   ├── clean/*.csv & *.json         # 15 tables clean
+│   ├── dirty/*.csv & *.json         # 15 tables dirty (15 anomalies)
+│   ├── ground_truth/
+│   │   ├── ground_truth.csv
+│   │   └── ground_truth.json
+│   ├── manifest.json                # 62 entries (31 CSV + 31 JSON) with SHA-256
+│   ├── schema.sql                   # SQLite/ANSI DDL schema
+│   └── starter_inserts.sql          # Clean starter SQL INSERT statements
+└── full/
+    ├── README.md                    # Regeneration guide
+    └── SHA256SUMS                   # Reference SHA-256 digests for all 68 regenerated files
 ```
-The manifest records clean/dirty row counts and a SHA-256 checksum plus row count for each table and ground-truth file. It does not feed back into generation.
 
 ---
 
 ## 10. Reproducibility & Distribution Reporting
 
-### 10.1 Reproducibility
-Export tests generate the same seeded data more than once, compare SHA-256 hashes, and check timezone independence. `manifest.json` provides per-file hashes for clean/dirty data and ground truth.
+### 10.1 Multi-Platform Reproducibility Scripts
+Automated end-to-end reproducibility pipelines are provided for both major shell environments:
+- `scripts/reproduce.ps1`: Windows PowerShell script.
+- `scripts/reproduce.sh`: POSIX Bash script.
 
-### 10.2 Stage Reports
-Stage diagnostics live in the `scripts/report_stage_*.py` scripts. The profile CLI reports generation, anomaly/recomputation, export, and total elapsed times, as well as row and anomaly counts.
+Both scripts perform complete environment orchestration:
+1. Virtual environment provisioning and package installation from `requirements.txt`.
+2. Execution of the full test suite via `pytest`.
+3. Deterministic generation of starter and full datasets with fixed seed `20261022`.
+4. Independent execution of `validate.py` across all four output directories (`starter/clean`, `starter/dirty`, `full/clean`, `full/dirty`), verifying exit code 0 on clean and exit code 1 on dirty.
+5. Benchmark evaluation via `scripts/evaluate_validator.py` asserting 100% recall and zero false positives.
+
+### 10.2 Deterministic Cryptographic Validation
+- Generation is strictly deterministic: two distinct generation runs using the identical seed produce byte-identical CSV and JSON files across all tables (verified by `test_identical_seed_produces_byte_identical_csvs`).
+- `.gitattributes` enforces binary checkout (`-text`) for all `.csv`, `.json`, and `SHA256SUMS` files to ensure platform line endings (`CRLF` vs `LF`) do not alter cryptographic checksums.
 
 ---
 
